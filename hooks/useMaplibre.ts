@@ -36,22 +36,22 @@ export function useMapLibre(
   //   return new maplibregl.NavigationControl()
   // }, [])
 
-  // const geoControl = useMemo(() => {
-  //   console.debug('Create GeolocateControl')
-  //   return new maplibregl.GeolocateControl({
-  //     positionOptions: { enableHighAccuracy: true },
-  //     trackUserLocation: true,
-  //   })
-  // }, [])
+  const geoControl = useMemo(() => {
+    console.debug('Create GeolocateControl')
+    return new maplibregl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+    })
+  }, [])
 
   useEffect(() => {
     if (!mapContext.map) return
     // if (!mapContext.map.hasControl(navigateContol)) {
     //   mapContext.map?.addControl(navigateContol, 'bottom-right')
     // }
-    // if (!mapContext.map.hasControl(geoControl)) {
-    //   mapContext.map?.addControl(geoControl, 'bottom-right')
-    // }
+    if (!mapContext.map.hasControl(geoControl)) {
+      mapContext.map?.addControl(geoControl, 'bottom-right')
+    }
     if (!mapContext.map.hasControl(attributetion)) {
       mapContext.map?.addControl(attributetion, 'bottom-left')
     }

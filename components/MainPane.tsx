@@ -27,7 +27,6 @@ import {
 import { LngLat, LngLatBounds } from 'maplibre-gl'
 import { NDKEvent, NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
 import { CropFree, Draw, LocationOn, Tag } from '@mui/icons-material'
-import pin from '@/public/pin.svg'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import UserBar from './UserBar'
@@ -40,6 +39,7 @@ import buffer from '@turf/buffer'
 import bboxPolygon from '@turf/bbox-polygon'
 import bbox from '@turf/bbox'
 import FeedFilterMenu from './FeedFilterMenu'
+import pin from '@/public/pin.svg'
 
 const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
   (b.created_at || 0) - (a.created_at || 0)
