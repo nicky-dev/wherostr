@@ -16,7 +16,6 @@ import {
   EventBuilder,
   EventKind,
   NostrPrefix,
-  PowWorker,
   createNostrLink,
 } from '@snort/system'
 import {
@@ -58,9 +57,7 @@ import { reverse } from '@/services/osm'
 import usePromise from 'react-use-promise'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/hooks/useAccount'
-
-const powWorker =
-  typeof window !== 'undefined' ? new PowWorker('/pow.js') : undefined
+import powWorker from '@/utils/powWorker'
 
 export const CreateEventForm = ({
   type,
@@ -118,8 +115,6 @@ export const CreateEventForm = ({
   const mdDownRef = useRef<boolean>(mdDown)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const enableLocation = useRef<boolean | undefined>(positingOptions?.location)
-  const powRef = useRef(powWorker)
-  powRef.current = powWorker
   enableLocation.current = positingOptions?.location
   mdDownRef.current = mdDown
 
@@ -280,12 +275,16 @@ export const CreateEventForm = ({
           .build()
 
         let publishEvent = nostrEvent
-        if (positingOptions?.pow && powRef.current) {
-          publishEvent = await powRef.current?.minePow(nostrEvent, pow || 21)
+        if (positingOptions?.pow && powWorker) {
+          publishEvent = await powWorker.minePow(nostrEvent, pow || 21)
         }
         const ev = new NDKEvent(ndk, publishEvent)
         // console.log('powEvent', powEvent)
-        // console.log('ev', { powId: publishEvent?.id, eventId: ev.id, pow })
+        console.log('ev', {
+          powId: publishEvent?.id,
+          eventId: ev.id,
+          pow: pow || 21,
+        })
 
         await ev.publish(relaySet)
         setEventAction(undefined)

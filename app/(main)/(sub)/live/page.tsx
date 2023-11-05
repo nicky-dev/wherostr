@@ -94,11 +94,6 @@ export default function Page() {
   const renderItems = useCallback(
     (item: NDKEvent, i: number, all: NDKEvent[]) => {
       if (i % colsNum === 0) {
-        console.log('renderItems', {
-          i,
-          colsNum,
-          items: all.slice(i, i + colsNum),
-        })
         return (
           <Box
             key={item.deduplicationKey()}
@@ -115,7 +110,7 @@ export default function Page() {
   )
 
   return (
-    <Box px={2} flex={1}>
+    <Box px={2} flex={1} overflow="visible">
       <Typography variant="h4">Live</Typography>
       <Divider />
       <ViewportList
