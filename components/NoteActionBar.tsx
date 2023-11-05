@@ -26,7 +26,6 @@ const amountFormat = '0,0.[0]a'
 
 const NoteActionBar = ({ event }: { event: NDKEvent }) => {
   const ndk = useNDK()
-  const relaySet = useRelaySet()
   const user = useUser()
   const [muteList] = useMuting()
   const { setEventAction } = useContext(AppContext)
@@ -37,14 +36,13 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
   })
 
   const fetchRelatedEvent = useCallback(async () => {
-    if (!relaySet || !ndk || !event) return
+    if (!ndk || !event) return
     const events = await ndk.fetchEvents(
       {
         kinds: [NDKKind.Repost, NDKKind.Text, NDKKind.Zap, NDKKind.Reaction],
         '#e': [event.id],
       },
       { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
-      relaySet,
     )
 
     const reactedEvent: NDKEvent[] = []
@@ -98,7 +96,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
       comments,
       zaps: zapEvents.map((item) => zapInvoiceFromEvent(item) || { amount: 0 }),
     }
-  }, [relaySet, ndk, event, muteList, user?.hexpubkey])
+  }, [ndk, event, muteList, user?.hexpubkey])
 
   const [data] = usePromise(fetchRelatedEvent, [fetchRelatedEvent])
 
@@ -143,9 +141,9 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
         disliked: disliked + (reaction === '-' ? 1 : 0),
       })
       // console.log('relaySet', relaySet)
-      await newEvent.publish(relaySet)
+      await newEvent.publish()
     },
-    [event, ndk, liked, disliked, relaySet],
+    [event, ndk, liked, disliked],
   )
   const handleClickAction = useCallback(
     (type: EventActionType, options?: any) => () => {

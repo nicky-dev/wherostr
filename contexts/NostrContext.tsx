@@ -24,7 +24,7 @@ interface Nostr {
   relaySet?: NDKRelaySet
   getUser: (key?: string, relayUrls?: string[]) => Promise<NDKUser | undefined>
   getEvent: (id: string) => Promise<NDKEvent | null>
-  updateRelaySet: (user?: NDKUser) => Promise<void>
+  // updateRelaySet: (user?: NDKUser) => Promise<void>
 }
 
 export const verifyCache: Record<string, boolean> = {}
@@ -44,7 +44,7 @@ export const NostrContext = createContext<Nostr>({
   relaySet: undefined,
   getUser: () => new Promise((resolve) => resolve(undefined)),
   getEvent: () => new Promise((resolve) => resolve(null)),
-  updateRelaySet: async () => {},
+  // updateRelaySet: async () => {},
 })
 
 export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
@@ -59,47 +59,20 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
       }),
     [],
   )
-
   useEffect(() => {
     ndk.connect()
-    // return () => {
-    //   if (!ndk.explicitRelayUrls) return
-    //   NDKRelaySet.fromRelayUrls(ndk.explicitRelayUrls, ndk).relays.forEach(
-    //     (d) => d.disconnect(),
-    //   )
-    // }
+    const onConnect = (...args: any[]) => {
+      console.log('onConnect:args', args)
+    }
+    const onDisconnect = (...args: any[]) => {
+      console.log('onDisconnect:args', args)
+    }
+    ndk.on('connect', onConnect)
+    ndk.on('disconnect', onDisconnect)
+    return () => {
+      ndk.removeAllListeners()
+    }
   }, [ndk])
-
-  const updateRelaySet = useCallback(
-    async (user?: NDKUser) => {
-      try {
-        // ndk.explicitRelayUrls?.map((d) => new NDKRelay(d).disconnect())
-        console.log('updateRelaySet:user', user)
-        if (user) {
-          const relayList = await user.relayList()
-          console.log('updateRelaySet:relayList', relayList)
-          if (relayList?.bothRelayUrls.length) {
-            // ndk.explicitRelayUrls = relayList.bothRelayUrls
-            // await ndk.connect()
-            setRelaySet((prev) => {
-              // prev?.relays.forEach((relay) => relay.disconnect())
-              return NDKRelaySet.fromRelayUrls(relayList.bothRelayUrls, ndk)
-            })
-            return
-          }
-        }
-        // ndk.explicitRelayUrls = defaultRelays
-        // await ndk.connect()
-        setRelaySet((prev) => {
-          // prev?.relays.forEach((relay) => relay.disconnect())
-          return NDKRelaySet.fromRelayUrls(defaultRelays, ndk)
-        })
-      } catch (err) {
-        console.error('updateRelaySet:error', err)
-      }
-    },
-    [ndk],
-  )
 
   const getUser = useCallback(
     async (key?: string, relayUrls: string[] = defaultRelays) => {
@@ -171,8 +144,7 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
       relaySet,
       getUser,
       getEvent,
-      updateRelaySet,
     }
-  }, [ndk, relaySet, getUser, getEvent, updateRelaySet])
+  }, [ndk, relaySet, getUser, getEvent])
   return <NostrContext.Provider value={value}>{children}</NostrContext.Provider>
 }

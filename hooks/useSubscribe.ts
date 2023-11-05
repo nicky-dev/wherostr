@@ -33,21 +33,18 @@ export const useSubscribe = (
   subOptions?: NDKSubscriptionOptions,
 ) => {
   const ndk = useNDK()
-  const defaultRelaySet = useRelaySet()
+  // const defaultRelaySet = useRelaySet()
   const { signing } = useAccount()
   const [sub, setSub] = useState<NDKSubscription>()
   const [items, setItems] = useState<NDKEvent[]>([])
   const [newItems, setNewItems] = useState<NDKEvent[]>([])
   const eos = useRef(false)
 
-  const relaySet = useMemo(
-    () => optRelaySet || defaultRelaySet,
-    [optRelaySet, defaultRelaySet],
-  )
+  const relaySet = useMemo(() => optRelaySet, [optRelaySet])
 
   useEffect(() => {
     if (signing || !ndk) return
-    if (!filter || !relaySet) {
+    if (!filter) {
       setNewItems([])
       setItems([])
       return setSub((prev) => {
@@ -56,7 +53,7 @@ export const useSubscribe = (
         return undefined
       })
     }
-    console.log('sub:init', relaySet)
+    console.log('sub:init')
     setNewItems([])
     setItems([])
     eos.current = false
@@ -74,7 +71,7 @@ export const useSubscribe = (
       prev?.stop()
       return subscribe
     })
-  }, [signing, ndk, relaySet, filter])
+  }, [signing, ndk, relaySet, filter, subOptions])
 
   useEffect(() => {
     if (signing || !ndk || !sub) return
@@ -148,7 +145,7 @@ export const useSubscribe = (
 
   const oldestEvent = useMemo(() => items[items.length - 1], [items])
   const fetchMore = useCallback(async () => {
-    if (!relaySet || !filter || !oldestEvent) return
+    if (!filter || !oldestEvent) return
     const { since, ...original } = filter
     const events = await ndk.fetchEvents(
       { ...original, until: oldestEvent.created_at, limit: 30 },

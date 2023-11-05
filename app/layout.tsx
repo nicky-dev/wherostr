@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   themeColor: '#121212',
   openGraph: {
     type: 'website',
-    images: '/windows11/LargeTile.scale-100.png',
+    images: '/windows11/Wide310x150Logo.scale-400.png',
   },
 }
 

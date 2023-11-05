@@ -56,7 +56,7 @@ export const AccountContext = createContext<AccountProps>({
 })
 
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const { ndk, relaySet, updateRelaySet, getUser } = useContext(NostrContext)
+  const { ndk, getUser } = useContext(NostrContext)
   const { showSnackbar } = useAction()
   const [readOnly, setReadOnly] = useState(true)
   const [signing, setSigning] = useState<boolean>(true)
@@ -80,7 +80,6 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
           authors: [user.hexpubkey],
         },
         undefined,
-        relaySet,
       )
       if (contactListEvent) {
         const pubkeys = new Set<string>()
@@ -99,7 +98,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       }
       setFollows(Array.from(follows))
     },
-    [ndk, relaySet],
+    [ndk],
   )
 
   const follow = useCallback(
@@ -116,10 +115,10 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       followsSet.forEach((follow) => {
         event.tag(follow)
       })
-      await event.publish(relaySet)
+      await event.publish()
       setFollows(Array.from(followsSet))
     },
-    [user, follows, ndk, relaySet],
+    [user, follows, ndk],
   )
 
   const unfollow = useCallback(
@@ -133,10 +132,10 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       followsSet.forEach((d) => {
         event.tag(d)
       })
-      await event.publish(relaySet)
+      await event.publish()
       setFollows(Array.from(followsSet))
     },
-    [follows, ndk, relaySet],
+    [follows, ndk],
   )
 
   const signIn = useCallback(
@@ -196,9 +195,8 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
               ...(type === 'nsec' ? { nsec: key } : undefined),
             }),
           )
+          ndk.activeUser = user
           console.log('signIn:savedSession')
-          await updateRelaySet(user)
-          console.log('signIn:updateRelaySet')
           await updateFollows(user)
           console.log('signIn:fetchFollows')
           setUser(user)
@@ -216,14 +214,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
         setSigning(false)
       }
     },
-    [
-      ndk,
-      hasNip7Extension,
-      getUser,
-      updateFollows,
-      updateRelaySet,
-      showSnackbar,
-    ],
+    [ndk, hasNip7Extension, getUser, updateFollows, showSnackbar],
   )
 
   const signOut = useCallback(async () => {
@@ -231,8 +222,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     localStorage.removeItem('session')
     setUser(undefined)
     setReadOnly(true)
-    updateRelaySet()
-  }, [ndk, updateRelaySet])
+  }, [ndk])
 
   const initUser = useCallback(async () => {
     try {
@@ -245,18 +235,17 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
         )
         return
       }
-      await updateRelaySet()
     } catch (err) {
     } finally {
       setSigning(false)
     }
-  }, [updateRelaySet, signIn])
+  }, [signIn])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (user || relaySet) return
+    if (user) return
     initUser()
-  }, [user, relaySet, initUser])
+  }, [user, initUser])
 
   const filter = useMemo<NDKFilter | undefined>(() => {
     if (!user?.hexpubkey) return
@@ -267,19 +256,17 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [user?.hexpubkey])
 
   usePromise(async () => {
-    if (!filter || !relaySet) return setMuteList([])
+    if (!filter) return setMuteList([])
 
-    const event = await ndk.fetchEvent(
-      filter,
-      { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
-      relaySet,
-    )
+    const event = await ndk.fetchEvent(filter, {
+      cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
+    })
     const list =
       event?.getMatchingTags('p').map(([tag, pubkey]) => {
         return pubkey
       }) || []
     setMuteList(list)
-  }, [filter, relaySet])
+  }, [filter])
 
   const value = useMemo((): AccountProps => {
     return {

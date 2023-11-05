@@ -1,7 +1,7 @@
 import { EventActionType } from '@/contexts/AppContext'
 import { useAction } from '@/hooks/useApp'
 import { useMap } from '@/hooks/useMap'
-import { useNDK, useRelaySet } from '@/hooks/useNostr'
+import { useNDK } from '@/hooks/useNostr'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -67,7 +67,6 @@ export const CreateEventForm = ({
   relatedEvents?: NDKEvent[]
 }) => {
   const ndk = useNDK()
-  const relaySet = useRelaySet()
   const map = useMap()
   const user = useUser()
   const theme = useTheme()
@@ -75,13 +74,11 @@ export const CreateEventForm = ({
   const pathname = usePathname()
   const query = useSearchParams()
   const { setEventAction, showSnackbar } = useAction()
-  const { register, handleSubmit, setValue, watch } = useForm()
   const [busy, setBusy] = useState(false)
   const [appendMapLink, setAppendMapLink] = useState(false)
   const [locating, setLocating] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [posting, setPosting] = useState(false)
-  const [positingOptions, setPostingOptions] = useState<PostingOptionsValues>()
   const nostrLink = useMemo(() => {
     if (type !== EventActionType.Quote) return ''
     if (!relatedEvents[0]?.id) return ''
@@ -108,6 +105,11 @@ export const CreateEventForm = ({
     }
     return link ? `nostr:${link}` : ''
   }, [type, relatedEvents])
+
+  const { register, handleSubmit, setValue, watch } = useForm({
+    values: undefined,
+  })
+  const [positingOptions, setPostingOptions] = useState<PostingOptionsValues>()
 
   const geohashValue = watch('geohash', '')
   const contentValue = watch('content', nostrLink)
@@ -278,15 +280,16 @@ export const CreateEventForm = ({
         if (positingOptions?.pow && powWorker) {
           publishEvent = await powWorker.minePow(nostrEvent, pow || 21)
         }
-        const ev = new NDKEvent(ndk, publishEvent)
-        // console.log('powEvent', powEvent)
-        console.log('ev', {
-          powId: publishEvent?.id,
-          eventId: ev.id,
-          pow: pow || 21,
-        })
-
-        await ev.publish(relaySet)
+        if (ndk.signer) {
+          publishEvent.sig = await ndk.signer.sign(publishEvent)
+        }
+        console.log('publishEvent', publishEvent)
+        const pool = ndk.pool || ndk.outboxPool
+        await Promise.race(
+          pool.connectedRelays().map((relay) => {
+            return relay.connectivity.relay.publish(publishEvent)
+          }),
+        )
         setEventAction(undefined)
       } catch (err: any) {
         showSnackbar(err.message, {
@@ -301,7 +304,6 @@ export const CreateEventForm = ({
     },
     [
       user,
-      relaySet,
       type,
       relatedEvents,
       positingOptions?.location,
