@@ -28,9 +28,7 @@ interface Nostr {
 }
 
 export const verifyCache: Record<string, boolean> = {}
-export const defaultRelays = (process.env.NEXT_PUBLIC_RELAY_URLS || '')
-  .split(',')
-  .filter((item) => !!item)
+export const defaultRelays = ['wss://relay.damus.io', 'wss://nos.lol']
 
 const dexieAdapter = new NDKCacheAdapterDexie({ dbName: 'wherostr-cache' })
 // const ndk =
