@@ -2,6 +2,7 @@ import './globals.css'
 import { DefaultTheme } from '@/themes'
 import { NostrContextProvider } from '@/contexts/NostrContext'
 import { Metadata } from 'next'
+import { Analytics } from '@vercel/analytics/react'
 
 export const metadata: Metadata = {
   title: 'Wherostr',
@@ -38,6 +39,7 @@ export default function RootLayout({
         <DefaultTheme>
           <NostrContextProvider>{children}</NostrContextProvider>
         </DefaultTheme>
+        <Analytics />
       </body>
     </html>
   )
