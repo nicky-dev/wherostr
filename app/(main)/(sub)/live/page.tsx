@@ -74,9 +74,8 @@ export default function Page() {
     return items
   }, [liveEvent, muteList])
 
-  const ref = useRef<HTMLElement>(
-    window.document.getElementsByTagName('main').item(0),
-  )
+  const ref = useRef<HTMLElement>(window.document.body)
+  ref.current = window.document.body
 
   const colsNum = useMemo(() => {
     if (xlUp) {
@@ -95,10 +94,15 @@ export default function Page() {
   const renderItems = useCallback(
     (item: NDKEvent, i: number, all: NDKEvent[]) => {
       if (i % colsNum === 0) {
+        console.log('renderItems', {
+          i,
+          colsNum,
+          items: all.slice(i, i + colsNum),
+        })
         return (
           <Box
             key={item.deduplicationKey()}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 m-8"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 sm:gap-8 sm:m-4 md:m-8"
           >
             {all.slice(i, i + colsNum).map((d) => (
               <CardEvent key={d.deduplicationKey()} ev={d} />
@@ -111,16 +115,28 @@ export default function Page() {
   )
 
   return (
-    <Box px={2} overflow={'visible'} flex={1}>
+    <Box px={2} flex={1}>
       <Typography variant="h4">Live</Typography>
       <Divider />
-      <ViewportList items={liveItems} viewportRef={ref}>
+      <ViewportList
+        items={liveItems}
+        viewportRef={ref}
+        withCache
+        axis="y"
+        overscan={1}
+      >
         {renderItems}
       </ViewportList>
       <Box my={8} />
       <Typography variant="h4">Ended</Typography>
       <Divider />
-      <ViewportList items={endedItems} viewportRef={ref}>
+      <ViewportList
+        items={endedItems}
+        viewportRef={ref}
+        withCache
+        axis="y"
+        overscan={2}
+      >
         {renderItems}
       </ViewportList>
     </Box>
@@ -153,7 +169,7 @@ const CardEvent: FC<{
     <Card>
       <CardMedia
         component={Link}
-        href={`/a?naddr=${nostrLink}`}
+        href={`/${nostrLink}`}
         sx={{
           backgroundImage: `url(${image})`,
           aspectRatio: '16/9',

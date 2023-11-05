@@ -127,7 +127,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
             kind: event.kind,
             pubkey: event.pubkey,
           })
-          return router.push('/a/?naddr=' + addr)
+          return router.push('/' + addr)
         }
       } catch (err: any) {
         showSnackbar(err.message, {

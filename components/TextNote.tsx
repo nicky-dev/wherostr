@@ -182,7 +182,7 @@ export const NostrAddressBox = ({
                       className="aspect-video hover:scale-110 transition-all"
                       centerRipple
                       LinkComponent={NextLink}
-                      href={`/a?naddr=${nostrLink.encode()}`}
+                      href={`/${nostrLink.encode()}`}
                       target="_blank"
                     >
                       <img src={image} alt="image" />
@@ -198,7 +198,7 @@ export const NostrAddressBox = ({
                       color="inherit"
                       variant="h6"
                       fontWeight="bold"
-                      href={`/a/?naddr=${naddr}`}
+                      href={`/${naddr}`}
                     >
                       {title}
                     </Link>
@@ -226,7 +226,7 @@ export const NostrAddressBox = ({
                   className="shrink-0"
                   LinkComponent={NextLink}
                   target="_blank"
-                  href={`/a/?naddr=${naddr}`}
+                  href={`/${naddr}`}
                   color="primary"
                   variant="contained"
                   sx={{ fontWeight: 'bold' }}
