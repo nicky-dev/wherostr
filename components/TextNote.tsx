@@ -44,6 +44,9 @@ import { useEvent } from '@/hooks/useEvent'
 import { useStreamRelaySet } from '@/hooks/useNostr'
 import StatusBadge from './StatusBadge'
 import ReactTimeago from 'react-timeago'
+import { EmbedLiveActivity } from './EmbedLiveActivity'
+import { EmbedLongFormContent } from './EmbedLongFormContent'
+import { EmbedEventAddress } from './EmbedEventAddress'
 // import { nip19 } from 'nostr-tools'
 
 type RelatedNoteVariant = 'full' | 'fraction' | 'link'
@@ -105,6 +108,7 @@ export const QuotedEvent = ({
       })
     }
   }, [event, setEventAction])
+
   return relatedNoteVariant === 'link' ? (
     <Typography
       className="cursor-pointer"
@@ -140,120 +144,6 @@ export const QuotedEvent = ({
         {icon ? icon : <FormatQuote />}
       </Box>
     </Box>
-  )
-}
-
-export const NostrAddressBox = ({
-  nostrLink,
-  naddr,
-}: {
-  nostrLink: NostrLink
-  naddr: string
-}) => {
-  const streamRelaySet = useStreamRelaySet()
-  const optRelaySet = useMemo(
-    () => (nostrLink.kind === 30311 ? streamRelaySet : undefined),
-    [streamRelaySet, nostrLink.kind],
-  )
-  const [event, error, state] = useEvent(naddr, optRelaySet)
-  const pubkey = useMemo(() => event?.tagValue('p') || event?.pubkey, [event])
-  const title = useMemo(() => event?.tagValue('title'), [event])
-  const image = useMemo(() => event?.tagValue('image'), [event])
-  const isLive = useMemo(() => event?.tagValue('status') === 'live', [event])
-  const starts = useMemo(
-    () => Number(event?.tagValue('starts') || event?.created_at),
-    [event],
-  )
-  const ends = useMemo(
-    () => Number(event?.tagValue('ends') || event?.created_at),
-    [event],
-  )
-
-  if (nostrLink.kind === 30311) {
-    return (
-      <Box className="bg-gradient-primary w-full rounded-2xl shadow p-0.5">
-        <Paper className="p-3 !rounded-2xl">
-          {state === 'resolved' ? (
-            <Box className="flex flex-col gap-3">
-              <Box className="flex gap-3 items-start flex-col sm:flex-row">
-                {!!image && (
-                  <Box className="sm:max-w-[40%] rounded-2xl overflow-hidden shadow">
-                    <ButtonBase
-                      className="aspect-video hover:scale-110 transition-all"
-                      centerRipple
-                      LinkComponent={NextLink}
-                      href={`/${nostrLink.encode()}`}
-                      target="_blank"
-                    >
-                      <img src={image} alt="image" />
-                    </ButtonBase>
-                  </Box>
-                )}
-                <Box>
-                  <Box>
-                    <Link
-                      component="a"
-                      target="_blank"
-                      underline="hover"
-                      color="inherit"
-                      variant="h6"
-                      fontWeight="bold"
-                      href={`/${naddr}`}
-                    >
-                      {title}
-                    </Link>
-                  </Box>
-                  <Typography
-                    className="text-contrast-secondary"
-                    variant="caption"
-                  >
-                    {isLive && (
-                      <StatusBadge
-                        className="!mr-2 inline-block text-contrast-primary"
-                        status="live"
-                      />
-                    )}
-                    {!isLive && 'Streamed '}
-                    <ReactTimeago
-                      date={new Date((isLive ? starts : ends) * 1000)}
-                    />
-                  </Typography>
-                </Box>
-              </Box>
-              <Box className="flex items-end gap-2">
-                <ProfileChip className="flex-1" hexpubkey={pubkey} />
-                <Button
-                  className="shrink-0"
-                  LinkComponent={NextLink}
-                  target="_blank"
-                  href={`/${naddr}`}
-                  color="primary"
-                  variant="contained"
-                  sx={{ fontWeight: 'bold' }}
-                  startIcon={<PlayCircleOutline />}
-                >
-                  Watch
-                </Button>
-              </Box>
-            </Box>
-          ) : (
-            <CircularProgress color="inherit" />
-          )}
-        </Paper>
-      </Box>
-    )
-  }
-
-  return (
-    <Link
-      href={`https://snort.social/${naddr}`}
-      target="_blank"
-      component="a"
-      underline="hover"
-      color="secondary"
-    >
-      {naddr}
-    </Link>
   )
 }
 
@@ -321,28 +211,9 @@ const renderChunk = (
         (protocol === 'nostr:' || protocol === 'web+nostr:')
       ) {
         const nostrLink = tryParseNostrLink(content)
-        // const nostrLink2 = nip19.decode(content)
-        // console.log('nostrLink2', nostrLink2)
-        const naddr = nostrLink?.encode() || ''
-        // if (!naddr) {
-        //   return (
-        //     <Typography component="span" color="error">
-        //       [invalid {nostrLink?.type}]
-        //     </Typography>
-        //   )
-        // }
-        switch (nostrLink?.type) {
-          case NostrPrefix.PublicKey:
-          case NostrPrefix.Profile: {
-            return <UserMentionLink id={nostrLink.id} />
-          }
-          case NostrPrefix.Event:
-          case NostrPrefix.Note:
-            return (
-              <QuotedEvent id={nostrLink.id} relatedNoteVariant="fraction" />
-            )
-          case NostrPrefix.Address:
-            return <NostrAddressBox nostrLink={nostrLink} naddr={naddr} />
+        if (nostrLink?.type) {
+          const naddr = nostrLink?.encode() || ''
+          return <EmbedEventAddress naddr={naddr} />
         }
       }
       return (
