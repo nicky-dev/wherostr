@@ -111,8 +111,26 @@ const ShortTextNoteCard = ({
   }, [event, setEventAction])
 
   const difficulty = useMemo(() => {
-    return event.getMatchingTags('nonce').at(0)?.[2]
-  }, [event, setEventAction])
+    const diff = event.getMatchingTags('nonce').at(0)?.[2]
+    if (!diff) return
+    const match = event.id.match(/^0+(\d|[a-f])/)?.[0]
+    if (!match) return
+    const nonceDiff = Number(diff)
+    const idDiff = match.split('0').reduce((a, b) => {
+      if (!b) {
+        a += 4
+      } else {
+        a +=
+          Number('0x' + b)
+            .toString(2)
+            .padStart(4, '0')
+            .match(/^0+/)?.[0].length || 0
+      }
+      return a
+    }, 0)
+    if (idDiff < nonceDiff) return
+    return idDiff
+  }, [event])
 
   return (
     <Card className="!rounded-none">
