@@ -428,21 +428,6 @@ const MainPane = () => {
         onShowNewItems={showNewItems}
         showComments={!!query || showComments}
       />
-      {eventAction ? (
-        <Box
-          className={classNames(
-            'fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-3 md:p-6 backdrop-blur z-50',
-            { hidden: showMap && mdDown },
-          )}
-        >
-          <EventActionModal />
-        </Box>
-      ) : null}
-      {profileAction && (
-        <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-3 md:p-6 backdrop-blur z-50">
-          <ProfileActionModal />
-        </Box>
-      )}
     </Paper>
   )
 }

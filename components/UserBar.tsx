@@ -29,10 +29,11 @@ import { useAccount } from '@/hooks/useAccount'
 import { LoadingButton } from '@mui/lab'
 import { SignInType } from '@/contexts/AccountContext'
 import { useForm } from 'react-hook-form'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 const UserBar = ({ className }: { className?: string }) => {
   const router = useRouter()
+  const pathname = usePathname()
   const { register, handleSubmit, setValue, reset } = useForm()
   const { user, signing, signIn, signOut } = useAccount()
   const [open, setOpen] = useState(false)
@@ -54,10 +55,14 @@ const UserBar = ({ className }: { className?: string }) => {
     async (type: SignInType) => {
       const user = await signIn(type)
       if (!user) return
-      router.replace(`/?q=following&map=`)
+      if (pathname === '/' || pathname === '/feeds/') {
+        router.replace(`${pathname}?q=following&map=`)
+      } else {
+        router.replace(`/?q=following&map=`)
+      }
       setOpen(false)
     },
-    [signIn, router],
+    [signIn, router, pathname],
   )
 
   const handleClickSignOut = useCallback(() => {

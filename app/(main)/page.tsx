@@ -10,10 +10,12 @@ import { useCallback, useMemo } from 'react'
 import { useAccount } from '@/hooks/useAccount'
 import { useAction } from '@/hooks/useApp'
 import { EventActionType } from '@/contexts/AppContext'
+import EventActionModal from '@/components/EventActionModal'
+import ProfileActionModal from '@/components/ProfileActionModal'
 
 export default function Page() {
   const { readOnly } = useAccount()
-  const { setEventAction } = useAction()
+  const { eventAction, profileAction, setEventAction } = useAction()
   const theme = useTheme()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -59,6 +61,21 @@ export default function Page() {
           </Hidden>
         </MapView>
         <MainPane />
+        {eventAction ? (
+          <Box
+            className={classNames(
+              'fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-3 md:p-6 backdrop-blur z-50',
+              { hidden: hasMap && mdDown },
+            )}
+          >
+            <EventActionModal />
+          </Box>
+        ) : null}
+        {profileAction && (
+          <Box className="fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-3 md:p-6 backdrop-blur z-50">
+            <ProfileActionModal />
+          </Box>
+        )}
       </Box>
       <Zoom in={!readOnly && !showOnlyMap}>
         <Fab

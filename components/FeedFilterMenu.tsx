@@ -8,7 +8,7 @@ import {
 } from '@mui/material'
 import { NDKUser } from '@nostr-dev-kit/ndk'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import {
   ArrowDropDownOutlined,
   ForumOutlined,
@@ -22,7 +22,7 @@ interface MenuItemProps {
   label: string
   icon?: React.ReactNode
   disabled?: boolean
-  href?: (user?: NDKUser) => string
+  href?: (pathname: string, user?: NDKUser) => string
   hide?: (user?: NDKUser) => boolean
 }
 
@@ -31,8 +31,8 @@ const options: MenuItemProps[] = [
     id: 'following',
     label: 'Following',
     icon: <GroupOutlined />,
-    href: () => {
-      return `/?q=following`
+    href: (pathname) => {
+      return `${pathname}?q=following`
     },
     hide(user) {
       return !user
@@ -42,8 +42,8 @@ const options: MenuItemProps[] = [
     id: 'conversation',
     label: 'Conversation',
     icon: <ForumOutlined />,
-    href: () => {
-      return `/?q=conversation`
+    href: (pathname) => {
+      return `${pathname}?q=conversation`
     },
     hide(user) {
       return !user
@@ -53,13 +53,14 @@ const options: MenuItemProps[] = [
     id: 'global',
     label: 'Global',
     icon: <PublicOutlined />,
-    href: () => {
-      return `/?q=global`
+    href: (pathname) => {
+      return `${pathname}?q=global`
     },
   },
 ]
 
 export default function FeedFilterMenu({ user }: { user?: NDKUser }) {
+  const pathname = usePathname()
   const query = useSearchParams()
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
@@ -121,7 +122,7 @@ export default function FeedFilterMenu({ user }: { user?: NDKUser }) {
                 disabled={option.disabled}
                 onClick={() => handleMenuClick(option.id)}
                 {...(option.href
-                  ? { LinkComponent: Link, href: option.href(user) }
+                  ? { LinkComponent: Link, href: option.href(pathname, user) }
                   : {})}
               >
                 {option.icon && <ListItemIcon>{option.icon}</ListItemIcon>}

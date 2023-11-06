@@ -168,7 +168,11 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
           <ListItemButton
             onClick={async () => {
               await signOut()
-              router.replace(`/?q=global&map=`)
+              if (pathname === '/' || pathname === '/feeds/') {
+                router.replace(`${pathname}?q=global&map=`)
+              } else {
+                router.replace(`/?q=global&map=`)
+              }
               closeDrawer()
             }}
           >
