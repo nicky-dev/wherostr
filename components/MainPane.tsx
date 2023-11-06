@@ -17,12 +17,10 @@ import {
   Box,
   Chip,
   Divider,
-  Fab,
   Paper,
   Toolbar,
   useMediaQuery,
   useTheme,
-  Zoom,
 } from '@mui/material'
 import { LngLat, LngLatBounds } from 'maplibre-gl'
 import { NDKEvent, NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
@@ -289,11 +287,6 @@ const MainPane = () => {
     () => profileAction || eventAction || showEvents || !showOnlyMap,
     [profileAction, eventAction, showEvents, showOnlyMap],
   )
-  const handleClickPost = useCallback(() => {
-    setEventAction({
-      type: EventActionType.Create,
-    })
-  }, [setEventAction])
 
   useEffect(() => {
     if (!map) return
@@ -327,7 +320,7 @@ const MainPane = () => {
   return (
     <Paper
       className={classNames(
-        'absolute left-0 top-0 w-full md:w-[640px] flex flex-col !rounded-none min-h-full',
+        'relative w-full md:w-[640px] flex flex-col !rounded-none min-h-full',
         {
           // 'min-h-full': !showOnlyMap,
           // 'h-[66px] overflow-hidden': showOnlyMap,
@@ -439,9 +432,7 @@ const MainPane = () => {
         <Box
           className={classNames(
             'fixed left-0 top-0 w-full md:w-[640px] h-full p-2 sm:p-3 md:p-6 backdrop-blur z-50',
-            // {
-            //   hidden: showMap && mdDown,
-            // },
+            { hidden: showMap && mdDown },
           )}
         >
           <EventActionModal />
@@ -452,18 +443,6 @@ const MainPane = () => {
           <ProfileActionModal />
         </Box>
       )}
-      <Zoom in={!readOnly && !showOnlyMap}>
-        <Fab
-          className={classNames('!fixed !bg-gradient-primary !z-40 bottom-6', {
-            'left-[576px]': mdUp,
-            'right-6': mdDown,
-          })}
-          size="medium"
-          onClick={handleClickPost}
-        >
-          <Draw className="text-[white]" />
-        </Fab>
-      </Zoom>
     </Paper>
   )
 }
