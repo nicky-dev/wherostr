@@ -15,6 +15,9 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(252, 106, 3, 0.8);
 }
+html {
+  overflow: visible;
+}
 
 .MuiButton-root {
   text-transform: none !important;
