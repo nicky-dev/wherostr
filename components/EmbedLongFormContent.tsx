@@ -1,15 +1,5 @@
 import NextLink from 'next/link'
-import {
-  Avatar,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
+import { Box, Button, CircularProgress, Paper, Typography } from '@mui/material'
 import { useMemo } from 'react'
 import { useEvent } from '@/hooks/useEvent'
 import ReactTimeago from 'react-timeago'
@@ -54,43 +44,30 @@ export const EmbedLongFormContent = ({ naddr }: { naddr: string }) => {
             </Box>
             <Box className="flex items-end gap-2">
               <ProfileChip className="flex-1" hexpubkey={pubkey} />
-              <TextField
-                margin="dense"
-                label="Open with..."
-                inputProps={{
-                  style: { display: 'none' },
-                }}
-                InputProps={{
-                  readOnly: true,
-                  startAdornment: (
-                    <Stack direction="row">
-                      <Chip
-                        className="shrink-0"
-                        component="a"
-                        href={`https://yakihonne.com/article/${naddr}`}
-                        color="secondary"
-                        variant="outlined"
-                        sx={{ fontWeight: 'bold' }}
-                        avatar={
-                          <Avatar src="https://yakihonne.s3.ap-east-1.amazonaws.com/20986fb83e775d96d188ca5c9df10ce6d613e0eb7e5768a0f0b12b37cdac21b3/files/1691722198488-YAKIHONNES3.png" />
-                        }
-                      />
-                      <Button
-                        className="shrink-0"
-                        LinkComponent={NextLink}
-                        target="_blank"
-                        href={`https://habla.news/a/${naddr}`}
-                        color="secondary"
-                        variant="outlined"
-                        sx={{ fontWeight: 'bold' }}
-                        // startIcon={<PlayCircleOutline />}
-                      >
-                        Habla
-                      </Button>
-                    </Stack>
-                  ),
-                }}
-              />
+              <Button
+                className="shrink-0"
+                LinkComponent={NextLink}
+                target="_blank"
+                href={`https://yakihonne.com/article/${naddr}`}
+                color="secondary"
+                variant="outlined"
+                sx={{ fontWeight: 'bold' }}
+                // startIcon={<PlayCircleOutline />}
+              >
+                Yakihhone
+              </Button>
+              <Button
+                className="shrink-0"
+                LinkComponent={NextLink}
+                target="_blank"
+                href={`https://habla.news/a/${naddr}`}
+                color="secondary"
+                variant="outlined"
+                sx={{ fontWeight: 'bold' }}
+                // startIcon={<PlayCircleOutline />}
+              >
+                Habla
+              </Button>
             </Box>
           </Box>
         ) : (
