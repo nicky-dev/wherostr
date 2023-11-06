@@ -173,20 +173,21 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
           console.log('signerUser', signerUser)
           if (signerUser) {
             pubkey = signerUser.hexpubkey
-            // user = await getUser(signerUser.hexpubkey)
-            // setReadOnly(false)
             readOnly = false
           }
         } else if (type === 'npub' && key) {
           readOnly = true
           pubkey = key
           ndk.signer = undefined
-          user = await getUser(key)
         }
         if (pubkey) {
           user = await getUser(pubkey)
         }
         if (user) {
+          console.log('activeUser', ndk.activeUser)
+          if (!ndk.activeUser) {
+            ndk.activeUser = user
+          }
           localStorage.setItem(
             'session',
             JSON.stringify({
@@ -195,7 +196,6 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
               ...(type === 'nsec' ? { nsec: key } : undefined),
             }),
           )
-          ndk.activeUser = user
           console.log('signIn:savedSession')
           await updateFollows(user)
           console.log('signIn:fetchFollows')
