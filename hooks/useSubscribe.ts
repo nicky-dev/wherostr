@@ -63,6 +63,7 @@ export const useSubscribe = (
         subOptions || {
           closeOnEose: false,
           cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+          pool: ndk.pool,
         },
         relaySet,
         false,
@@ -149,7 +150,7 @@ export const useSubscribe = (
     const { since, ...original } = filter
     const events = await ndk.fetchEvents(
       { ...original, until: oldestEvent.created_at, limit: 30 },
-      { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
+      { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST, pool: ndk.pool },
       relaySet,
     )
     const items = sortItems(events)
