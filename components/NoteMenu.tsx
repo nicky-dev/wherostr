@@ -242,55 +242,56 @@ export default function NoteMenu({ event }: { event: NDKEvent }) {
             })
         })}
         {!readOnly ? (
-          <>
-            {!itsYou ? (
-              <>
-                {isFollowing ? (
-                  <LoadingButton
-                    className="!rounded-none"
-                    color="error"
-                    loading={followLoading}
-                    loadingPosition="start"
-                    startIcon={<PersonRemoveOutlined />}
-                    onClick={handleClickUnfollow}
-                  >
-                    Unfollow
-                  </LoadingButton>
-                ) : (
-                  <LoadingButton
-                    color="inherit"
-                    loading={followLoading}
-                    loadingPosition="start"
-                    startIcon={<PersonAddOutlined />}
-                    onClick={handleClickFollow}
-                  >
-                    Follow
-                  </LoadingButton>
-                )}
+          !itsYou ? (
+            [
+              isFollowing ? (
                 <LoadingButton
+                  key={0}
                   className="!rounded-none"
                   color="error"
-                  loading={muteLoading}
+                  loading={followLoading}
                   loadingPosition="start"
-                  startIcon={<PersonOff />}
-                  onClick={handleClickMute}
+                  startIcon={<PersonRemoveOutlined />}
+                  onClick={handleClickUnfollow}
                 >
-                  Mute
+                  Unfollow
                 </LoadingButton>
-              </>
-            ) : (
+              ) : (
+                <LoadingButton
+                  key={0}
+                  color="inherit"
+                  loading={followLoading}
+                  loadingPosition="start"
+                  startIcon={<PersonAddOutlined />}
+                  onClick={handleClickFollow}
+                >
+                  Follow
+                </LoadingButton>
+              ),
               <LoadingButton
+                key={1}
                 className="!rounded-none"
                 color="error"
-                loading={deleteLoading}
+                loading={muteLoading}
                 loadingPosition="start"
-                startIcon={<DeleteOutline />}
-                onClick={handleClickDelete}
+                startIcon={<PersonOff />}
+                onClick={handleClickMute}
               >
-                Delete
-              </LoadingButton>
-            )}
-          </>
+                Mute
+              </LoadingButton>,
+            ]
+          ) : (
+            <LoadingButton
+              className="!rounded-none"
+              color="error"
+              loading={deleteLoading}
+              loadingPosition="start"
+              startIcon={<DeleteOutline />}
+              onClick={handleClickDelete}
+            >
+              Delete
+            </LoadingButton>
+          )
         ) : undefined}
       </Menu>
     </>

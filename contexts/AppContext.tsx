@@ -135,8 +135,17 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
           event,
         })
         if (eventAction.type === EventActionType.View) {
+          const _eventActionHistory = [...eventActionHistory]
+          const latestEventAction =
+            _eventActionHistory[_eventActionHistory.length - 1]
+          if (
+            latestEventAction?.type === eventAction.type &&
+            latestEventAction?.event?.id === (eventAction.event as NDKEvent).id
+          ) {
+            _eventActionHistory.pop()
+          }
           setEventActionHistory([
-            ...eventActionHistory,
+            ..._eventActionHistory,
             {
               ...eventAction,
               event,

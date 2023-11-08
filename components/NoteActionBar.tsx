@@ -213,17 +213,20 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
         </Button>
       </Tooltip>
       <Tooltip title="Zap">
-        <Button
-          color="inherit"
-          disabled={!author?.profile?.lud16 && !author?.profile?.lud06}
-          size="small"
-          onClick={handleClickAction(EventActionType.Zap)}
-          startIcon={<ElectricBolt color="primary" />}
-        >
-          <Typography className="!w-7 text-left" variant="caption">
-            {zapAmount}
-          </Typography>
-        </Button>
+        <Box>
+          <Button
+            className="w-full"
+            color="inherit"
+            disabled={!author?.profile?.lud16 && !author?.profile?.lud06}
+            size="small"
+            onClick={handleClickAction(EventActionType.Zap)}
+            startIcon={<ElectricBolt color="primary" />}
+          >
+            <Typography className="!w-7 text-left" variant="caption">
+              {zapAmount}
+            </Typography>
+          </Button>
+        </Box>
       </Tooltip>
     </Box>
   )
