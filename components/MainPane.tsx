@@ -6,8 +6,6 @@ import {
   useRef,
   useState,
 } from 'react'
-import EventActionModal from '@/components/EventActionModal'
-import ProfileActionModal from '@/components/ProfileActionModal'
 import EventList from '@/components/EventList'
 import Filter from '@/components/Filter'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
@@ -24,12 +22,12 @@ import {
 } from '@mui/material'
 import { LngLat, LngLatBounds } from 'maplibre-gl'
 import { NDKEvent, NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
-import { CropFree, Draw, LocationOn, Tag } from '@mui/icons-material'
+import { CropFree, LocationOn, Tag } from '@mui/icons-material'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import UserBar from './UserBar'
 import classNames from 'classnames'
-import { DAY, unixNow } from '@/utils/time'
+import { WEEK, unixNow } from '@/utils/time'
 import { useAccount, useFollowing } from '@/hooks/useAccount'
 import DrawerMenu from './DrawerMenu'
 import { extractQuery } from '@/utils/extractQuery'
@@ -47,10 +45,9 @@ const MainPane = () => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { map } = useContext(MapContext)
-  const { user, signing, readOnly } = useAccount()
+  const { user, signing } = useAccount()
   const [follows] = useFollowing()
-  const { profileAction, events, eventAction, setEvents, setEventAction } =
-    useContext(AppContext)
+  const { profileAction, eventAction, setEventAction } = useContext(AppContext)
   const [mapLoaded, setMapLoaded] = useState(false)
   const theme = useTheme()
   const xlUp = useMediaQuery(theme.breakpoints.up('lg'))
@@ -73,10 +70,6 @@ const MainPane = () => {
   const showComments = useMemo(() => q === 'conversation', [q])
 
   const query = useMemo(() => extractQuery(q), [q])
-
-  useEffect(() => {
-    setEvents([])
-  }, [query, setEvents])
 
   const bounds = useMemo(() => {
     if (query?.geohash) {
@@ -124,47 +117,34 @@ const MainPane = () => {
     }
   }, [follows, query?.tags, feedType])
 
-  const tagsFilter = useMemo<NDKFilter | undefined>(() => {
+  const filter = useMemo<NDKFilter | undefined>(() => {
     if (signing) return
-    if (!authorsOrTags && geohashFilter) return
+    if (geohashFilter) return geohashFilter
     return {
       ...authorsOrTags,
       kinds: [NDKKind.Text, NDKKind.Repost],
-      since: unixNow() - DAY,
-      limit: 30,
+      since: unixNow() - WEEK,
+      limit: 200,
     } as NDKFilter
   }, [signing, geohashFilter, authorsOrTags])
 
-  const [subGeoFilter] = useSubscribe(geohashFilter)
-  const [subTagFilter, fetchMore, newItems, showNewItems] =
-    useSubscribe(tagsFilter)
+  const [data, fetchMore, newItems, showNewItems] = useSubscribe(filter)
 
-  useEffect(() => {
-    if (!subTagFilter || !subGeoFilter) return
-    const data = new Set<NDKEvent>(subTagFilter)
+  const events = useMemo(() => {
+    if (!filter) return []
     if (!bounds.isEmpty()) {
-      subGeoFilter.forEach((d) => {
-        if (data.has(d)) return
+      return data.filter((d) => {
         const geohashes = d.getMatchingTags('g')
         if (!geohashes.length) return
         geohashes.sort((a, b) => b[1].length - a[1].length)
         if (!geohashes[0]) return
         const { lat, lon } = Geohash.decode(geohashes[0][1])
         if (!bounds.contains({ lat, lon })) return
-        data.add(d)
+        return true
       })
     }
-    let ids = new Set<string>()
-    setEvents(
-      Array.from(data)
-        .filter((item) => {
-          if (ids.has(item.id)) return false
-          ids.add(item.id)
-          return true
-        })
-        .sort(handleSortDescending),
-    )
-  }, [showComments, bounds, subGeoFilter, subTagFilter, setEvents])
+    return data
+  }, [bounds, filter, data])
 
   const mouseEnterHandler = useCallback((ev: maplibregl.MapMouseEvent) => {
     const style = ev.target.getCanvas().style
@@ -222,9 +202,11 @@ const MainPane = () => {
     if (map.getSource('nostr-event')) {
       map.removeSource('nostr-event')
     }
-    const img = new Image()
-    img.onload = () => map.addImage('pin', img)
-    img.src = pin.src
+    if (!map.hasImage('pin')) {
+      const img = new Image()
+      img.onload = () => map.addImage('pin', img)
+      img.src = pin.src
+    }
 
     map.addSource('nostr-event', {
       type: 'geojson',
@@ -267,15 +249,15 @@ const MainPane = () => {
       .filter((event) => !!event)
 
     try {
-      if (!zoomBounds.isEmpty()) {
-        map.fitBounds(zoomBounds, { animate: false, maxZoom: 15 })
+      if (!bounds.isEmpty()) {
+        map.fitBounds(bounds, { duration: 1000, maxZoom: 15 })
       }
       ;(map.getSource('nostr-event') as any)?.setData({
         type: 'FeatureCollection',
         features,
       })
     } catch (err) {}
-  }, [events, map])
+  }, [events, map, bounds])
 
   const showEvents = useMemo(
     () => !!events?.length && (!mdDown || !showMap),
@@ -320,7 +302,7 @@ const MainPane = () => {
   return (
     <Paper
       className={classNames(
-        'relative w-full md:w-[640px] flex flex-col !rounded-none min-h-full',
+        'relative w-full md:w-[640px] flex flex-col !rounded-none min-h-full will-change-transform',
         {
           // 'min-h-full': !showOnlyMap,
           // 'h-[66px] overflow-hidden': showOnlyMap,

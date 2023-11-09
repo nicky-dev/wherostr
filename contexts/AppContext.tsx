@@ -57,8 +57,6 @@ export interface AppSnackbarProps extends SnackbarProps {
 export interface AppContextProps {
   profileAction?: ProfileAction
   setProfileAction: (profileAction?: ProfileActionOptions) => void
-  events: NDKEvent[]
-  setEvents: Dispatch<SetStateAction<NDKEvent[]>>
   eventAction?: EventAction
   setEventAction: (eventAction?: EventActionOptions) => void
   showSnackbar: (message: string, props?: AppSnackbarProps) => void
@@ -68,8 +66,6 @@ export interface AppContextProps {
 
 export const AppContext = createContext<AppContextProps>({
   setProfileAction: () => {},
-  events: [],
-  setEvents: () => {},
   setEventAction: () => {},
   showSnackbar: () => {},
   hideSnackbar: () => {},
@@ -79,7 +75,6 @@ export const AppContext = createContext<AppContextProps>({
 export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const { getEvent } = useContext(NostrContext)
   const [profileAction, _setProfileAction] = useState<ProfileAction>()
-  const [events, setEvents] = useState<NDKEvent[]>([])
   const [eventAction, _setEventAction] = useState<EventAction>()
   const [eventActionHistory, setEventActionHistory] = useState<EventAction[]>(
     [],
@@ -202,8 +197,6 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
     return {
       profileAction,
       setProfileAction,
-      events,
-      setEvents,
       eventAction,
       setEventAction,
       showSnackbar,
@@ -213,7 +206,6 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [
     profileAction,
     setProfileAction,
-    events,
     eventAction,
     setEventAction,
     showSnackbar,
