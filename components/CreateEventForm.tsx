@@ -58,6 +58,7 @@ import usePromise from 'react-use-promise'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/hooks/useAccount'
 import powWorker from '@/utils/powWorker'
+import NostrTextField from './NostrTextField'
 
 export const CreateEventForm = ({
   type,
@@ -433,7 +434,7 @@ export const CreateEventForm = ({
       <Box className="mt-3 grid gap-3 grid-cols-1">
         {type !== EventActionType.Repost && (
           <>
-            <TextField
+            <NostrTextField
               value={contentValue}
               inputRef={inputRef}
               placeholder="What's on your mind?"
@@ -627,7 +628,7 @@ export const CreateEventForm = ({
             <Typography color="text.secondary" className="pl-2">
               Preview
             </Typography>
-            <Box className="rounded-2xl border border-[rgba(255,255,255,0.2)] p-2 pointer-events-none">
+            <Box className="rounded-2xl border border-[rgba(255,255,255,0.2)] p-4 pointer-events-none">
               <TextNote event={previewEvent} relatedNoteVariant="full" />
             </Box>
           </>

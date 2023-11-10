@@ -393,7 +393,11 @@ const EventActionModal = () => {
             <Divider />
           </Paper>
           {eventAction.type !== EventActionType.View && (
-            <ProfileChip className="pt-3 px-3" hexpubkey={user?.hexpubkey} />
+            <ProfileChip
+              className="pt-3 px-3"
+              hexpubkey={user?.hexpubkey}
+              clickable={false}
+            />
           )}
           <Box
             className={

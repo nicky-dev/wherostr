@@ -17,6 +17,7 @@ export interface ProfileChipProps {
   showName?: boolean
   showNip5?: boolean
   nameAdornment?: ReactNode
+  clickable?: boolean
   onClick?: (hexpubkey: string) => void | boolean
 }
 
@@ -27,6 +28,7 @@ const ProfileChip = ({
   showName = true,
   showNip5 = true,
   nameAdornment,
+  clickable = true,
   onClick,
 }: ProfileChipProps) => {
   const userLeft = useUserProfile(
@@ -57,9 +59,12 @@ const ProfileChip = ({
     <Box
       className={classNames(
         className,
-        'relative min-w-[40px] flex cursor-pointer hover:underline items-center',
+        'relative min-w-[40px] flex items-center',
+        {
+          'cursor-pointer hover:underline': clickable,
+        },
       )}
-      onClick={userLeft ? handleClickProfile : undefined}
+      onClick={clickable && userLeft ? handleClickProfile : undefined}
     >
       <Box className="relative">
         <Avatar
