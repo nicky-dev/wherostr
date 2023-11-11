@@ -181,8 +181,8 @@ const ShortTextNoteCard = ({
                 onClick={() => {
                   setTimeout(() => {
                     map?.fitBounds(LngLatBounds.fromLngLat(lnglat), {
-                      animate: false,
-                      maxZoom: 15,
+                      duration: 1000,
+                      maxZoom: 16,
                     })
                   }, 300)
                   const q = query.get('q') || ''

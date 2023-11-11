@@ -48,7 +48,7 @@ export default function Page() {
           })}
         >
           <Hidden mdUp>
-            <Box className="absolute top-20 left-2">
+            <Box className="absolute top-2 left-2">
               <Fab
                 size="small"
                 onClick={() =>

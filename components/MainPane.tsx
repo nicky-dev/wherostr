@@ -37,9 +37,6 @@ import bbox from '@turf/bbox'
 import FeedFilterMenu from './FeedFilterMenu'
 import pin from '@/public/pin.svg'
 
-const handleSortDescending = (a: NDKEvent, b: NDKEvent) =>
-  (b.created_at || 0) - (a.created_at || 0)
-
 const MainPane = () => {
   const router = useRouter()
   const pathname = usePathname()
@@ -202,11 +199,6 @@ const MainPane = () => {
     if (map.getSource('nostr-event')) {
       map.removeSource('nostr-event')
     }
-    if (!map.hasImage('pin')) {
-      const img = new Image()
-      img.onload = () => map.addImage('pin', img)
-      img.src = pin.src
-    }
 
     map.addSource('nostr-event', {
       type: 'geojson',
@@ -217,7 +209,7 @@ const MainPane = () => {
       type: 'symbol',
       source: 'nostr-event',
       layout: {
-        'icon-image': 'pin',
+        'icon-image': ['get', 'pubkey'],
         'icon-size': 0.25,
         'icon-offset': [0, -64],
       },
@@ -227,7 +219,6 @@ const MainPane = () => {
   useEffect(() => {
     if (!map) return
 
-    const zoomBounds = new LngLatBounds()
     const features = events
       .map((event) => {
         const geohashes = event.getMatchingTags('g')
@@ -243,7 +234,6 @@ const MainPane = () => {
           id: event.id,
           properties: nostrEvent,
         }
-        zoomBounds.extend({ lon, lat })
         return geojson
       })
       .filter((event) => !!event)
