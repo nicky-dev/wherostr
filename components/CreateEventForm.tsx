@@ -16,6 +16,7 @@ import {
   EventBuilder,
   EventKind,
   NostrPrefix,
+  NostrEvent,
   createNostrLink,
 } from '@snort/system'
 import {
@@ -277,20 +278,27 @@ export const CreateEventForm = ({
           .processContent()
           .build()
 
-        let publishEvent = nostrEvent
+        let publishEvent: Partial<NostrEvent> = nostrEvent
         if (positingOptions?.pow && powWorker) {
           publishEvent = await powWorker.minePow(nostrEvent, pow || 21)
+          publishEvent = await new NDKEvent(
+            ndk,
+            publishEvent as NostrEvent,
+          ).toNostrEvent(user?.pubkey)
+          if (ndk.signer) {
+            publishEvent.sig = await ndk.signer.sign(publishEvent as NostrEvent)
+          }
+          const pool = ndk.pool || ndk.outboxPool
+          await Promise.race(
+            pool.connectedRelays().map((relay) => {
+              return relay.connectivity.relay.publish({
+                ...publishEvent,
+              } as NostrEvent)
+            }),
+          )
+        } else {
+          await new NDKEvent(ndk, publishEvent as NostrEvent).publish()
         }
-        if (ndk.signer) {
-          publishEvent.sig = await ndk.signer.sign(publishEvent)
-        }
-        console.log('publishEvent', publishEvent)
-        const pool = ndk.pool || ndk.outboxPool
-        await Promise.race(
-          pool.connectedRelays().map((relay) => {
-            return relay.connectivity.relay.publish(publishEvent)
-          }),
-        )
         setEventAction(undefined)
       } catch (err: any) {
         showSnackbar(err.message, {

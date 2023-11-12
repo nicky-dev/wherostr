@@ -300,7 +300,6 @@ const MainPane = () => {
   useEffect(() => {
     if (!map || !mapLoaded) return
     try {
-      console.log('bounds', bounds)
       if (!bounds.isEmpty()) {
         map.fitBounds(bounds, { duration: 1000, maxZoom: 15 })
       }
