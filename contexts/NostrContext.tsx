@@ -6,12 +6,9 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useState,
 } from 'react'
 import NDK, {
   NDKEvent,
-  NDKRelay,
-  NDKRelaySet,
   NDKSubscriptionCacheUsage,
   NDKUser,
 } from '@nostr-dev-kit/ndk'
@@ -21,36 +18,26 @@ import { nip5Regexp } from '@/constants/app'
 
 interface Nostr {
   ndk: NDK
-  relaySet?: NDKRelaySet
   getUser: (key?: string, relayUrls?: string[]) => Promise<NDKUser | undefined>
   getEvent: (id: string) => Promise<NDKEvent | null>
-  // updateRelaySet: (user?: NDKUser) => Promise<void>
 }
 
 export const verifyCache: Record<string, boolean> = {}
 export const defaultRelays = ['wss://relay.damus.io', 'wss://nos.lol']
 
-const dexieAdapter = new NDKCacheAdapterDexie({ dbName: 'wherostr-cache' })
-// const ndk =
-//   typeof window !== 'undefined'
-//     ? new NDK({
-//         cacheAdapter: dexieAdapter as any,
-//         explicitRelayUrls: defaultRelays,
-//       })
-//     : new NDK({ cacheAdapter: dexieAdapter as any })
+const dexieAdapter = new NDKCacheAdapterDexie({
+  dbName: 'wherostr-cache',
+  expirationTime: 3600 * 24 * 7,
+  profileCacheSize: 200,
+})
 
 export const NostrContext = createContext<Nostr>({
   ndk: new NDK({ cacheAdapter: dexieAdapter as any }),
-  relaySet: undefined,
   getUser: () => new Promise((resolve) => resolve(undefined)),
   getEvent: () => new Promise((resolve) => resolve(null)),
-  // updateRelaySet: async () => {},
 })
 
 export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const [relaySet, setRelaySet] = useState<NDKRelaySet>()
-  // const [connected, setConnected] = useState(false)
-
   const ndk = useMemo(
     () =>
       new NDK({
@@ -78,10 +65,6 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
     async (key?: string, relayUrls: string[] = defaultRelays) => {
       if (!key) return
       let user: NDKUser
-      if (!relayUrls) {
-        const relays = Array.from(relaySet?.relays.values() || [])
-        relayUrls = relays.map((d) => d.url)
-      }
       if (nip5Regexp.test(key)) {
         const profile = await nip05.queryProfile(key)
         if (!profile?.pubkey) return
@@ -124,27 +107,24 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
       }
       return user
     },
-    [ndk, relaySet],
+    [ndk],
   )
 
   const getEvent = useCallback(
     async (id: string) => {
-      return ndk.fetchEvent(
-        id,
-        { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST },
-        relaySet,
-      )
+      return ndk.fetchEvent(id, {
+        cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+      })
     },
-    [ndk, relaySet],
+    [ndk],
   )
 
   const value = useMemo((): Nostr => {
     return {
       ndk,
-      relaySet,
       getUser,
       getEvent,
     }
-  }, [ndk, relaySet, getUser, getEvent])
+  }, [ndk, getUser, getEvent])
   return <NostrContext.Provider value={value}>{children}</NostrContext.Provider>
 }

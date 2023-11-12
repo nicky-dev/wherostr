@@ -21,7 +21,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { LngLat, LngLatBounds } from 'maplibre-gl'
-import { NDKEvent, NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
+import { NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
 import { CropFree, LocationOn, Tag } from '@mui/icons-material'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -36,6 +36,7 @@ import bboxPolygon from '@turf/bbox-polygon'
 import bbox from '@turf/bbox'
 import FeedFilterMenu from './FeedFilterMenu'
 import pin from '@/public/pin.svg'
+import { fetchProfile, profilePin, toDataURL } from '@/hooks/useUserProfile'
 
 const MainPane = () => {
   const router = useRouter()
@@ -200,6 +201,12 @@ const MainPane = () => {
       map.removeSource('nostr-event')
     }
 
+    if (!map.hasImage('pin')) {
+      const img = new Image()
+      img.onload = () => map.addImage('pin', img)
+      img.src = pin.src
+    }
+
     map.addSource('nostr-event', {
       type: 'geojson',
       data: { type: 'FeatureCollection', features: [] },
@@ -209,17 +216,16 @@ const MainPane = () => {
       type: 'symbol',
       source: 'nostr-event',
       layout: {
-        'icon-image': ['get', 'pubkey'],
+        // 'icon-image': ['get', 'pubkey'],
+        'icon-image': 'pin',
         'icon-size': 0.25,
         'icon-offset': [0, -64],
       },
     })
   }, [mapLoaded, map])
 
-  useEffect(() => {
-    if (!map) return
-
-    const features = events
+  const features = useMemo(() => {
+    return events
       .map((event) => {
         const geohashes = event.getMatchingTags('g')
         if (!geohashes.length) return
@@ -237,17 +243,19 @@ const MainPane = () => {
         return geojson
       })
       .filter((event) => !!event)
+  }, [events])
 
+  useEffect(() => {
+    if (!map) return
     try {
-      if (!bounds.isEmpty()) {
-        map.fitBounds(bounds, { duration: 1000, maxZoom: 15 })
-      }
-      ;(map.getSource('nostr-event') as any)?.setData({
+      const source = map.getSource('nostr-event') as any
+      if (!source) return
+      source?.setData({
         type: 'FeatureCollection',
         features,
       })
     } catch (err) {}
-  }, [events, map, bounds])
+  }, [map, features])
 
   const showEvents = useMemo(
     () => !!events?.length && (!mdDown || !showMap),
@@ -288,6 +296,34 @@ const MainPane = () => {
       })
     }
   }, [map, showPanel, mdUp, xlUp])
+
+  useEffect(() => {
+    if (!map || !mapLoaded) return
+    try {
+      console.log('bounds', bounds)
+      if (!bounds.isEmpty()) {
+        map.fitBounds(bounds, { duration: 1000, maxZoom: 15 })
+      }
+    } catch (err) {}
+  }, [map, mapLoaded, bounds])
+
+  // const addProfilePin = useCallback(
+  //   async (user: NDKUser) => {
+  //     const profile = await fetchProfile(user)
+  //     if (profile?.image && !map?.hasImage(user.pubkey)) {
+  //       const dataUrl = await toDataURL(profile?.image).catch()
+  //       if (dataUrl) {
+  //         const img = new Image()
+  //         img.onload = () => map?.addImage(user.pubkey, img)
+  //         img.crossOrigin = 'anonymous'
+  //         img.src = `data:image/svg+xml;utf8,${encodeURIComponent(
+  //           profilePin.replace('{PROFILE_URL}', profile?.image),
+  //         )}`
+  //       }
+  //     }
+  //   },
+  //   [map],
+  // )
 
   return (
     <Paper

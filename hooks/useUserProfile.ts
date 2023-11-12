@@ -1,24 +1,16 @@
 'use client'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNDK, useRelaySet } from './useNostr'
+import { useEffect, useMemo, useState } from 'react'
+import { useNDK } from './useNostr'
 import {
   NDKSubscriptionCacheUsage,
   NDKUser,
   NDKUserProfile,
 } from '@nostr-dev-kit/ndk'
 import { nip19 } from 'nostr-tools'
-import { useMap } from './useMap'
 
 const verifyCache: Record<string, boolean> = {}
 export const useUserProfile = (hexpubkey?: string) => {
   const ndk = useNDK()
-  const map = useMap()
-  const relaySet = useRelaySet()
-  const relayUrls = useMemo(
-    () => Array.from(relaySet?.relays.values() || []).map((d) => d.url),
-    [relaySet],
-  )
-
   const pubkey = useMemo(() => {
     if (!hexpubkey) return
     try {
@@ -31,46 +23,12 @@ export const useUserProfile = (hexpubkey?: string) => {
   }, [hexpubkey])
 
   const [user, setUser] = useState<NDKUser | undefined>(
-    pubkey ? ndk.getUser({ hexpubkey: pubkey, relayUrls }) : undefined,
-  )
-
-  const fetchProfile = useCallback(
-    async (user: NDKUser) => {
-      try {
-        const profile = await Promise.race<NDKUserProfile | null>([
-          user.fetchProfile({
-            cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
-          }),
-          new Promise<null>((_, reject) => {
-            setTimeout(() => reject('Timeout'), 3000)
-          }),
-        ])
-        if (pubkey && profile?.image && !map?.hasImage(pubkey)) {
-          const dataUrl = await toDataURL(profile?.image)
-          if (dataUrl) {
-            const img = new Image()
-            img.onload = () => map?.addImage(pubkey, img)
-            img.crossOrigin = 'anonymous'
-            img.src = `data:image/svg+xml;utf8,${encodeURIComponent(
-              profilePin.replace('{PROFILE_URL}', dataUrl),
-            )}`
-          }
-        }
-        return profile
-      } catch (err) {
-        return new Promise<NDKUserProfile | null>((resolve) => {
-          setTimeout(() => {
-            fetchProfile(user).then((d) => resolve(d))
-          }, 1000)
-        })
-      }
-    },
-    [map, pubkey],
+    pubkey ? ndk.getUser({ hexpubkey: pubkey }) : undefined,
   )
 
   useEffect(() => {
     if (!pubkey) return
-    const user = ndk.getUser({ hexpubkey: pubkey, relayUrls })
+    const user = ndk.getUser({ hexpubkey: pubkey })
     setUser(user)
     fetchProfile(user).then(async (profile) => {
       if (!profile) return
@@ -105,7 +63,7 @@ export const useUserProfile = (hexpubkey?: string) => {
       })
       return user.profile
     })
-  }, [pubkey, ndk, relayUrls, fetchProfile])
+  }, [pubkey, ndk])
 
   return user
 }
@@ -125,7 +83,7 @@ export const profilePin = `<?xml version="1.0" standalone="no"?>
   <defs>
     <pattern id="image" x="0%" y="0%" height="100%" width="100%"
             viewBox="0 0 24 24">
-      <image xlink:href="{PROFILE_URL}" height="24" width="24" preserveAspectRatio="xMinYMin slice" />
+      <image crossOrigin="Anonymous" xlink:href="{PROFILE_URL}" height="24" width="24" preserveAspectRatio="xMinYMin slice" />
     </pattern>
   </defs>
   <path
@@ -136,7 +94,7 @@ export const profilePin = `<?xml version="1.0" standalone="no"?>
 </svg>
 `
 
-async function toDataURL(src: string) {
+export async function toDataURL(src: string) {
   return new Promise<string>((resolve) => {
     var img = new Image()
     img.crossOrigin = 'Anonymous'
@@ -156,4 +114,24 @@ async function toDataURL(src: string) {
       img.src = src
     }
   })
+}
+
+export const fetchProfile = async (user: NDKUser) => {
+  try {
+    const profile = await Promise.race<NDKUserProfile | null>([
+      user.fetchProfile({
+        cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+      }),
+      new Promise<null>((_, reject) => {
+        setTimeout(() => reject('Timeout'), 3000)
+      }),
+    ])
+    return profile
+  } catch (err) {
+    return new Promise<NDKUserProfile | null>((resolve) => {
+      setTimeout(() => {
+        fetchProfile(user).then((d) => resolve(d))
+      }, 1000)
+    })
+  }
 }
