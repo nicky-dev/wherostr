@@ -280,13 +280,14 @@ export const CreateEventForm = ({
 
         let publishEvent: Partial<NostrEvent> = nostrEvent
         if (positingOptions?.pow && powWorker) {
-          publishEvent = await powWorker.minePow(nostrEvent, pow || 21)
+          const powEvent = await powWorker.minePow(nostrEvent, pow || 21)
           publishEvent = await new NDKEvent(
             ndk,
-            publishEvent as NostrEvent,
-          ).toNostrEvent(user?.pubkey)
+            powEvent as NostrEvent,
+          ).toNostrEvent(powEvent.pubkey)
+          publishEvent.id = powEvent.id
           if (ndk.signer) {
-            publishEvent.sig = await ndk.signer.sign(publishEvent as NostrEvent)
+            publishEvent.sig = await ndk.signer.sign(powEvent as NostrEvent)
           }
           const pool = ndk.pool || ndk.outboxPool
           await Promise.race(
