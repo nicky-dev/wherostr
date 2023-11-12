@@ -119,7 +119,7 @@ export const useSubscribe = (
           setItems(sortItems(evetns.values()))
         }
       } else {
-        setItems(sortItems(evetns.values()))
+        // setItems(sortItems(evetns.values()))
       }
     }
     sub.on('show-new-items', (newItems: NDKEvent[]) => {
@@ -134,7 +134,7 @@ export const useSubscribe = (
     // sub.on('event:dup', onEventDup)
     sub.once('eose', () => {
       eos.current = true
-      // setItems(Array.from(items.values()))
+      setItems(sortItems(evetns.values()))
     })
     sub.start()
     return () => {

@@ -118,8 +118,14 @@ export async function toDataURL(src: string) {
   })
 }
 
-export const fetchProfile = async (pubkey: string, ndk: NDK) => {
+const MAX_ATTEMPS_RETRY = 3
+export const fetchProfile = async (
+  pubkey: string,
+  ndk: NDK,
+  attemps: number = 0,
+) => {
   try {
+    if (attemps >= MAX_ATTEMPS_RETRY) return null
     const user = ndk.getUser({ pubkey })
     const profile = await Promise.race<NDKUserProfile | null>([
       user.fetchProfile({
@@ -129,11 +135,12 @@ export const fetchProfile = async (pubkey: string, ndk: NDK) => {
         setTimeout(() => reject('Timeout'), 5000)
       }),
     ])
+    attemps += 1
     return profile
   } catch (err) {
     return new Promise<NDKUserProfile | null>((resolve) => {
       setTimeout(() => {
-        fetchProfile(pubkey, ndk).then((d) => resolve(d))
+        fetchProfile(pubkey, ndk, attemps).then((d) => resolve(d))
       }, 1000)
     })
   }

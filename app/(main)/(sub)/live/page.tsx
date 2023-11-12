@@ -97,7 +97,7 @@ export default function Page() {
         return (
           <Box
             key={item.deduplicationKey()}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 sm:gap-8 sm:m-4 md:m-8"
+            className="grid grid-cols-1 mb-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 sm:gap-8 sm:m-4 md:m-8"
           >
             {all.slice(i, i + colsNum).map((d) => (
               <CardEvent key={d.deduplicationKey()} ev={d} />

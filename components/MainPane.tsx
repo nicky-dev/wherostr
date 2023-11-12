@@ -47,14 +47,15 @@ const MainPane = () => {
   const { map } = useContext(MapContext)
   const { user, signing } = useAccount()
   const [follows] = useFollowing()
-  const { profileAction, eventAction, setEventAction } = useContext(AppContext)
+  const { setEventAction } = useContext(AppContext)
   const [mapLoaded, setMapLoaded] = useState(false)
   const theme = useTheme()
   const xlUp = useMediaQuery(theme.breakpoints.up('lg'))
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
-  const mdDown = useMediaQuery(theme.breakpoints.down('md'))
   const showMap = searchParams.get('map') === '1'
   const q = useMemo(() => searchParams.get('q') || '', [searchParams])
+  const queryRef = useRef(searchParams.get('q'))
+  queryRef.current = searchParams.get('q')
   const scrollRef = useRef<HTMLElement>(
     typeof window !== 'undefined' ? window.document.body : null,
   )
@@ -156,26 +157,25 @@ const MainPane = () => {
     style.cursor = ''
   }, [])
 
-  const clickHandler = useCallback(
-    (
-      ev: maplibregl.MapMouseEvent & {
-        features?: maplibregl.MapGeoJSONFeature[] | undefined
-      } & Object,
-    ) => {
-      const feat = ev?.features?.[0]?.properties as NostrEvent
-      const event = events.find((ev) => ev.id === feat.id)
-      if (!event) return
-      router.replace(`${pathname}?q=${q || ''}`, { scroll: false })
-      setEventAction({
-        type: EventActionType.View,
-        event,
-        options: {
-          comments: true,
-        },
-      })
-    },
-    [events, pathname, q, router, setEventAction],
-  )
+  const clickHandler = (
+    ev: maplibregl.MapMouseEvent & {
+      features?: maplibregl.MapGeoJSONFeature[] | undefined
+    } & Object,
+  ) => {
+    const feat = ev?.features?.[0]?.properties as NostrEvent
+    const event = events.find((ev) => ev.id === feat.id)
+    if (!event) return
+    router.replace(`${pathname}?q=${queryRef.current || ''}`, {
+      scroll: false,
+    })
+    setEventAction({
+      type: EventActionType.View,
+      event,
+      options: {
+        comments: true,
+      },
+    })
+  }
 
   useEffect(() => {
     if (!map) return
@@ -192,7 +192,7 @@ const MainPane = () => {
       map.off('mouseout', mouseOutHandler)
       map.off('click', clickHandler)
     }
-  }, [map, clickHandler, mouseEnterHandler, mouseOutHandler])
+  }, [map, mouseEnterHandler, mouseOutHandler])
 
   // useEffect(() => {
   //   if (!map || !mapLoaded) return
@@ -259,45 +259,21 @@ const MainPane = () => {
     } catch (err) {}
   }, [map, features])
 
-  const showEvents = useMemo(
-    () => !!events?.length && (!mdDown || !showMap),
-    [events, mdDown, showMap],
-  )
-  const showOnlyMap = useMemo(() => mdDown && showMap, [mdDown, showMap])
-
-  const showPanel = useMemo(
-    () => profileAction || eventAction || showEvents || !showOnlyMap,
-    [profileAction, eventAction, showEvents, showOnlyMap],
-  )
-
   useEffect(() => {
     if (!map) return
     const basePadding = 32
     const left = xlUp ? 640 : mdUp ? 640 : 0
-    if (showPanel) {
-      map.easeTo({
-        padding: {
-          left: left + basePadding,
-          right: basePadding,
-          top: basePadding,
-          bottom: basePadding,
-        },
-        animate: false,
-        easeId: 'mainpane',
-      })
-    } else {
-      map.easeTo({
-        padding: {
-          left: basePadding,
-          right: basePadding,
-          top: basePadding,
-          bottom: basePadding,
-        },
-        animate: false,
-        easeId: 'mainpane',
-      })
-    }
-  }, [map, showPanel, mdUp, xlUp])
+    map.easeTo({
+      padding: {
+        left: left + basePadding,
+        right: basePadding,
+        top: basePadding,
+        bottom: basePadding,
+      },
+      animate: false,
+      easeId: 'mainpane',
+    })
+  }, [map, mdUp, xlUp])
 
   useEffect(() => {
     if (!map || !mapLoaded) return
@@ -310,18 +286,16 @@ const MainPane = () => {
 
   const generatePin = useCallback(
     async (pubkey: string) => {
-      const div = document.createElement('div')
+      // const div = document.createElement('div')
       try {
         const profile = await fetchProfile(pubkey, ndk)
         if (profile?.image && !map?.hasImage(pubkey)) {
-          div.innerHTML = profilePin
+          return profilePin
             .replaceAll('{URL}', profile.image)
             .replaceAll('{ID}', pubkey)
-          return div
         }
       } catch (err) {
-        div.innerHTML = svgPin
-        return div
+        return svgPin
       }
     },
     [ndk, map],
@@ -329,37 +303,45 @@ const MainPane = () => {
 
   useEffect(() => {
     if (!map || !mapLoaded) return
-    const newMarkers: Record<string, Marker> = {}
+    console.log('markers', { features, markers })
+    Object.keys(markers).forEach((key) => markers[key].remove())
     const tasks = Promise.all(
       features
         .slice()
         .sort((a, b) => a!.properties.created_at - b!.properties.created_at)
         .map(async (feat) => {
-          if (!feat?.properties.pubkey) return
-          const pin = await generatePin(feat?.properties.pubkey)
-          if (!pin) return
-          const [lng, lat] = feat.geometry.coordinates
+          if (!feat) return
           if (markers[feat.id]) {
-            newMarkers[feat.id] = markers[feat.id]
-            markers[feat.id].addTo(map)
-          } else {
-            newMarkers[feat.id] = new Marker({
-              element: pin,
-              anchor: 'bottom',
-              className: 'cursor-pointer',
-            })
-              .setLngLat([lng, lat])
-              .addTo(map)
-            pin.onclick = () => clickHandler({ features: [feat as any] } as any)
-            markers[feat.id] = newMarkers[feat.id]
+            markers[feat.id].remove()
+            return markers[feat.id]
           }
+          if (!feat?.properties.pubkey) return
+          const [lng, lat] = feat.geometry.coordinates
+          let marker = new Marker({
+            anchor: 'bottom',
+            className: 'cursor-pointer',
+          })
+            .setLngLat([lng, lat])
+            .addTo(map)
+          marker.getElement().onclick = () =>
+            clickHandler({ features: [feat as any] } as any)
+          const pin = await generatePin(feat?.properties.pubkey)
+          if (pin) {
+            marker.getElement().innerHTML = pin
+            marker.addClassName('cursor-pointer')
+            marker.setOffset([-2, 4])
+          }
+          marker.getElement().onclick = () =>
+            clickHandler({ features: [feat as any] } as any)
+          markers[feat.id] = marker
+          return marker
         }),
     )
-    tasks.then(() => {
-      Object.keys(markers).forEach((key) => {
-        if (!newMarkers[key]) {
-          markers[key].remove()
-        }
+    tasks.then((newMarkers) => {
+      Object.keys(markers).forEach((key) => markers[key].remove())
+      newMarkers.forEach((newMarker) => {
+        newMarker?.remove()
+        newMarker?.addTo(map)
       })
     })
   }, [generatePin, map, mapLoaded, features])
