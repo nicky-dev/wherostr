@@ -1,5 +1,5 @@
 'use client'
-import { useNDK, useRelaySet } from './useNostr'
+import { useNDK } from './useNostr'
 import {
   NDKEvent,
   NDKFilter,
@@ -15,11 +15,7 @@ export const useEvent = (
   optRelaySet?: NDKRelaySet,
 ) => {
   const ndk = useNDK()
-  const defaultRelaySet = useRelaySet()
-  const relaySet = useMemo(
-    () => optRelaySet || defaultRelaySet,
-    [optRelaySet, defaultRelaySet],
-  )
+  const relaySet = useMemo(() => optRelaySet, [optRelaySet])
 
   return usePromise(
     () =>
@@ -37,11 +33,7 @@ export const useEvents = (
   optRelaySet?: NDKRelaySet,
 ) => {
   const ndk = useNDK()
-  const defaultRelaySet = useRelaySet()
-  const relaySet = useMemo(
-    () => optRelaySet || defaultRelaySet,
-    [optRelaySet, defaultRelaySet],
-  )
+  const relaySet = useMemo(() => optRelaySet, [optRelaySet])
 
   return usePromise(
     async () =>

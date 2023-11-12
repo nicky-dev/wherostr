@@ -8,7 +8,7 @@ import {
   NDKSubscriptionOptions,
 } from '@nostr-dev-kit/ndk'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNDK, useRelaySet } from './useNostr'
+import { useNDK } from './useNostr'
 import { useAccount } from './useAccount'
 
 export type SubscribeResult = [
@@ -33,7 +33,6 @@ export const useSubscribe = (
   subOptions?: NDKSubscriptionOptions,
 ) => {
   const ndk = useNDK()
-  // const defaultRelaySet = useRelaySet()
   const { signing } = useAccount()
   const [sub, setSub] = useState<NDKSubscription>()
   const [items, setItems] = useState<NDKEvent[]>([])

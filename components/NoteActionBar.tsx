@@ -18,7 +18,7 @@ import {
 import usePromise from 'react-use-promise'
 import numeral from 'numeral'
 import { tryParseNostrLink, transformText } from '@snort/system'
-import { useNDK, useRelaySet } from '@/hooks/useNostr'
+import { useNDK } from '@/hooks/useNostr'
 import { useMuting, useUser } from '@/hooks/useAccount'
 import { useUserProfile } from '@/hooks/useUserProfile'
 

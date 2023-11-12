@@ -9,11 +9,6 @@ export const useNDK = () => {
   return useMemo(() => ndk, [ndk])
 }
 
-export const useRelaySet = () => {
-  const { relaySet } = useContext(NostrContext)
-  return useMemo(() => relaySet, [relaySet])
-}
-
 // const relays = new Set<NDKRelay>()
 // streamRelayUrls.forEach((d) => {
 //   relays.add(new NDKRelay(d))
