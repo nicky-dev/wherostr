@@ -113,7 +113,7 @@ export const useSubscribe = (
       // })
       evetns.set(dedupKey, event)
       if (eos.current) {
-        if (!existingEvent) {
+        if (!existingEvent || !sub.eventFirstSeen.has(existingEvent.tagId())) {
           setNewItems((prev) => sortItems([event, ...prev]))
         } else {
           setItems(sortItems(evetns.values()))
