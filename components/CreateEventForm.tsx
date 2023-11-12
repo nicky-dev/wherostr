@@ -382,6 +382,7 @@ export const CreateEventForm = ({
       noClick: true,
       noKeyboard: true,
       accept: accept,
+      multiple: true,
       onDrop: handleUploadFile,
     }),
     [handleUploadFile],

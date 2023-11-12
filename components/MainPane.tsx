@@ -20,7 +20,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material'
-import { LngLat, LngLatBounds } from 'maplibre-gl'
+import { LngLat, LngLatBounds, Marker } from 'maplibre-gl'
 import { NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
 import { CropFree, LocationOn, Tag } from '@mui/icons-material'
 import { useSubscribe } from '@/hooks/useSubscribe'
@@ -35,10 +35,12 @@ import buffer from '@turf/buffer'
 import bboxPolygon from '@turf/bbox-polygon'
 import bbox from '@turf/bbox'
 import FeedFilterMenu from './FeedFilterMenu'
-import pin from '@/public/pin.svg'
-import { fetchProfile, profilePin, toDataURL } from '@/hooks/useUserProfile'
+import { fetchProfile, profilePin } from '@/hooks/useUserProfile'
+import { useNDK } from '@/hooks/useNostr'
 
+const markers: Record<string, Marker> = {}
 const MainPane = () => {
+  const ndk = useNDK()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -163,7 +165,7 @@ const MainPane = () => {
       const feat = ev?.features?.[0]?.properties as NostrEvent
       const event = events.find((ev) => ev.id === feat.id)
       if (!event) return
-      router.replace(`${pathname}?q=${q || ''}`)
+      router.replace(`${pathname}?q=${q || ''}`, { scroll: false })
       setEventAction({
         type: EventActionType.View,
         event,
@@ -192,37 +194,37 @@ const MainPane = () => {
     }
   }, [map, clickHandler, mouseEnterHandler, mouseOutHandler])
 
-  useEffect(() => {
-    if (!map || !mapLoaded) return
-    if (map.getLayer('nostr-event')) {
-      map.removeLayer('nostr-event')
-    }
-    if (map.getSource('nostr-event')) {
-      map.removeSource('nostr-event')
-    }
+  // useEffect(() => {
+  //   if (!map || !mapLoaded) return
+  //   if (map.getLayer('nostr-event')) {
+  //     map.removeLayer('nostr-event')
+  //   }
+  //   if (map.getSource('nostr-event')) {
+  //     map.removeSource('nostr-event')
+  //   }
 
-    if (!map.hasImage('pin')) {
-      const img = new Image()
-      img.onload = () => map.addImage('pin', img)
-      img.src = pin.src
-    }
+  //   if (!map.hasImage('pin')) {
+  //     const img = new Image()
+  //     img.onload = () => map.addImage('pin', img)
+  //     img.src = pin.src
+  //   }
 
-    map.addSource('nostr-event', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] },
-    })
-    map.addLayer({
-      id: 'nostr-event',
-      type: 'symbol',
-      source: 'nostr-event',
-      layout: {
-        // 'icon-image': ['get', 'pubkey'],
-        'icon-image': 'pin',
-        'icon-size': 0.25,
-        'icon-offset': [0, -64],
-      },
-    })
-  }, [mapLoaded, map])
+  //   map.addSource('nostr-event', {
+  //     type: 'geojson',
+  //     data: { type: 'FeatureCollection', features: [] },
+  //   })
+  //   map.addLayer({
+  //     id: 'nostr-event',
+  //     type: 'symbol',
+  //     source: 'nostr-event',
+  //     layout: {
+  //       // 'icon-image': ['get', 'pubkey'],
+  //       'icon-image': 'pin',
+  //       'icon-size': 0.25,
+  //       'icon-offset': [0, -64],
+  //     },
+  //   })
+  // }, [mapLoaded, map])
 
   const features = useMemo(() => {
     return events
@@ -306,23 +308,61 @@ const MainPane = () => {
     } catch (err) {}
   }, [map, mapLoaded, bounds])
 
-  // const addProfilePin = useCallback(
-  //   async (user: NDKUser) => {
-  //     const profile = await fetchProfile(user)
-  //     if (profile?.image && !map?.hasImage(user.pubkey)) {
-  //       const dataUrl = await toDataURL(profile?.image).catch()
-  //       if (dataUrl) {
-  //         const img = new Image()
-  //         img.onload = () => map?.addImage(user.pubkey, img)
-  //         img.crossOrigin = 'anonymous'
-  //         img.src = `data:image/svg+xml;utf8,${encodeURIComponent(
-  //           profilePin.replace('{PROFILE_URL}', profile?.image),
-  //         )}`
-  //       }
-  //     }
-  //   },
-  //   [map],
-  // )
+  const generatePin = useCallback(
+    async (pubkey: string) => {
+      const div = document.createElement('div')
+      try {
+        const profile = await fetchProfile(pubkey, ndk)
+        if (profile?.image && !map?.hasImage(pubkey)) {
+          div.innerHTML = profilePin
+            .replaceAll('{URL}', profile.image)
+            .replaceAll('{ID}', pubkey)
+          return div
+        }
+      } catch (err) {
+        div.innerHTML = svgPin
+        return div
+      }
+    },
+    [ndk, map],
+  )
+
+  useEffect(() => {
+    if (!map || !mapLoaded) return
+    const newMarkers: Record<string, Marker> = {}
+    const tasks = Promise.all(
+      features
+        .slice()
+        .sort((a, b) => a!.properties.created_at - b!.properties.created_at)
+        .map(async (feat) => {
+          if (!feat?.properties.pubkey) return
+          const pin = await generatePin(feat?.properties.pubkey)
+          if (!pin) return
+          const [lng, lat] = feat.geometry.coordinates
+          if (markers[feat.id]) {
+            newMarkers[feat.id] = markers[feat.id]
+            markers[feat.id].addTo(map)
+          } else {
+            newMarkers[feat.id] = new Marker({
+              element: pin,
+              anchor: 'bottom',
+              className: 'cursor-pointer',
+            })
+              .setLngLat([lng, lat])
+              .addTo(map)
+            pin.onclick = () => clickHandler({ features: [feat as any] } as any)
+            markers[feat.id] = newMarkers[feat.id]
+          }
+        }),
+    )
+    tasks.then(() => {
+      Object.keys(markers).forEach((key) => {
+        if (!newMarkers[key]) {
+          markers[key].remove()
+        }
+      })
+    })
+  }, [generatePin, map, mapLoaded, features])
 
   return (
     <Paper
@@ -440,3 +480,5 @@ const MainPane = () => {
 }
 
 export default MainPane
+
+const svgPin = `<svg xmlns="http://www.w3.org/2000/svg" height="128" viewBox="0 -960 960 960" width="128"><path fill="#fc6a03" d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 400Q319-217 239.5-334.5T160-552q0-150 96.5-239T480-880q127 0 223.5 89T800-552q0 100-79.5 217.5T480-80Z"/></svg>`

@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { useNDK } from './useNostr'
-import {
+import NDK, {
   NDKSubscriptionCacheUsage,
   NDKUser,
   NDKUserProfile,
@@ -28,9 +28,9 @@ export const useUserProfile = (hexpubkey?: string) => {
 
   useEffect(() => {
     if (!pubkey) return
-    const user = ndk.getUser({ hexpubkey: pubkey })
+    const user = ndk.getUser({ pubkey })
     setUser(user)
-    fetchProfile(user).then(async (profile) => {
+    fetchProfile(pubkey, ndk).then(async (profile) => {
       if (!profile) return
 
       setUser((prev) => {
@@ -72,6 +72,8 @@ export const profilePin = `<?xml version="1.0" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg
+  width="56"
+  height="56"
   xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
   focusable="false"
   aria-hidden="true"
@@ -81,16 +83,16 @@ export const profilePin = `<?xml version="1.0" standalone="no"?>
   title="ContactSupport"
 >
   <defs>
-    <pattern id="image" x="0%" y="0%" height="100%" width="100%"
+    <pattern id="{ID}" x="0%" y="0%" height="100%" width="100%"
             viewBox="0 0 24 24">
-      <image crossOrigin="Anonymous" xlink:href="{PROFILE_URL}" height="24" width="24" preserveAspectRatio="xMinYMin slice" />
+      <image xlink:href="{URL}" height="24" width="24" />
     </pattern>
   </defs>
   <path
     fill="#fc6a03"
     d="M12 2c-4.97 0-9 4.03-9 9 0 4.17 2.84 7.67 6.69 8.69L12 22l2.31-2.31C18.16 18.67 21 15.17 21 11c0-4.97-4.03-9-9-9zm0 2c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.3c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"
   />
-  <circle xmlns="http://www.w3.org/2000/svg" class="medium" cx="50%" cy="45.75%" r="8.75" fill="url(#image)"/>
+  <circle xmlns="http://www.w3.org/2000/svg" class="medium" cx="50%" cy="46%" r="8.572" fill="url(#{ID})"/>
 </svg>
 `
 
@@ -116,21 +118,22 @@ export async function toDataURL(src: string) {
   })
 }
 
-export const fetchProfile = async (user: NDKUser) => {
+export const fetchProfile = async (pubkey: string, ndk: NDK) => {
   try {
+    const user = ndk.getUser({ pubkey })
     const profile = await Promise.race<NDKUserProfile | null>([
       user.fetchProfile({
         cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
       }),
       new Promise<null>((_, reject) => {
-        setTimeout(() => reject('Timeout'), 3000)
+        setTimeout(() => reject('Timeout'), 5000)
       }),
     ])
     return profile
   } catch (err) {
     return new Promise<NDKUserProfile | null>((resolve) => {
       setTimeout(() => {
-        fetchProfile(user).then((d) => resolve(d))
+        fetchProfile(pubkey, ndk).then((d) => resolve(d))
       }, 1000)
     })
   }

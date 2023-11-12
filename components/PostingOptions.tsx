@@ -54,6 +54,7 @@ export const PostingOptions: FC<PostingOptionsProps> = ({
     ...slotProps?.dropzone,
     accept: accept,
     noDrag: true,
+    multiple: true,
   })
 
   return (
