@@ -132,7 +132,7 @@ export const useSubscribe = (
       setNewItems([])
     })
     sub.on('event', onEvent)
-    sub.on('event:dup', onEventDup)
+    // sub.on('event:dup', onEventDup)
     sub.once('eose', () => {
       eos.current = true
       setItems(sortItems(evetns.values()))
