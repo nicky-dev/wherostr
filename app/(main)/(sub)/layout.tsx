@@ -2,9 +2,11 @@
 
 import DrawerMenu from '@/components/DrawerMenu'
 import EventActionModal from '@/components/EventActionModal'
+import FeedFilterMenu from '@/components/FeedFilterMenu'
 import ProfileActionModal from '@/components/ProfileActionModal'
 import { StreamButton } from '@/components/StreamButton'
 import UserBar from '@/components/UserBar'
+import { MapContextProvider } from '@/contexts/MapContext'
 import { useUser } from '@/hooks/useAccount'
 import { useAction } from '@/hooks/useApp'
 import { Sensors } from '@mui/icons-material'
@@ -21,14 +23,21 @@ export default function RootLayout({
   const { eventAction, profileAction } = useAction()
 
   return (
-    <>
-      <Toolbar>
+    <MapContextProvider>
+      <Toolbar className="z-50">
         {user?.hexpubkey ? (
           <>
             <DrawerMenu hexpubkey={user.hexpubkey} />
-            <Box flex={1} />
             {pathname.startsWith('/live') && (
-              <StreamButton label="Stream" icon={<Sensors />} />
+              <>
+                <Box flex={1} />
+                <StreamButton label="Stream" icon={<Sensors />} />
+              </>
+            )}
+            {pathname.startsWith('/map') && (
+              <Box className="flex flex-1 justify-center">
+                <FeedFilterMenu variant="contained" user={user} />
+              </Box>
             )}
           </>
         ) : (
@@ -50,6 +59,6 @@ export default function RootLayout({
           </Box>
         </Box>
       )}
-    </>
+    </MapContextProvider>
   )
 }

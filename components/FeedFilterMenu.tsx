@@ -2,6 +2,7 @@ import * as React from 'react'
 import Menu from '@mui/material/Menu'
 import {
   Button,
+  ButtonProps,
   ListItemButton,
   ListItemIcon,
   ListItemText,
@@ -59,7 +60,10 @@ const options: MenuItemProps[] = [
   },
 ]
 
-export default function FeedFilterMenu({ user }: { user?: NDKUser }) {
+export default function FeedFilterMenu({
+  user,
+  ...props
+}: { user?: NDKUser } & ButtonProps) {
   const pathname = usePathname()
   const query = useSearchParams()
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
@@ -88,6 +92,7 @@ export default function FeedFilterMenu({ user }: { user?: NDKUser }) {
   return (
     <>
       <Button
+        {...props}
         color="inherit"
         size="large"
         onClick={handleClick}

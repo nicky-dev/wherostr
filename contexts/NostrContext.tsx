@@ -23,7 +23,12 @@ interface Nostr {
 }
 
 export const verifyCache: Record<string, boolean> = {}
-export const defaultRelays = ['wss://relay.damus.io', 'wss://nos.lol']
+export const defaultRelays = [
+  'wss://nostr.wine',
+  'wss://relay.nostr.band',
+  'wss://relay.damus.io',
+  'wss://nos.lol',
+]
 
 const dexieAdapter = new NDKCacheAdapterDexie({
   dbName: 'wherostr-cache',

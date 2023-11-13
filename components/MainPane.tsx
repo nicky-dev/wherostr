@@ -303,7 +303,6 @@ const MainPane = () => {
 
   useEffect(() => {
     if (!map || !mapLoaded) return
-    console.log('markers', { features, markers })
     Object.keys(markers).forEach((key) => markers[key].remove())
     const tasks = Promise.all(
       features

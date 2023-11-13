@@ -152,7 +152,6 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
           readOnly = false
           ndk.signer = new NDKNip07Signer()
           const signerUser = await ndk.signer?.user()
-          console.log('signIn:signerUser')
           if (signerUser) {
             pubkey = signerUser.hexpubkey
             // user = await getUser(signerUser.hexpubkey)
@@ -166,11 +165,8 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
             if (nsecProfile.type !== 'nsec') throw new Error('Invalid nsec')
             secret = nsecProfile.data
           }
-          console.log('secret', secret)
           ndk.signer = new NDKPrivateKeySigner(secret)
-          console.log('ndk.signer', ndk.signer)
           const signerUser = await ndk.signer?.user()
-          console.log('signerUser', signerUser)
           if (signerUser) {
             pubkey = signerUser.hexpubkey
             readOnly = false
@@ -184,7 +180,6 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
           user = await getUser(pubkey)
         }
         if (user) {
-          console.log('activeUser', ndk.activeUser)
           if (!ndk.activeUser) {
             ndk.activeUser = user
           }
@@ -196,17 +191,12 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
               ...(type === 'nsec' ? { nsec: key } : undefined),
             }),
           )
-          console.log('signIn:savedSession')
           await updateFollows(user)
-          console.log('signIn:fetchFollows')
           setUser(user)
-          console.log('signIn:setUser')
           setReadOnly(readOnly)
-          console.log('signIn:setReadOnly')
           return user
         }
       } catch (err: any) {
-        console.log('err', err)
         showSnackbar(err.message, {
           slotProps: { alert: { severity: 'error' } },
         })

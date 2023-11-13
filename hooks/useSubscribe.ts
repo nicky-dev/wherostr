@@ -10,6 +10,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNDK } from './useNostr'
 import { useAccount } from './useAccount'
+import { nanoid } from 'nanoid'
 
 export type SubscribeResult = [
   NDKEvent[],
@@ -39,7 +40,10 @@ export const useSubscribe = (
   const [newItems, setNewItems] = useState<NDKEvent[]>([])
   const eos = useRef(false)
 
-  const relaySet = useMemo(() => optRelaySet, [optRelaySet])
+  const relaySet = useMemo(
+    () => optRelaySet || NDKRelaySet.fromRelayUrls(ndk.pool.urls(), ndk),
+    [optRelaySet, ndk],
+  )
 
   useEffect(() => {
     if (signing || !ndk) return
@@ -52,7 +56,6 @@ export const useSubscribe = (
         return undefined
       })
     }
-    console.log('sub:init')
     setNewItems([])
     setItems([])
     eos.current = false
@@ -60,9 +63,9 @@ export const useSubscribe = (
       const subscribe = ndk.subscribe(
         filter,
         subOptions || {
+          subId: nanoid(),
           closeOnEose: false,
           cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
-          pool: ndk.pool,
         },
         relaySet,
         false,
@@ -75,7 +78,6 @@ export const useSubscribe = (
 
   useEffect(() => {
     if (signing || !ndk || !sub) return
-    console.log('sub:postCreate', sub)
     eos.current = false
     let evetns = new Map<string, NDKEvent>()
 
@@ -100,7 +102,7 @@ export const useSubscribe = (
           setItems(sortItems(evetns.values()))
         }
       } else {
-        setItems(sortItems(evetns.values()))
+        // setItems(sortItems(evetns.values()))
       }
     }
     const onEvent = (item: NDKEvent) => {
@@ -123,7 +125,6 @@ export const useSubscribe = (
       }
     }
     sub.on('show-new-items', (newItems: NDKEvent[]) => {
-      // console.log('newItems', newItems)
       newItems.forEach((ev) => {
         evetns.set(ev.deduplicationKey(), ev)
       })
@@ -131,7 +132,7 @@ export const useSubscribe = (
       setNewItems([])
     })
     sub.on('event', onEvent)
-    // sub.on('event:dup', onEventDup)
+    sub.on('event:dup', onEventDup)
     sub.once('eose', () => {
       eos.current = true
       setItems(sortItems(evetns.values()))

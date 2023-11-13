@@ -55,7 +55,7 @@ const UserBar = ({ className }: { className?: string }) => {
     async (type: SignInType) => {
       const user = await signIn(type)
       if (!user) return
-      if (pathname === '/' || pathname === '/feeds/') {
+      if (!pathname.startsWith('/settings')) {
         router.replace(`${pathname}?q=following&map=`)
       } else {
         router.replace(`/?q=following&map=`)

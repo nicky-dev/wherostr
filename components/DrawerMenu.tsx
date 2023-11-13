@@ -1,9 +1,9 @@
 'use client'
 import { FC, Fragment, useCallback, useState } from 'react'
 import {
-  ArticleOutlined,
   Close,
   ExitToApp,
+  Map,
   NotesOutlined,
   SensorsOutlined,
   Settings,
@@ -101,20 +101,21 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
             <ListItemIcon>
               <NotesOutlined />
             </ListItemIcon>
-            <ListItemText primary="Notes" />
+            <ListItemText primary="Feeds" />
           </ListItemButton>
 
           <ListItemButton
-            selected={pathname.startsWith('/articles')}
-            disabled
+            selected={pathname.startsWith('/map')}
+            LinkComponent={Link}
+            href="/map"
             onClick={async () => {
               closeDrawer()
             }}
           >
             <ListItemIcon>
-              <ArticleOutlined />
+              <Map />
             </ListItemIcon>
-            <ListItemText primary="Articles (Coming soon)" />
+            <ListItemText primary="Maps" />
           </ListItemButton>
 
           <ListItemButton
@@ -168,7 +169,7 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
           <ListItemButton
             onClick={async () => {
               await signOut()
-              if (pathname === '/' || pathname === '/feeds/') {
+              if (!pathname.startsWith('/settings')) {
                 router.replace(`${pathname}?q=global&map=`)
               } else {
                 router.replace(`/?q=global&map=`)
