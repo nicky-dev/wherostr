@@ -113,10 +113,10 @@ const MainPane = () => {
     if (!!tags?.size) {
       return { '#t': Array.from(tags) }
     }
-    if (follows && feedType === 'following') {
-      return { authors: follows.map((d) => d.hexpubkey) }
+    if (user?.pubkey && follows && feedType === 'following') {
+      return { authors: follows.map((d) => d.hexpubkey).concat([user?.pubkey]) }
     }
-  }, [follows, query?.tags, feedType])
+  }, [user?.pubkey, follows, query?.tags, feedType])
 
   const filter = useMemo<NDKFilter | undefined>(() => {
     if (signing) return

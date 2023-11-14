@@ -62,10 +62,10 @@ const MapController = () => {
   }, [map])
 
   const authorsOrTags = useMemo(() => {
-    if (follows && feedType === 'following') {
-      return { authors: follows.map((d) => d.pubkey) }
+    if (user?.pubkey && follows && feedType === 'following') {
+      return { authors: follows.map((d) => d.hexpubkey).concat([user?.pubkey]) }
     }
-  }, [follows, feedType])
+  }, [user?.pubkey, follows, feedType])
 
   const filter = useMemo<NDKFilter | undefined>(() => {
     if (signing || !mapLoaded) return
