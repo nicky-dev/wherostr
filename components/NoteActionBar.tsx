@@ -22,8 +22,7 @@ import { tryParseNostrLink, transformText } from '@snort/system'
 import { useNDK } from '@/hooks/useNostr'
 import { useMuting, useUser } from '@/hooks/useAccount'
 import { useUserProfile } from '@/hooks/useUserProfile'
-
-const amountFormat = '0,0.[0]a'
+import { amountFormat } from '@/constants/app'
 
 const NoteActionBar = ({ event }: { event: NDKEvent }) => {
   const ndk = useNDK()
