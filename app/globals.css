@@ -21,6 +21,9 @@ html {
 
 .MuiButton-root {
   text-transform: none !important;
+}
+
+.MuiButton-root:not(.MuiButtonGroup-grouped) {
   border-radius: 9999px !important;
 }
 

@@ -1,11 +1,12 @@
 'use client'
 import { Box, Button, Tooltip, Typography } from '@mui/material'
 import {
-  Comment,
-  ElectricBolt,
-  FormatQuote,
-  Repeat,
+  RepeatOutlined,
+  CommentOutlined,
+  FormatQuoteOutlined,
   ThumbUp,
+  ThumbUpOutlined,
+  ElectricBoltOutlined,
 } from '@mui/icons-material'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
@@ -165,7 +166,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           color="inherit"
           size="small"
           onClick={handleClickAction(EventActionType.Repost)}
-          startIcon={<Repeat />}
+          startIcon={<RepeatOutlined />}
         >
           <Typography className="!w-7 text-left" variant="caption">
             {repostAmount}
@@ -177,7 +178,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           color="inherit"
           size="small"
           onClick={handleClickAction(EventActionType.Quote)}
-          startIcon={<FormatQuote />}
+          startIcon={<FormatQuoteOutlined />}
         >
           <Typography className="!w-7 text-left" variant="caption">
             {quoteAmount}
@@ -189,7 +190,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           color="inherit"
           size="small"
           onClick={handleClickAction(EventActionType.Comment)}
-          startIcon={<Comment />}
+          startIcon={<CommentOutlined />}
         >
           <Typography className="!w-7 text-left" variant="caption">
             {commentAmount}
@@ -202,9 +203,11 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           size="small"
           onClick={handleClickReact('+')}
           startIcon={
-            <ThumbUp
-              className={reacted === '+' ? '!text-secondary' : undefined}
-            />
+            reacted === '+' ? (
+              <ThumbUp className="!text-secondary" />
+            ) : (
+              <ThumbUpOutlined />
+            )
           }
         >
           <Typography className="!w-7 text-left" variant="caption">
@@ -220,7 +223,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
             disabled={!author?.profile?.lud16 && !author?.profile?.lud06}
             size="small"
             onClick={handleClickAction(EventActionType.Zap)}
-            startIcon={<ElectricBolt color="primary" />}
+            startIcon={<ElectricBoltOutlined />}
           >
             <Typography className="!w-7 text-left" variant="caption">
               {zapAmount}

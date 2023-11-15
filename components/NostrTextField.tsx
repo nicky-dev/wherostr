@@ -113,7 +113,7 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
           const leftText = value.substring(0, selectionEnd)
           const lastAtSignIndex = leftText.lastIndexOf('@')
           const searchText = leftText.substring(lastAtSignIndex + 1)
-          if (/\s|\r|\n/.test(searchText)) {
+          if (/\s|\r|\n/.test(searchText) || selectionEnd === 0) {
             handleClosePopover()
           } else {
             setCurrentCaretPosition(selectionEnd)
