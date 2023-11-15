@@ -51,7 +51,7 @@ const ShortTextNoteCard = ({
   const pathname = usePathname()
   const query = useSearchParams()
   const router = useRouter()
-  const { ndk, getEvent } = useContext(NostrContext)
+  const { ndk } = useContext(NostrContext)
   const { map } = useContext(MapContext)
   const createdDate = useMemo(
     () => (event.created_at ? new Date(event.created_at * 1000) : undefined),
@@ -66,18 +66,17 @@ const ShortTextNoteCard = ({
   const { setEventAction } = useContext(AppContext)
   const handleClickRootNote = useCallback(async () => {
     if (ndk && fromNote?.value) {
-      const rootEvent = await getEvent(fromNote.value)
-      if (rootEvent) {
+      if (fromNote.value) {
         setEventAction({
           type: EventActionType.View,
-          event: rootEvent,
+          event: fromNote.value,
           options: {
             comments: true,
           },
         })
       }
     }
-  }, [ndk, fromNote, getEvent, setEventAction])
+  }, [ndk, fromNote, setEventAction])
 
   const lnglat = useMemo(() => extractLngLat(event), [event])
   const repostId = useMemo(

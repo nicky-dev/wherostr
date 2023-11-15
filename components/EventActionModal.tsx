@@ -3,6 +3,7 @@ import '@getalby/bitcoin-connect-react'
 import ProfileChip from '@/components/ProfileChip'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import {
+  Avatar,
   Box,
   Button,
   ButtonGroup,
@@ -47,7 +48,6 @@ import { LoadingButton } from '@mui/lab'
 import { useFollowing, useMuting, useUser } from '@/hooks/useAccount'
 import { isComment } from '@/utils/event'
 import { useNDK } from '@/hooks/useNostr'
-import TimeFromNow from './TimeFromNow'
 
 const amountFormat = '0,0.[0]a'
 
@@ -57,35 +57,70 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
   const { register, handleSubmit, setValue, watch } = useForm()
   const [loading, setLoading] = useState(false)
   const _amountValue = watch('amount')
+
+  const maxWeight = useMemo(
+    () =>
+      event
+        .getMatchingTags('zap')
+        .reduce((a, [, , , w]) => (a += Number(w)), 0),
+    [event],
+  )
+
+  const zaps = useMemo(() => {
+    const zaps = event.getMatchingTags('zap')
+    const zapsplit: { pubkey: string; weight: number; amount: number }[] = []
+    zaps.forEach(([, p, , w]) => {
+      const weight = Number(w)
+      const amount = (1 - weight / maxWeight) * Number(_amountValue || 0)
+      zapsplit.push({ pubkey: p, weight, amount })
+    })
+    return zapsplit
+  }, [event, _amountValue, maxWeight])
+
   const _handleSubmit = useCallback(
     async (data: any) => {
       try {
         setLoading(true)
         const { amount, comment } = data
-        const pr = await event.zap(
-          amount * 1000,
-          comment || undefined,
-          undefined,
-          ndk.getUser({
-            hexpubkey: event.tagValue('p') || event.pubkey,
+        const zapsplit = zaps.slice()
+        if (!zapsplit.length) {
+          zapsplit.push({
+            pubkey: event.isReplaceable()
+              ? event.tagValue('p') || event.pubkey
+              : event.pubkey,
+            amount,
+            weight: 1,
+          })
+        }
+
+        let totalAmount = 0
+        await Promise.all(
+          zapsplit.map(async (zap) => {
+            const pr = await event.zap(
+              Math.floor(zap.amount) * 1000,
+              comment || undefined,
+              undefined,
+              ndk.getUser({ hexpubkey: zap.pubkey }),
+            )
+            if (pr) {
+              await (await requestProvider()).sendPayment(pr)
+              totalAmount += Math.floor(zap.amount)
+            }
           }),
         )
-        if (pr) {
-          await (await requestProvider()).sendPayment(pr)
-          showSnackbar(`Zapped ${amount} sats`, {
-            slotProps: {
-              alert: {
-                severity: 'success',
-              },
+        showSnackbar(`Zapped ${totalAmount} sats`, {
+          slotProps: {
+            alert: {
+              severity: 'success',
             },
-          })
-          setEventAction(undefined)
-        }
+          },
+        })
+        setEventAction(undefined)
       } finally {
         setLoading(false)
       }
     },
-    [event, ndk, setEventAction, showSnackbar],
+    [event, ndk, zaps, setEventAction, showSnackbar],
   )
   const amountValue = useMemo(
     () =>
@@ -111,6 +146,28 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
   return (
     <form onSubmit={handleSubmit(_handleSubmit)}>
       <Box className="mt-3 grid gap-3 grid-cols-1">
+        {!!zaps.length && (
+          <Box className="flex gap-4 justify-center">
+            {zaps.map((d) => {
+              return (
+                <Box key={d.pubkey} className="relative scale-125">
+                  <ProfileChip
+                    hexpubkey={d.pubkey}
+                    showName={false}
+                    clickable={false}
+                  />
+                  <Avatar className="!absolute top-0 left-0 !bg-disabled-dark opacity-75">
+                    <Typography variant="body2" fontWeight="bold" color="white">
+                      {d.amount
+                        ? numeral(Math.floor(d.amount)).format(amountFormat)
+                        : d.weight}
+                    </Typography>
+                  </Avatar>
+                </Box>
+              )
+            })}
+          </Box>
+        )}
         <Box className="relative max-h-80 border-2 border-secondary-dark rounded-2xl overflow-hidden">
           <ShortTextNoteCard
             event={event}

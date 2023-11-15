@@ -2,6 +2,7 @@
 import { NostrContext } from '@/contexts/NostrContext'
 import { Box, Typography } from '@mui/material'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import { nanoid } from 'nanoid'
 import { RedirectType } from 'next/dist/client/components/redirect'
 import { redirect, useParams } from 'next/navigation'
 import { nip19 } from 'nostr-tools'
@@ -24,6 +25,7 @@ export default function Page() {
     const ev = await ndk.fetchEvent(naddr.toString(), {
       cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
       closeOnEose: true,
+      subId: nanoid(8),
     })
     return ev?.toNostrEvent()
   }, [ndk, naddrDesc, naddr])

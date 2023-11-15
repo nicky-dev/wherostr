@@ -1,6 +1,5 @@
 'use client'
 import { MapView } from '@/components/MapView'
-import { useMediaQuery, useTheme } from '@mui/material'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount, useFollowing } from '@/hooks/useAccount'

@@ -7,6 +7,7 @@ import {
   NDKRelaySet,
   NDKSubscriptionCacheUsage,
 } from '@nostr-dev-kit/ndk'
+import { nanoid } from 'nanoid'
 import { useMemo } from 'react'
 import usePromise from 'react-use-promise'
 
@@ -21,7 +22,7 @@ export const useEvent = (
     () =>
       ndk.fetchEvent(
         idOrFilter,
-        { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
+        { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST, subId: nanoid(8) },
         relaySet,
       ),
     [idOrFilter, relaySet],
@@ -39,7 +40,7 @@ export const useEvents = (
     async () =>
       (await ndk.fetchEvents(
         filter,
-        { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
+        { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST, subId: nanoid(8) },
         relaySet,
       )) || new Set<NDKEvent>(),
     [filter, relaySet],

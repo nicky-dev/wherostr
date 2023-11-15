@@ -25,6 +25,7 @@ import { NostrContext } from '@/contexts/NostrContext'
 import { useAction } from '@/hooks/useApp'
 import { nip19 } from 'nostr-tools'
 import usePromise from 'react-use-promise'
+import { nanoid } from 'nanoid'
 
 export type SignInType = 'nip7' | 'nsec' | 'npub'
 export interface AccountProps {
@@ -79,7 +80,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
           kinds: [3],
           authors: [user.hexpubkey],
         },
-        undefined,
+        { subId: nanoid(8) },
       )
       if (contactListEvent) {
         const pubkeys = new Set<string>()
@@ -249,7 +250,8 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     if (!filter) return setMuteList([])
 
     const event = await ndk.fetchEvent(filter, {
-      cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
+      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+      subId: nanoid(8),
     })
     const list =
       event?.getMatchingTags('p').map(([tag, pubkey]) => {

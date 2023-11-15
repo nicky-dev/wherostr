@@ -15,6 +15,7 @@ import {
   Box,
   Chip,
   LinearProgress,
+  Paper,
   Slide,
   Typography,
 } from '@mui/material'
@@ -46,7 +47,7 @@ const EventList: FC<EventListProps> = ({
   onShowNewItems,
   showComments,
 }) => {
-  const noteRef = useRef<HTMLElement>(null)
+  const noteRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<ViewportListRef>(null)
   const [muteList] = useMuting()
   const [scrollEnd, setScrollEnd] = useState(false)
@@ -129,7 +130,7 @@ const EventList: FC<EventListProps> = ({
 
   return (
     <>
-      <Box
+      <Paper
         ref={!parentRef ? noteRef : undefined}
         className={classNames('relative', className)}
       >
@@ -158,7 +159,7 @@ const EventList: FC<EventListProps> = ({
             <ShortTextNoteCard key={item.deduplicationKey()} event={item} />
           )}
         </ViewportList>
-      </Box>
+      </Paper>
       {fetching && <LinearProgress sx={{ minHeight: 4 }} />}
       <Slide
         in={scrollEnd && !hasNext}
@@ -169,7 +170,7 @@ const EventList: FC<EventListProps> = ({
       >
         <Typography
           color="text.secondary"
-          className="flex flex-1 justify-center items-end !py-2 italic"
+          className="flex flex-1 justify-center items-end !py-2 italic bg-[inherit]"
         >
           No more content.
         </Typography>

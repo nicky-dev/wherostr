@@ -15,6 +15,7 @@ import NDK, {
 import NDKCacheAdapterDexie from '@nostr-dev-kit/ndk-cache-dexie'
 import { nip19, nip05 } from 'nostr-tools'
 import { nip5Regexp } from '@/constants/app'
+import { nanoid } from 'nanoid'
 
 interface Nostr {
   ndk: NDK
@@ -52,7 +53,6 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
     [],
   )
   useEffect(() => {
-    ndk.connect()
     const onConnect = (...args: any[]) => {
       console.log('onConnect:args', args)
     }
@@ -61,6 +61,7 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
     }
     ndk.on('connect', onConnect)
     ndk.on('disconnect', onDisconnect)
+    ndk.connect()
     return () => {
       ndk.removeAllListeners()
     }
@@ -119,6 +120,7 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
     async (id: string) => {
       return ndk.fetchEvent(id, {
         cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+        subId: nanoid(8),
       })
     },
     [ndk],

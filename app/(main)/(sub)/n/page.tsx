@@ -4,6 +4,7 @@ import { CommonEventLayout } from '@/components/PageLayout'
 import { NostrContext } from '@/contexts/NostrContext'
 import { Paper } from '@mui/material'
 import { NDKSubscriptionCacheUsage } from '@nostr-dev-kit/ndk'
+import { nanoid } from 'nanoid'
 import { RedirectType } from 'next/dist/client/components/redirect'
 import { redirect, useParams, useSearchParams } from 'next/navigation'
 import { nip19 } from 'nostr-tools'
@@ -27,6 +28,7 @@ export default function Page() {
     if (naddrDesc.type !== 'note') return
     const ev = await ndk.fetchEvent(naddr.toString(), {
       cacheUsage: NDKSubscriptionCacheUsage.PARALLEL,
+      subId: nanoid(8),
     })
     return ev
   }, [ndk, naddrDesc, naddr])
