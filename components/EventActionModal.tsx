@@ -415,7 +415,7 @@ export const ShortTextNotePane = ({
                     <ThumbUp color="secondary" />
                   ) : (
                     <Typography
-                      className="overflow-hidden whitespace-nowrap text-ellipsis"
+                      className="overflow-hidden whitespace-nowrap text-ellipsis text-contrast-primary"
                       variant="h6"
                     >
                       {item.content}
