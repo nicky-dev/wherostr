@@ -206,11 +206,20 @@ export const CreateEventForm = ({
             break
         }
 
-        relatedEvents.forEach(({ id, relay, author }) => {
+        relatedEvents.forEach((event) => {
+          const { id, author } = event
+          const tagE = event.getMatchingTags('e')
+          tagE.forEach(([name, val, , mark], i) => {
+            if (i === 0) {
+              newEvent.tag([name, val, '', 'root'])
+            } else {
+              newEvent.tag([name, val])
+            }
+          })
           newEvent.tag([
             'e',
             id,
-            relay ? relay.url : '',
+            '',
             type === EventActionType.Quote
               ? 'mention'
               : type === EventActionType.Comment
@@ -287,7 +296,7 @@ export const CreateEventForm = ({
           ).toNostrEvent(powEvent.pubkey)
           publishEvent.id = powEvent.id
           if (ndk.signer) {
-            publishEvent.sig = await ndk.signer.sign(powEvent as NostrEvent)
+            publishEvent.sig = await ndk.signer.sign(publishEvent as NostrEvent)
           }
           const pool = ndk.pool || ndk.outboxPool
           await Promise.race(
