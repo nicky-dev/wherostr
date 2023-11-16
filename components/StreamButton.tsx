@@ -211,22 +211,28 @@ export const StreamButton: FC<StreamButtonProps> = ({
             margin="dense"
             autoComplete="off"
             fullWidth
-            helperText="Stream type should be HLS"
+            // helperText="Stream type should be HLS"
             InputLabelProps={{
               shrink: true,
             }}
             {...register('streaming', {
-              required: true,
+              // required: true,
               validate: (val) => {
-                if (
-                  !val?.length ||
-                  val?.length < 5 ||
-                  !val?.match(/^https?:\/\/.*\.m3u8?$/i)
-                ) {
+                if (val && !ReactPlayer.canPlay(val)) {
                   return 'Invalid URL'
                 }
                 return true
               },
+              // validate: (val) => {
+              //   if (
+              //     !val?.length ||
+              //     val?.length < 5 ||
+              //     !val?.match(/^https?:\/\/.*\.m3u8?$/i)
+              //   ) {
+              //     return 'Invalid URL'
+              //   }
+              //   return true
+              // },
             })}
           />
           <Box ml={2} mb={1}>
