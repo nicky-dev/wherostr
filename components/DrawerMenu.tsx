@@ -4,6 +4,7 @@ import {
   Close,
   ExitToApp,
   Map,
+  Menu,
   NotesOutlined,
   SensorsOutlined,
   Settings,
@@ -51,12 +52,15 @@ const DrawerMenu: FC<MenuButtonProps> = ({ slotProps }) => {
 
   return (
     <Fragment>
-      <ProfileChip
+      {/* <ProfileChip
         {...slotProps?.profileChip}
         hexpubkey={defaultPubkey}
         showName={slotProps?.profileChip?.showName ?? false}
         onClick={toggleDrawer}
-      />
+      /> */}
+      <IconButton onClick={toggleDrawer}>
+        <Menu />
+      </IconButton>
       <Drawer
         anchor={'left'}
         open={open}

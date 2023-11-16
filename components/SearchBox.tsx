@@ -7,7 +7,8 @@ import Typography from '@mui/material/Typography'
 import { debounce } from '@mui/material/utils'
 import { OSMSearchResult, search } from '@/services/osm'
 import Geohash from 'latlon-geohash'
-import { Box, CircularProgress, Divider } from '@mui/material'
+import { CircularProgress, Divider } from '@mui/material'
+import { Search } from '@mui/icons-material'
 
 interface MainTextMatchedSubstrings {
   offset: number
@@ -136,6 +137,7 @@ const SearchBox: React.FC<
 
   return (
     <Autocomplete
+      id="autocomplete-search"
       fullWidth
       getOptionLabel={(option) =>
         typeof option === 'string' ? option : option.display_name!
@@ -152,14 +154,27 @@ const SearchBox: React.FC<
           handleSelectValue(evt, options[0])
         }
       }}
+      autoComplete={false}
+      popupIcon={<Search />}
+      forcePopupIcon
+      slotProps={{
+        popupIndicator: {
+          sx: { transform: 'rotate(0)' },
+        },
+      }}
       onChange={handleSelectValue}
       renderInput={(params) => (
         <TextField
           {...params}
+          name="search"
           margin="dense"
           size="small"
           fullWidth
           placeholder={placeholder}
+          InputProps={{
+            autoComplete: 'off',
+            ...params.InputProps,
+          }}
           onChange={(e) => {
             const newValue = e.target.value
             setInputValue(newValue)

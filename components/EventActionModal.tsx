@@ -45,10 +45,9 @@ import { isComment } from '@/utils/event'
 import { amountFormat } from '@/constants/app'
 import ZapEventForm from './ZapEventForm'
 
-export const EventProfileCard: FC<PropsWithChildren & { hexpubkey: string }> = ({
-  children,
-  hexpubkey,
-}) => {
+export const EventProfileCard: FC<
+  PropsWithChildren & { hexpubkey: string }
+> = ({ children, hexpubkey }) => {
   const [loading, setLoading] = useState(false)
   const account = useUser()
   const [follows, follow, unfollow] = useFollowing()
@@ -84,7 +83,6 @@ export const EventProfileCard: FC<PropsWithChildren & { hexpubkey: string }> = (
             {isFollowing ? (
               <LoadingButton
                 loading={loading}
-                loadingPosition="start"
                 color="secondary"
                 size="small"
                 variant="outlined"
@@ -95,7 +93,6 @@ export const EventProfileCard: FC<PropsWithChildren & { hexpubkey: string }> = (
             ) : (
               <LoadingButton
                 loading={loading}
-                loadingPosition="start"
                 color="secondary"
                 size="small"
                 variant="contained"

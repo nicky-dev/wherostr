@@ -1,4 +1,4 @@
-import { useFollowList } from '@/hooks/useAccount'
+import { useAccount, useFollowList } from '@/hooks/useAccount'
 import { LoadingButton } from '@mui/lab'
 import { FC, useCallback, useMemo, useState } from 'react'
 
@@ -8,6 +8,7 @@ export interface FollowHashtagButtonProps {
 export const FollowHashtagButton: FC<FollowHashtagButtonProps> = ({
   hashtag,
 }) => {
+  const { readOnly } = useAccount()
   const [loading, setLoading] = useState(false)
   const [followLists, followHashtag, unfollowHashtag] = useFollowList()
 
@@ -35,10 +36,9 @@ export const FollowHashtagButton: FC<FollowHashtagButtonProps> = ({
 
   return isFollowing ? (
     <LoadingButton
+      disabled={readOnly}
       loading={loading}
-      loadingPosition="start"
       color="secondary"
-      size="small"
       variant="outlined"
       onClick={handleClickUnfollow}
     >
@@ -46,10 +46,9 @@ export const FollowHashtagButton: FC<FollowHashtagButtonProps> = ({
     </LoadingButton>
   ) : (
     <LoadingButton
+      disabled={readOnly}
       loading={loading}
-      loadingPosition="start"
       color="secondary"
-      size="small"
       variant="contained"
       onClick={handleClickFollow}
     >
