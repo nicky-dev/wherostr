@@ -18,6 +18,8 @@ import {
   NDKKind,
   NDKNip07Signer,
   NDKPrivateKeySigner,
+  NDKRelay,
+  NDKRelayStatus,
   NDKSubscriptionCacheUsage,
   NDKUser,
 } from '@nostr-dev-kit/ndk'
@@ -80,7 +82,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
           kinds: [3],
           authors: [user.hexpubkey],
         },
-        { subId: nanoid(8) },
+        { subId: nanoid(8), cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY },
       )
       if (contactListEvent) {
         const pubkeys = new Set<string>()
@@ -192,6 +194,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
               ...(type === 'nsec' ? { nsec: key } : undefined),
             }),
           )
+          await connectToUserRelays(user)
           await updateFollows(user)
           setUser(user)
           setReadOnly(readOnly)
@@ -250,7 +253,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     if (!filter) return setMuteList([])
 
     const event = await ndk.fetchEvent(filter, {
-      cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+      cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
       subId: nanoid(8),
     })
     const list =
@@ -289,4 +292,54 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   return (
     <AccountContext.Provider value={value}>{children}</AccountContext.Provider>
   )
+}
+
+const connectToUserRelays = async (user: NDKUser) => {
+  const ndk = user.ndk
+  if (!ndk) {
+    console.debug('NDK not initialized', { npub: user.npub })
+    return
+  }
+  const runUserFunctions = async (user: NDKUser) => {
+    const relayList = await user.relayList()
+
+    if (!relayList) {
+      console.debug('No relay list found for user', { npub: user.npub })
+      return
+    }
+    console.debug('Connecting to user relays', {
+      npub: user.npub,
+      relays: relayList.relays,
+    })
+    await Promise.allSettled(
+      relayList.relays.map(async (url) => {
+        return new Promise<NDKRelay>((resolve) => {
+          const relay = ndk.pool.relays.get(url)
+          if (!relay) {
+            const relay = new NDKRelay(url)
+            relay.once('connect', () => resolve(relay))
+            ndk.pool.addRelay(relay)
+          } else {
+            if (relay.connectivity.status === NDKRelayStatus.CONNECTED) {
+              resolve(relay)
+            } else if (
+              relay.connectivity.status === NDKRelayStatus.CONNECTING
+            ) {
+              relay.once('connect', () => resolve(relay))
+            }
+          }
+        })
+      }),
+    )
+  }
+
+  if (ndk.pool.connectedRelays().length > 0) {
+    await runUserFunctions(user)
+  } else {
+    console.debug('Waiting for connection to main relays')
+    ndk.pool.once('relay:connect', (relay: NDKRelay) => {
+      console.debug('New relay came online', relay)
+      runUserFunctions(user)
+    })
+  }
 }

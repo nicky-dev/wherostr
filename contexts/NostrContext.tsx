@@ -49,18 +49,21 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
       new NDK({
         cacheAdapter: dexieAdapter as any,
         explicitRelayUrls: defaultRelays,
+        autoConnectUserRelays: false,
+        autoFetchUserMutelist: false,
       }),
     [],
   )
   useEffect(() => {
     const onConnect = (...args: any[]) => {
-      console.log('onConnect:args', args)
+      console.debug('onConnect:args', args)
     }
     const onDisconnect = (...args: any[]) => {
-      console.log('onDisconnect:args', args)
+      console.debug('onDisconnect:args', args)
     }
-    ndk.on('connect', onConnect)
-    ndk.on('disconnect', onDisconnect)
+    ndk.pool.on('connect', onConnect)
+    ndk.pool.on('disconnect', onDisconnect)
+    // ndk.pool.on('relay:connect', onConnect)
     ndk.connect()
     return () => {
       ndk.removeAllListeners()

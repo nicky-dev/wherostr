@@ -1,8 +1,9 @@
-import { Box, LinearProgress, Typography } from '@mui/material'
+import { LinearProgress } from '@mui/material'
 import { FC, useMemo } from 'react'
 import { NDKFilter } from '@nostr-dev-kit/ndk'
 import { nip19 } from 'nostr-tools'
 import { useSubscribe } from '@/hooks/useSubscribe'
+import { ShortTextNotePane } from './EventActionModal'
 
 export interface NostrEventComponentProps {
   data: nip19.EventPointer
@@ -19,11 +20,12 @@ export const NostrEventComponent: FC<NostrEventComponentProps> = ({ data }) => {
     return <LinearProgress />
   }
 
-  return (
-    <Box mx={2} overflow="hidden">
-      <Typography component="pre" variant="caption">
-        {JSON.stringify(event || {}, null, 4)}
-      </Typography>
-    </Box>
-  )
+  return <ShortTextNotePane event={event} comments />
+  // return (
+  //   <Box mx={2} overflow="hidden">
+  //     <Typography component="pre" variant="caption">
+  //       {JSON.stringify(event || {}, null, 4)}
+  //     </Typography>
+  //   </Box>
+  // )
 }

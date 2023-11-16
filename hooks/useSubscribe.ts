@@ -40,10 +40,7 @@ export const useSubscribe = (
   const [newItems, setNewItems] = useState<NDKEvent[]>([])
   const eos = useRef(false)
 
-  const relaySet = useMemo(
-    () => optRelaySet || NDKRelaySet.fromRelayUrls(ndk.pool.urls(), ndk),
-    [optRelaySet, ndk],
-  )
+  const relaySet = useMemo(() => optRelaySet, [optRelaySet])
 
   useEffect(() => {
     if (signing || !ndk) return
