@@ -42,7 +42,7 @@ export default function Page() {
       >
         <MapView
           className={classNames('fixed inset-0 flex-1', {
-            '-z-10': !mdUp && !hasMap,
+            hidden: !mdUp && !hasMap,
             'z-10': hasMap && !mdUp,
             // 'md:visible': true,
           })}

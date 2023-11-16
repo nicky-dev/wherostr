@@ -1,33 +1,19 @@
 'use client'
 import 'react-photo-view/dist/react-photo-view.css'
 import { ReactNode, useCallback, useContext, useMemo, useState } from 'react'
-import {
-  NostrLink,
-  NostrPrefix,
-  ParsedFragment,
-  tryParseNostrLink,
-  transformText,
-} from '@snort/system'
+import { ParsedFragment, tryParseNostrLink, transformText } from '@snort/system'
 import {
   Box,
   Button,
-  ButtonBase,
   CircularProgress,
   IconButton,
   Link,
-  Paper,
   Typography,
 } from '@mui/material'
 import { Fragment } from 'react'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
-import {
-  PlayCircleOutline,
-  FormatQuote,
-  InfoOutlined,
-  ZoomIn,
-  ZoomOut,
-} from '@mui/icons-material'
+import { FormatQuote, InfoOutlined, ZoomIn, ZoomOut } from '@mui/icons-material'
 import NextLink from 'next/link'
 import {
   EventActionType,
@@ -39,15 +25,7 @@ import { Variant } from '@mui/material/styles/createTypography'
 import { PhotoProvider, PhotoView } from 'react-photo-view'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import ReactPlayer from 'react-player/lazy'
-import ProfileChip from './ProfileChip'
-import { useEvent } from '@/hooks/useEvent'
-import { useStreamRelaySet } from '@/hooks/useNostr'
-import StatusBadge from './StatusBadge'
-import ReactTimeago from 'react-timeago'
-import { EmbedLiveActivity } from './EmbedLiveActivity'
-import { EmbedLongFormContent } from './EmbedLongFormContent'
 import { EmbedEventAddress } from './EmbedEventAddress'
-// import { nip19 } from 'nostr-tools'
 
 type RelatedNoteVariant = 'full' | 'fraction' | 'link'
 

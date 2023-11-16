@@ -20,7 +20,7 @@ export const NostrEventComponent: FC<NostrEventComponentProps> = ({ data }) => {
     return <LinearProgress />
   }
 
-  return <ShortTextNotePane event={event} comments />
+  return <ShortTextNotePane event={event} />
   // return (
   //   <Box mx={2} overflow="hidden">
   //     <Typography component="pre" variant="caption">

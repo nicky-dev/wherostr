@@ -36,7 +36,12 @@ export default function RootLayout({
             )}
             {pathname.startsWith('/map') && (
               <Box className="flex flex-1 justify-center">
-                <FeedFilterMenu variant="contained" user={user} />
+                <FeedFilterMenu
+                  variant="contained"
+                  user={user}
+                  disableConversation
+                  disableList
+                />
               </Box>
             )}
           </>

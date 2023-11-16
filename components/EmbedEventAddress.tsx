@@ -23,15 +23,21 @@ export const EmbedEventAddress: FC<EmbedEventAddressProps> = ({ naddr }) => {
       return <UserMentionLink id={naddrDesc.data} />
     } else if (naddrDesc?.type === 'nprofile') {
       return <UserMentionLink id={naddrDesc.data.pubkey} />
-    } else if (naddrDesc?.type === 'nevent') {
-      return (
-        <QuotedEvent id={naddrDesc.data.id} relatedNoteVariant="fraction" />
-      )
     } else if (naddrDesc?.type === 'naddr') {
       if (naddrDesc.data.kind === 30311) {
         return <EmbedLiveActivity naddr={naddr} />
       } else if (naddrDesc.data.kind === 30023) {
         return <EmbedLongFormContent naddr={naddr} />
+      }
+    } else if (naddrDesc?.type === 'nevent') {
+      if (naddrDesc.data.kind === 1 || naddrDesc.data.kind === 6) {
+        return (
+          <QuotedEvent id={naddrDesc.data.id} relatedNoteVariant="fraction" />
+        )
+      } else {
+        return (
+          <QuotedEvent id={naddrDesc.data.id} relatedNoteVariant="fraction" />
+        )
       }
     } else {
       return <Typography variant="h6">Invalid Nostr Address</Typography>

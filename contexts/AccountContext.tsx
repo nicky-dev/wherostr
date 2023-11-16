@@ -14,7 +14,6 @@ import {
 } from 'react'
 import {
   NDKEvent,
-  NDKFilter,
   NDKKind,
   NDKNip07Signer,
   NDKPrivateKeySigner,
@@ -30,12 +29,21 @@ import usePromise from 'react-use-promise'
 import { nanoid } from 'nanoid'
 
 export type SignInType = 'nip7' | 'nsec' | 'npub'
+
+export interface FollowListItem {
+  type: 'tag' | 'people' | 'bounds'
+  id: string
+  name: string
+  value: any
+}
+
 export interface AccountProps {
   user?: NDKUser
   readOnly: boolean
   signing: boolean
   muteList: string[]
   follows: NDKUser[]
+  followLists: FollowListItem[]
   signIn: (type: SignInType, key?: string) => Promise<NDKUser | void>
   signOut: () => Promise<void>
   setFollows: Dispatch<SetStateAction<NDKUser[]>>
@@ -50,6 +58,7 @@ export const AccountContext = createContext<AccountProps>({
   muteList: [],
   follows: [],
   signing: true,
+  followLists: [],
   signIn: async () => {},
   signOut: async () => {},
   setFollows: () => {},
@@ -65,6 +74,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const [signing, setSigning] = useState<boolean>(true)
   const [user, setUser] = useState<NDKUser>()
   const [follows, setFollows] = useState<NDKUser[]>([])
+  const [followLists, setFollowLists] = useState<FollowListItem[]>([])
   const [muteList, setMuteList] = useState<string[]>([])
   const nostrRef = useRef<typeof window.nostr>(
     typeof window !== 'undefined' ? window.nostr : undefined,
@@ -241,27 +251,62 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     initUser()
   }, [user, initUser])
 
-  const filter = useMemo<NDKFilter | undefined>(() => {
-    if (!user?.hexpubkey) return
-    return {
-      kinds: [NDKKind.MuteList, NDKKind.ChannelMuteUser],
-      authors: [user?.hexpubkey],
-    }
-  }, [user?.hexpubkey])
-
   usePromise(async () => {
-    if (!filter) return setMuteList([])
+    if (!user?.hexpubkey) return setMuteList([])
 
-    const event = await ndk.fetchEvent(filter, {
-      cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY,
-      subId: nanoid(8),
-    })
+    const event = await ndk.fetchEvent(
+      {
+        kinds: [NDKKind.MuteList, NDKKind.ChannelMuteUser],
+        authors: [user?.hexpubkey],
+      },
+      { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, subId: nanoid(8) },
+    )
     const list =
       event?.getMatchingTags('p').map(([tag, pubkey]) => {
         return pubkey
       }) || []
     setMuteList(list)
-  }, [filter])
+  }, [user?.hexpubkey])
+
+  usePromise(async () => {
+    if (!user?.hexpubkey) return setFollowLists([])
+
+    const events = await ndk.fetchEvents(
+      [
+        {
+          kinds: [30002 as NDKKind],
+          authors: [user?.hexpubkey],
+          '#d': ['follow'],
+        },
+        {
+          kinds: [NDKKind.CategorizedPeopleList],
+          authors: [user?.hexpubkey],
+        },
+      ],
+      { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, subId: nanoid(8) },
+    )
+
+    let tagList: NDKEvent | undefined
+    let peopleList: FollowListItem[] = []
+    events?.forEach((ev) => {
+      if (ev.kind === 30002) {
+        tagList = ev
+      } else {
+        const value = ev.getMatchingTags('p')
+        if (!value.length) return
+        const name = ev.tagValue('title')
+        if (!name) return
+        const id = ev.tagValue('d') || ev.tagId()
+        peopleList.push({ type: 'people', id, name, value })
+      }
+    })
+    const tags =
+      tagList?.getMatchingTags('t').map<FollowListItem>(([, tag]) => {
+        return { type: 'tag', id: tag, name: tag, value: tag }
+      }) || []
+    console.log({ tags, peopleList })
+    setFollowLists((prev) => prev.concat(peopleList, tags))
+  }, [user?.hexpubkey])
 
   const value = useMemo((): AccountProps => {
     return {
@@ -269,6 +314,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       readOnly,
       muteList,
       follows,
+      followLists,
       signing,
       signIn,
       signOut,
@@ -282,6 +328,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     readOnly,
     muteList,
     follows,
+    followLists,
     signing,
     signIn,
     signOut,

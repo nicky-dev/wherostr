@@ -2,7 +2,6 @@
 
 import DrawerMenu from '@/components/DrawerMenu'
 import EventActionModal from '@/components/EventActionModal'
-import FeedFilterMenu from '@/components/FeedFilterMenu'
 import ProfileActionModal from '@/components/ProfileActionModal'
 import { StreamButton } from '@/components/StreamButton'
 import UserBar from '@/components/UserBar'
@@ -32,11 +31,6 @@ export default function RootLayout({
                 <Box flex={1} />
                 <StreamButton label="Stream" icon={<Sensors />} />
               </>
-            )}
-            {pathname.startsWith('/map') && (
-              <Box className="flex flex-1 justify-center">
-                <FeedFilterMenu variant="contained" user={user} />
-              </Box>
             )}
           </>
         ) : (

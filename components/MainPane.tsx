@@ -125,7 +125,7 @@ const MainPane = () => {
       ...authorsOrTags,
       kinds: [NDKKind.Text, NDKKind.Repost],
       since: unixNow() - WEEK,
-      limit: 200,
+      limit: 20,
     } as NDKFilter
   }, [signing, geohashFilter, authorsOrTags])
 

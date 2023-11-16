@@ -12,17 +12,28 @@ import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import {
   ArrowDropDownOutlined,
+  CropFree,
   ForumOutlined,
-  Group,
   GroupOutlined,
+  List,
   PublicOutlined,
+  Tag,
 } from '@mui/icons-material'
+import { useFollowList } from '@/hooks/useAccount'
+
+interface FeedFilterMenuProps extends ButtonProps {
+  user?: NDKUser
+  disableList?: boolean
+  disableConversation?: boolean
+}
 
 interface MenuItemProps {
   id: string
   label: string
   icon?: React.ReactNode
   disabled?: boolean
+  disableList?: boolean
+  disableConversation?: boolean
   href?: (pathname: string, user?: NDKUser) => string
   hide?: (user?: NDKUser) => boolean
 }
@@ -62,8 +73,11 @@ const options: MenuItemProps[] = [
 
 export default function FeedFilterMenu({
   user,
+  disableList,
+  disableConversation,
   ...props
-}: { user?: NDKUser } & ButtonProps) {
+}: FeedFilterMenuProps) {
+  const followLists = useFollowList()
   const pathname = usePathname()
   const query = useSearchParams()
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
@@ -119,10 +133,15 @@ export default function FeedFilterMenu({
         onClose={handleClose}
       >
         {options
-          .filter((option) => option.hide?.(user) !== true)
+          .filter((option) =>
+            disableConversation && option.id === 'conversation'
+              ? false
+              : option.hide?.(user) !== true,
+          )
           .map((option, i) => {
             return (
               <ListItemButton
+                dense
                 key={option.id}
                 disabled={option.disabled}
                 onClick={() => handleMenuClick(option.id)}
@@ -132,6 +151,36 @@ export default function FeedFilterMenu({
               >
                 {option.icon && <ListItemIcon>{option.icon}</ListItemIcon>}
                 <ListItemText primary={option.label} />
+              </ListItemButton>
+            )
+          })}
+        {!disableList &&
+          followLists.map((d) => {
+            const q =
+              d.type === 'tag'
+                ? `t:${d.value}`
+                : d.type === 'people'
+                ? `p:${d.value}`
+                : `b:${d.value}`
+
+            const icon =
+              d.type === 'tag' ? (
+                <Tag />
+              ) : d.type === 'people' ? (
+                <List />
+              ) : (
+                <CropFree />
+              )
+            return (
+              <ListItemButton
+                dense
+                key={d.id}
+                onClick={() => handleMenuClick(d.id)}
+                LinkComponent={Link}
+                href={`${pathname}?q=${q}`}
+              >
+                <ListItemIcon>{icon}</ListItemIcon>
+                <ListItemText primary={d.name} />
               </ListItemButton>
             )
           })}

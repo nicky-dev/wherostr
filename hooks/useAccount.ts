@@ -24,6 +24,11 @@ export const useFollowing = () => {
   )
 }
 
+export const useFollowList = () => {
+  const { followLists } = useContext(AccountContext)
+  return followLists
+}
+
 export const useMuting = () => {
   const ndk = useNDK()
   const { muteList, setMuteList } = useContext(AccountContext)

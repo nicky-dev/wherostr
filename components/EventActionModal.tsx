@@ -45,7 +45,7 @@ import { isComment } from '@/utils/event'
 import { amountFormat } from '@/constants/app'
 import ZapEventForm from './ZapEventForm'
 
-const EventProfileCard: FC<PropsWithChildren & { hexpubkey: string }> = ({
+export const EventProfileCard: FC<PropsWithChildren & { hexpubkey: string }> = ({
   children,
   hexpubkey,
 }) => {
