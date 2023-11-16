@@ -27,7 +27,6 @@ export default function RootLayout({
     <MapContextProvider>
       <Toolbar className="z-50">
         <DrawerMenu />
-        <Box flex={1} />
         {user?.hexpubkey ? (
           <>
             {pathname.startsWith('/map') && (
@@ -43,7 +42,10 @@ export default function RootLayout({
             <ProfileChip hexpubkey={user?.hexpubkey} showName={false} />
           </>
         ) : (
-          <UserBar />
+          <>
+            <Box flex={1} />
+            <UserBar />
+          </>
         )}
       </Toolbar>
       {children}

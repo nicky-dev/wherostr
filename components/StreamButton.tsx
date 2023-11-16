@@ -26,7 +26,7 @@ import { nip19 } from 'nostr-tools'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
 
-export interface StreamButtonProps {
+export interface StreamButtonProps extends ButtonProps {
   label: string
   icon?: ReactNode
   mode?: 'add' | 'edit'
@@ -39,6 +39,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
   data,
   mode = 'add',
   size,
+  ...props
 }) => {
   const router = useRouter()
   const ndk = useNDK()
@@ -150,6 +151,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
   return (
     <>
       <Button
+        {...props}
         variant="contained"
         color="secondary"
         startIcon={icon}

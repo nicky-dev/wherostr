@@ -29,9 +29,7 @@ export default function RootLayout({
         {user?.hexpubkey ? (
           <>
             {pathname.startsWith('/live') && (
-              <>
-                <StreamButton label="Stream" icon={<Sensors />} />
-              </>
+              <StreamButton label="Stream" icon={<Sensors />} sx={{ mr: 1 }} />
             )}
             <ProfileChip hexpubkey={user?.hexpubkey} showName={false} />
           </>
