@@ -200,7 +200,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
         <Button
           color="inherit"
           size="small"
-          onClick={handleClickReact('+')}
+          onClick={reacted === '+' ? undefined : handleClickReact('+')}
           startIcon={
             reacted === '+' ? (
               <ThumbUp className="!text-secondary" />

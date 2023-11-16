@@ -203,13 +203,13 @@ export const ShortTextNotePane = ({
     })
     return [..._reposts, ..._quotes, ..._comments, ..._likes, ..._zaps]
       .sort((a, b) => a.created_at! - b.created_at!)
-      .map((item) => {
+      .map((item, index) => {
         switch (item.kind) {
           case NDKKind.Repost:
-            return <EventProfileCard hexpubkey={item.pubkey} />
+            return <EventProfileCard key={index} hexpubkey={item.pubkey} />
           case NDKKind.Reaction:
             return (
-              <EventProfileCard hexpubkey={item.pubkey}>
+              <EventProfileCard key={index} hexpubkey={item.pubkey}>
                 <Box className="px-3 w-14 text-center">
                   {item.content === '+' ? (
                     <ThumbUp color="secondary" />
@@ -231,7 +231,7 @@ export const ShortTextNotePane = ({
                 amountFormat,
               )
               return (
-                <EventProfileCard hexpubkey={zapInvoice.zappee}>
+                <EventProfileCard key={index} hexpubkey={zapInvoice.zappee}>
                   <Box className="flex justify-center">
                     <ElectricBolt
                       className="mr-1"
@@ -254,7 +254,7 @@ export const ShortTextNotePane = ({
           default:
             return (
               <ShortTextNoteCard
-                key={item.id}
+                key={index}
                 event={item}
                 depth={1}
                 hideContent={item.kind !== NDKKind.Text}
