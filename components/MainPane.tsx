@@ -16,6 +16,7 @@ import {
   Chip,
   CircularProgress,
   Divider,
+  IconButton,
   Paper,
   Toolbar,
   Typography,
@@ -24,7 +25,13 @@ import {
 } from '@mui/material'
 import { LngLat, LngLatBounds, Marker } from 'maplibre-gl'
 import { NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
-import { CropFree, List, LocationOn, Tag } from '@mui/icons-material'
+import {
+  CropFree,
+  List,
+  LocationOn,
+  Notifications,
+  Tag,
+} from '@mui/icons-material'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import UserBar from './UserBar'
@@ -143,7 +150,7 @@ const MainPane = () => {
       ...(tags ? tags : authors),
       kinds: [NDKKind.Text, NDKKind.Repost],
       since: unixNow() - WEEK,
-      limit: 20,
+      limit: 50,
     } as NDKFilter
   }, [signing, geohashFilter, tags, authors, loadingList])
 
@@ -378,7 +385,12 @@ const MainPane = () => {
           <DrawerMenu />
           <Filter className="grow" user={user} />
           {user?.hexpubkey ? (
-            <ProfileChip showName={false} hexpubkey={user.hexpubkey} />
+            <>
+              {/* <IconButton>
+                <Notifications />
+              </IconButton> */}
+              <ProfileChip showName={false} hexpubkey={user.hexpubkey} />
+            </>
           ) : (
             <UserBar />
           )}
