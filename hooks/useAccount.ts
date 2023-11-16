@@ -25,8 +25,18 @@ export const useFollowing = () => {
 }
 
 export const useFollowList = () => {
-  const { followLists } = useContext(AccountContext)
-  return followLists
+  const { followLists, followHashtag, unfollowHashtag } =
+    useContext(AccountContext)
+  return useMemo<
+    [
+      AccountProps['followLists'],
+      AccountProps['followHashtag'],
+      AccountProps['unfollowHashtag'],
+    ]
+  >(
+    () => [followLists, followHashtag, unfollowHashtag],
+    [followLists, followHashtag, unfollowHashtag],
+  )
 }
 
 export const useMuting = () => {

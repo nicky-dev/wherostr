@@ -55,7 +55,7 @@ export const ProfileCard = ({
           user?.profile?.banner ? '' : ' opacity-70 bg-gradient-primary'
         }`}
         style={
-          user?.profile?.image
+          user?.profile?.banner
             ? {
                 backgroundImage: `url(${user?.profile?.banner})`,
               }

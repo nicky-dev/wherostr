@@ -14,15 +14,17 @@ import Geohash from 'latlon-geohash'
 import {
   Box,
   Chip,
+  CircularProgress,
   Divider,
   Paper,
   Toolbar,
+  Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
 import { LngLat, LngLatBounds, Marker } from 'maplibre-gl'
 import { NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
-import { CropFree, LocationOn, Tag } from '@mui/icons-material'
+import { CropFree, List, LocationOn, Tag } from '@mui/icons-material'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import UserBar from './UserBar'
@@ -37,6 +39,9 @@ import bbox from '@turf/bbox'
 import FeedFilterMenu from './FeedFilterMenu'
 import { fetchProfile, profilePin } from '@/hooks/useUserProfile'
 import { useNDK } from '@/hooks/useNostr'
+import ProfileChip from './ProfileChip'
+import { useEvent } from '@/hooks/useEvent'
+import { FollowHashtagButton } from './FollowHashtagButton'
 
 const markers: Record<string, Marker> = {}
 const MainPane = () => {
@@ -72,6 +77,13 @@ const MainPane = () => {
 
   const query = useMemo(() => extractQuery(q), [q])
 
+  const [listEvent] = useEvent(query?.naddrDesc ? query.naddr : undefined)
+
+  const loadingList = useMemo(
+    () => query?.naddrDesc && !listEvent,
+    [query?.naddrDesc, listEvent],
+  )
+
   const bounds = useMemo(() => {
     if (query?.geohash) {
       const { lat, lon } = Geohash.decode(query?.geohash)
@@ -105,29 +117,35 @@ const MainPane = () => {
     }
   }, [signing, query?.bbox, query?.geohash])
 
-  const authorsOrTags = useMemo(() => {
+  const tags = useMemo(() => {
     const tags = query?.tags
       ? new Set(query?.tags.map((d) => d.trim().toLowerCase()))
       : undefined
-
     if (!!tags?.size) {
       return { '#t': Array.from(tags) }
+    }
+  }, [query?.tags])
+
+  const authors = useMemo(() => {
+    if (listEvent) {
+      const tags = listEvent.getMatchingTags('p')
+      return { authors: tags.map(([, pubkey]) => pubkey) }
     }
     if (user?.pubkey && follows && feedType === 'following') {
       return { authors: follows.map((d) => d.hexpubkey).concat([user?.pubkey]) }
     }
-  }, [user?.pubkey, follows, query?.tags, feedType])
+  }, [user?.pubkey, follows, listEvent, feedType])
 
   const filter = useMemo<NDKFilter | undefined>(() => {
-    if (signing) return
+    if (signing || loadingList) return
     if (geohashFilter) return geohashFilter
     return {
-      ...authorsOrTags,
+      ...(tags ? tags : authors),
       kinds: [NDKKind.Text, NDKKind.Repost],
       since: unixNow() - WEEK,
       limit: 20,
     } as NDKFilter
-  }, [signing, geohashFilter, authorsOrTags])
+  }, [signing, geohashFilter, tags, authors, loadingList])
 
   const [data, fetchMore, newItems, showNewItems] = useSubscribe(filter)
 
@@ -357,97 +375,115 @@ const MainPane = () => {
     >
       <Paper className="!sticky top-0 z-10">
         <Toolbar className="gap-3 items-center !px-3 !min-h-[64px]">
+          <DrawerMenu />
+          <Filter className="grow" user={user} />
           {user?.hexpubkey ? (
-            <DrawerMenu hexpubkey={user.hexpubkey} />
+            <ProfileChip showName={false} hexpubkey={user.hexpubkey} />
           ) : (
             <UserBar />
           )}
-
-          {!query ? (
-            <Box className="flex flex-1 justify-center">
-              <FeedFilterMenu user={user} />
-            </Box>
-          ) : (
-            <Box mx="auto">
-              {query.tags?.map((d) => (
-                <Chip
-                  icon={<Tag />}
-                  key={d}
-                  label={d}
-                  onDelete={() =>
-                    router.replace(
-                      `${pathname}?q=${query.tags
-                        ?.filter((tag) => tag !== d)
-                        .map((d) => `t:${d}`)
-                        .join(';')}&map=${showMap ? '1' : ''}`,
-                    )
-                  }
-                />
-              ))}
-              {query.bhash ? (
-                <Chip
-                  icon={<CropFree />}
-                  key={query.bhash?.join(', ')}
-                  label={query.bhash?.join(', ')}
-                  onClick={() => {
-                    if (!query.bbox) return
-                    const polygon = buffer(bboxPolygon(query.bbox), 5, {
-                      units: 'kilometers',
-                    })
-                    const [x1, y1, x2, y2] = bbox(polygon)
-                    router.replace(`${pathname}?q=${q}&map=1`, {
-                      scroll: false,
-                    })
-                    setTimeout(() => {
-                      map?.fitBounds([x1, y1, x2, y2], {
-                        duration: 1000,
-                        maxZoom: 16,
-                      })
-                    }, 300)
-                  }}
-                  onDelete={() => router.replace(`${pathname}?q=`)}
-                />
-              ) : undefined}
-              {query.geohash ? (
-                <Chip
-                  icon={<LocationOn />}
-                  key={query.geohash}
-                  label={query.geohash}
-                  onClick={() => {
-                    if (!query.lnglat) return
-                    const [lng, lat] = query.lnglat
-                    const lnglat = new LngLat(lng, lat)
-                    router.replace(`${pathname}?q=${q}&map=1`, {
-                      scroll: false,
-                    })
-                    setTimeout(() => {
-                      map?.fitBounds(LngLatBounds.fromLngLat(lnglat, 1000), {
-                        duration: 1000,
-                        maxZoom: 16,
-                      })
-                    }, 300)
-                  }}
-                  onDelete={() => router.replace(`${pathname}?q=`)}
-                />
-              ) : undefined}
-            </Box>
-          )}
-          <Filter className="grow" user={user} />
         </Toolbar>
         <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
       </Paper>
-      {/* <Tabs
-        variant="fullWidth"
-        value={tabValue}
-        onChange={(_, value) => {
-          setShowComments(value === 'conversations')
-          setTabValue(value)
-        }}
-      >
-        <Tab label="Notes" value="notes" />
-        <Tab label="Conversations" value="conversations" />
-      </Tabs> */}
+      <Toolbar>
+        {!query ? (
+          <Box className="flex flex-1 justify-center">
+            <FeedFilterMenu user={user} variant="contained" />
+          </Box>
+        ) : (
+          <Box mx="auto">
+            {query.tags?.map((d) => (
+              <Chip
+                icon={<Tag />}
+                key={d}
+                label={d}
+                onDelete={() =>
+                  router.replace(
+                    `${pathname}?q=${query.tags
+                      ?.filter((tag) => tag !== d)
+                      .map((d) => `t:${d}`)
+                      .join(';')}&map=${showMap ? '1' : ''}`,
+                  )
+                }
+              />
+            ))}
+            {query.bhash ? (
+              <Chip
+                icon={<CropFree />}
+                key={query.bhash?.join(', ')}
+                label={query.bhash?.join(', ')}
+                onClick={() => {
+                  if (!query.bbox) return
+                  const polygon = buffer(bboxPolygon(query.bbox), 5, {
+                    units: 'kilometers',
+                  })
+                  const [x1, y1, x2, y2] = bbox(polygon)
+                  router.replace(`${pathname}?q=${q}&map=1`, {
+                    scroll: false,
+                  })
+                  setTimeout(() => {
+                    map?.fitBounds([x1, y1, x2, y2], {
+                      duration: 1000,
+                      maxZoom: 16,
+                    })
+                  }, 300)
+                }}
+                onDelete={() => router.replace(`${pathname}?q=`)}
+              />
+            ) : undefined}
+            {query.geohash ? (
+              <Chip
+                icon={<LocationOn />}
+                key={query.geohash}
+                label={query.geohash}
+                onClick={() => {
+                  if (!query.lnglat) return
+                  const [lng, lat] = query.lnglat
+                  const lnglat = new LngLat(lng, lat)
+                  router.replace(`${pathname}?q=${q}&map=1`, {
+                    scroll: false,
+                  })
+                  setTimeout(() => {
+                    map?.fitBounds(LngLatBounds.fromLngLat(lnglat, 1000), {
+                      duration: 1000,
+                      maxZoom: 16,
+                    })
+                  }, 300)
+                }}
+                onDelete={() => router.replace(`${pathname}?q=`)}
+              />
+            ) : undefined}
+            {query.naddrDesc ? (
+              <Chip
+                icon={<List />}
+                clickable={false}
+                label={
+                  !loadingList ? (
+                    listEvent?.tagValue('title')
+                  ) : (
+                    <CircularProgress size={16} color="inherit" />
+                  )
+                }
+                onDelete={
+                  !loadingList
+                    ? () => router.replace(`${pathname}?q=`)
+                    : undefined
+                }
+              />
+            ) : undefined}
+          </Box>
+        )}
+      </Toolbar>
       <Divider />
+      {!!query?.tags?.[0] && (
+        <Toolbar>
+          <Typography fontWeight="bold" variant="h5">
+            #{query.tags[0]}
+          </Typography>
+          <Box className="flex-1" />
+          <FollowHashtagButton hashtag={query.tags[0]} />
+        </Toolbar>
+      )}
       <EventList
         parentRef={scrollRef}
         events={events}

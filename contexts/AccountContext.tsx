@@ -31,7 +31,7 @@ import { nanoid } from 'nanoid'
 export type SignInType = 'nip7' | 'nsec' | 'npub'
 
 export interface FollowListItem {
-  type: 'tag' | 'people' | 'bounds'
+  type: 'tag' | 'list' | 'bounds'
   id: string
   name: string
   value: any
@@ -50,6 +50,8 @@ export interface AccountProps {
   setMuteList: Dispatch<SetStateAction<string[]>>
   follow: (newFollow: NDKUser) => Promise<void>
   unfollow: (unfollowUser: NDKUser) => Promise<void>
+  followHashtag: (hashtag: string) => Promise<void>
+  unfollowHashtag: (hashtag: string) => Promise<void>
 }
 
 export const AccountContext = createContext<AccountProps>({
@@ -65,6 +67,8 @@ export const AccountContext = createContext<AccountProps>({
   setMuteList: () => {},
   follow: async () => {},
   unfollow: async () => {},
+  followHashtag: async () => {},
+  unfollowHashtag: async () => {},
 })
 
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
@@ -149,6 +153,51 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       setFollows(Array.from(followsSet))
     },
     [follows, ndk],
+  )
+
+  const followHashtag = useCallback(
+    async (hashtag: string) => {
+      if (!user) return
+      const hashtagLow = hashtag.toLowerCase()
+      const tags = followLists.filter((d) => d.type === 'tag').map((d) => d.id)
+      const followsSet = new Set(tags)
+      followsSet.add(hashtagLow)
+      const event = new NDKEvent(ndk)
+      event.kind = 30002
+      event.pubkey = user.pubkey
+      event.tags.push(['d', 'follow'])
+      followsSet.forEach((tag) => {
+        event.tags.push(['t', tag])
+      })
+      await event.publish()
+      setFollowLists((prev) => [
+        ...prev,
+        { type: 'tag', id: hashtagLow, name: hashtagLow, value: hashtagLow },
+      ])
+    },
+    [user, followLists, ndk],
+  )
+
+  const unfollowHashtag = useCallback(
+    async (hashtag: string) => {
+      if (!user) return
+      const hashtagLow = hashtag.toLowerCase()
+      const tags = followLists.filter((d) => d.type === 'tag').map((d) => d.id)
+      const followsSet = new Set(tags)
+      followsSet.delete(hashtagLow)
+      const event = new NDKEvent(ndk)
+      event.kind = 30002
+      event.pubkey = user.pubkey
+      event.tags.push(['d', 'follow'])
+      followsSet.forEach((tag) => {
+        event.tags.push(['t', tag])
+      })
+      await event.publish()
+      setFollowLists((prev) =>
+        prev.filter((d) => d.type !== 'tag' || d.id !== hashtagLow),
+      )
+    },
+    [user, followLists, ndk],
   )
 
   const signIn = useCallback(
@@ -291,21 +340,27 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     events?.forEach((ev) => {
       if (ev.kind === 30002) {
         tagList = ev
-      } else {
+      } else if (ev.kind) {
         const value = ev.getMatchingTags('p')
         if (!value.length) return
         const name = ev.tagValue('title')
         if (!name) return
-        const id = ev.tagValue('d') || ev.tagId()
-        peopleList.push({ type: 'people', id, name, value })
+        const id = ev.tagValue('d')
+        if (!id) return
+        const naddr = nip19.naddrEncode({
+          identifier: id,
+          kind: ev.kind,
+          pubkey: ev.pubkey,
+        })
+        peopleList.push({ type: 'list', id, name, value: naddr })
       }
     })
     const tags =
       tagList?.getMatchingTags('t').map<FollowListItem>(([, tag]) => {
-        return { type: 'tag', id: tag, name: tag, value: tag }
+        const tagLower = tag.toLowerCase()
+        return { type: 'tag', id: tagLower, name: tagLower, value: tagLower }
       }) || []
-    console.log({ tags, peopleList })
-    setFollowLists((prev) => prev.concat(peopleList, tags))
+    setFollowLists(peopleList.concat(tags))
   }, [user?.hexpubkey])
 
   const value = useMemo((): AccountProps => {
@@ -322,6 +377,8 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       setMuteList,
       follow,
       unfollow,
+      followHashtag,
+      unfollowHashtag,
     }
   }, [
     user,
@@ -334,6 +391,8 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     signOut,
     follow,
     unfollow,
+    followHashtag,
+    unfollowHashtag,
   ])
 
   return (

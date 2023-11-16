@@ -25,18 +25,18 @@ import { ProfileCard } from './ProfileCard'
 import { useAction } from '@/hooks/useApp'
 import { ProfileActionType } from '@/contexts/AppContext'
 import { usePathname, useRouter } from 'next/navigation'
+import { defaultPubkey } from '@/constants/app'
 
 export interface MenuButtonProps {
-  hexpubkey: string
   slotProps?: {
     profileChip?: ProfileChipProps
   }
 }
-const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
+const DrawerMenu: FC<MenuButtonProps> = ({ slotProps }) => {
   const router = useRouter()
   const pathname = usePathname()
   const { setProfileAction } = useAction()
-  const { readOnly, signOut } = useAccount()
+  const { readOnly, user, signOut } = useAccount()
   const [open, setOpen] = useState(false)
 
   const toggleDrawer = useCallback(() => {
@@ -47,12 +47,13 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
   const closeDrawer = useCallback(() => {
     setOpen(false)
   }, [])
+  const hexpubkey = user?.pubkey || defaultPubkey
 
   return (
     <Fragment>
       <ProfileChip
         {...slotProps?.profileChip}
-        hexpubkey={hexpubkey}
+        hexpubkey={defaultPubkey}
         showName={slotProps?.profileChip?.showName ?? false}
         onClick={toggleDrawer}
       />
@@ -71,22 +72,26 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
         <IconButton
           size="small"
           onClick={closeDrawer}
-          className="!absolute right-2 top-2 !bg-[#0000001f]"
+          className="!absolute right-2 top-2 !bg-[#0000001f] z-10"
         >
           <Close />
         </IconButton>
         <ProfileCard
           hexpubkey={hexpubkey}
           showAbout={false}
-          onClick={async () => {
-            closeDrawer()
-            setTimeout(() => {
-              setProfileAction({
-                hexpubkey: hexpubkey,
-                type: ProfileActionType.View,
-              })
-            }, 100)
-          }}
+          onClick={
+            user?.pubkey
+              ? async () => {
+                  closeDrawer()
+                  setTimeout(() => {
+                    setProfileAction({
+                      hexpubkey: hexpubkey,
+                      type: ProfileActionType.View,
+                    })
+                  }, 100)
+                }
+              : undefined
+          }
         />
         {/* <ProfileChip hexpubkey={hexpubkey} onClick={closeDrawer} size="large" /> */}
         <List>
@@ -164,25 +169,29 @@ const DrawerMenu: FC<MenuButtonProps> = ({ hexpubkey, slotProps }) => {
           </ListItemButton> */}
         </List>
         <Box flex={1} />
-        <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
-        <List>
-          <ListItemButton
-            onClick={async () => {
-              await signOut()
-              if (!pathname.startsWith('/settings')) {
-                router.replace(`${pathname}?q=global&map=`)
-              } else {
-                router.replace(`/?q=global&map=`)
-              }
-              closeDrawer()
-            }}
-          >
-            <ListItemIcon>
-              <ExitToApp />
-            </ListItemIcon>
-            <ListItemText primary="Logout" />
-          </ListItemButton>
-        </List>
+        {user?.pubkey && (
+          <>
+            <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
+            <List>
+              <ListItemButton
+                onClick={async () => {
+                  await signOut()
+                  if (!pathname.startsWith('/settings')) {
+                    router.replace(`${pathname}?q=global&map=`)
+                  } else {
+                    router.replace(`/?q=global&map=`)
+                  }
+                  closeDrawer()
+                }}
+              >
+                <ListItemIcon>
+                  <ExitToApp />
+                </ListItemIcon>
+                <ListItemText primary="Logout" />
+              </ListItemButton>
+            </List>
+          </>
+        )}
         {/* <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" /> */}
       </Drawer>
     </Fragment>

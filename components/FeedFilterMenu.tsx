@@ -77,7 +77,7 @@ export default function FeedFilterMenu({
   disableConversation,
   ...props
 }: FeedFilterMenuProps) {
-  const followLists = useFollowList()
+  const [followLists] = useFollowList()
   const pathname = usePathname()
   const query = useSearchParams()
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
@@ -108,7 +108,7 @@ export default function FeedFilterMenu({
       <Button
         {...props}
         color="inherit"
-        size="large"
+        size="medium"
         onClick={handleClick}
         startIcon={selectedMenu?.icon}
         endIcon={<ArrowDropDownOutlined />}
@@ -141,7 +141,6 @@ export default function FeedFilterMenu({
           .map((option, i) => {
             return (
               <ListItemButton
-                dense
                 key={option.id}
                 disabled={option.disabled}
                 onClick={() => handleMenuClick(option.id)}
@@ -159,21 +158,20 @@ export default function FeedFilterMenu({
             const q =
               d.type === 'tag'
                 ? `t:${d.value}`
-                : d.type === 'people'
-                ? `p:${d.value}`
+                : d.type === 'list'
+                ? `e:${d.value}`
                 : `b:${d.value}`
 
             const icon =
               d.type === 'tag' ? (
                 <Tag />
-              ) : d.type === 'people' ? (
+              ) : d.type === 'list' ? (
                 <List />
               ) : (
                 <CropFree />
               )
             return (
               <ListItemButton
-                dense
                 key={d.id}
                 onClick={() => handleMenuClick(d.id)}
                 LinkComponent={Link}

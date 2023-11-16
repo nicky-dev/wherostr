@@ -12,19 +12,24 @@ import { useMemo } from 'react'
 import usePromise from 'react-use-promise'
 
 export const useEvent = (
-  idOrFilter: string | NDKFilter<NDKKind>,
+  idOrFilter?: string | NDKFilter<NDKKind>,
   optRelaySet?: NDKRelaySet,
 ) => {
   const ndk = useNDK()
   const relaySet = useMemo(() => optRelaySet, [optRelaySet])
 
   return usePromise(
-    () =>
-      ndk.fetchEvent(
-        idOrFilter,
-        { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST, subId: nanoid(8) },
-        relaySet,
-      ),
+    async () =>
+      idOrFilter
+        ? ndk.fetchEvent(
+            idOrFilter,
+            {
+              cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+              subId: nanoid(8),
+            },
+            relaySet,
+          )
+        : null,
     [idOrFilter, relaySet],
   )
 }

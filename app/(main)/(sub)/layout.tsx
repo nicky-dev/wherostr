@@ -3,6 +3,7 @@
 import DrawerMenu from '@/components/DrawerMenu'
 import EventActionModal from '@/components/EventActionModal'
 import ProfileActionModal from '@/components/ProfileActionModal'
+import ProfileChip from '@/components/ProfileChip'
 import { StreamButton } from '@/components/StreamButton'
 import UserBar from '@/components/UserBar'
 import { useUser } from '@/hooks/useAccount'
@@ -23,15 +24,16 @@ export default function RootLayout({
   return (
     <>
       <Toolbar className="z-50">
+        <DrawerMenu />
+        <Box flex={1} />
         {user?.hexpubkey ? (
           <>
-            <DrawerMenu hexpubkey={user.hexpubkey} />
             {pathname.startsWith('/live') && (
               <>
-                <Box flex={1} />
                 <StreamButton label="Stream" icon={<Sensors />} />
               </>
             )}
+            <ProfileChip hexpubkey={user?.hexpubkey} showName={false} />
           </>
         ) : (
           <UserBar />

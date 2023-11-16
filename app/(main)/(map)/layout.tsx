@@ -4,6 +4,7 @@ import DrawerMenu from '@/components/DrawerMenu'
 import EventActionModal from '@/components/EventActionModal'
 import FeedFilterMenu from '@/components/FeedFilterMenu'
 import ProfileActionModal from '@/components/ProfileActionModal'
+import ProfileChip from '@/components/ProfileChip'
 import { StreamButton } from '@/components/StreamButton'
 import UserBar from '@/components/UserBar'
 import { MapContextProvider } from '@/contexts/MapContext'
@@ -25,15 +26,10 @@ export default function RootLayout({
   return (
     <MapContextProvider>
       <Toolbar className="z-50">
+        <DrawerMenu />
+        <Box flex={1} />
         {user?.hexpubkey ? (
           <>
-            <DrawerMenu hexpubkey={user.hexpubkey} />
-            {pathname.startsWith('/live') && (
-              <>
-                <Box flex={1} />
-                <StreamButton label="Stream" icon={<Sensors />} />
-              </>
-            )}
             {pathname.startsWith('/map') && (
               <Box className="flex flex-1 justify-center">
                 <FeedFilterMenu
@@ -44,6 +40,7 @@ export default function RootLayout({
                 />
               </Box>
             )}
+            <ProfileChip hexpubkey={user?.hexpubkey} showName={false} />
           </>
         ) : (
           <UserBar />
