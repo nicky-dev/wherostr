@@ -18,7 +18,7 @@ import getCaretCoordinates from 'textarea-caret'
 import ProfileChip from './ProfileChip'
 import classNames from 'classnames'
 import { ViewportList, ViewportListRef } from 'react-viewport-list'
-import { NostrPrefix, createNostrLink } from '@snort/system'
+import { NostrPrefix, createNostrLink, tryParseNostrLink } from '@snort/system'
 
 const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
   function NostrTextField({ onKeyUp, onKeyDown, inputRef, ...props }, ref) {
@@ -42,19 +42,16 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
       setSearchText('')
       setMentionPopoverAnchorEl(null)
     }, [])
-    const handleSelectProfile = useCallback(
-      (hexpubkey: string) => {
+    const replaceMentionValue = useCallback(
+      (nostrLink: string, caretPosition: number) => {
         const value = ((inputRef || innerInputRef) as any).current?.value
-        const leftText = value.substring(0, currentCaretPosition)
-        const rightText = value.substring(currentCaretPosition)
+        const leftText = value.substring(0, caretPosition)
+        const rightText = value.substring(caretPosition)
         const lastAtSignIndex = leftText.lastIndexOf('@')
         const newValue = `${leftText.substring(
           0,
           lastAtSignIndex,
-        )}nostr:${createNostrLink(
-          NostrPrefix.Profile,
-          hexpubkey,
-        ).encode()} ${rightText}`
+        )}${nostrLink} ${rightText}`
         const input = ((inputRef || innerInputRef) as any).current
         const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
           input.tagName === 'TEXTAREA'
@@ -65,10 +62,19 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
         nativeInputValueSetter?.call(input, newValue)
         const event = new Event('input', { bubbles: true })
         input.dispatchEvent(event)
+      },
+      [inputRef],
+    )
+    const handleSelectProfile = useCallback(
+      (hexpubkey: string) => {
+        replaceMentionValue(
+          `nostr:${createNostrLink(NostrPrefix.Profile, hexpubkey).encode()}`,
+          currentCaretPosition,
+        )
         handleClosePopover()
         return false
       },
-      [currentCaretPosition, handleClosePopover, inputRef],
+      [currentCaretPosition, handleClosePopover, replaceMentionValue],
     )
     const profiles = useMemo(() => {
       return Array.from(
@@ -116,13 +122,24 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
           if (/\s|\r|\n/.test(searchText) || selectionEnd === 0) {
             handleClosePopover()
           } else {
-            setCurrentCaretPosition(selectionEnd)
-            setSearchText(searchText)
+            const nostrLink = tryParseNostrLink(searchText)
+            if (nostrLink?.type) {
+              replaceMentionValue(`nostr:${nostrLink.encode()}`, selectionEnd)
+              handleClosePopover()
+            } else {
+              setCurrentCaretPosition(selectionEnd)
+              setSearchText(searchText)
+            }
           }
         }
         onKeyUp?.(event)
       },
-      [handleClosePopover, mentionPopoverAnchorEl, onKeyUp],
+      [
+        handleClosePopover,
+        mentionPopoverAnchorEl,
+        onKeyUp,
+        replaceMentionValue,
+      ],
     )
     const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = useCallback(
       (event) => {
