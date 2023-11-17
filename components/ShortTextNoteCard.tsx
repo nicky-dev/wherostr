@@ -28,8 +28,10 @@ import { MapContext } from '@/contexts/MapContext'
 import { LngLatBounds } from 'maplibre-gl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import NoteMenu from './NoteMenu'
+import classNames from 'classnames'
 
 const ShortTextNoteCard = ({
+  className,
   event,
   action = true,
   relatedNoteVariant = 'fraction',
@@ -39,6 +41,7 @@ const ShortTextNoteCard = ({
   indentLine,
   viewNoteButton = true,
 }: {
+  className?: string
   event: NDKEvent
   action?: boolean
   relatedNoteVariant?: 'full' | 'fraction' | 'link'
@@ -132,7 +135,7 @@ const ShortTextNoteCard = ({
   }, [event])
 
   return (
-    <Card className="!rounded-none">
+    <Card className={classNames('!rounded-none', className)}>
       <Box className="px-3 pt-3 flex items-center gap-2 text-contrast-secondary">
         <ProfileChip hexpubkey={hexpubkey} />
         {createdDate && (

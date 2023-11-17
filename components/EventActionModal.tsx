@@ -15,10 +15,12 @@ import {
 } from '@mui/material'
 import {
   FC,
+  MutableRefObject,
   PropsWithChildren,
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import {
@@ -43,6 +45,8 @@ import { useFollowing, useMuting, useUser } from '@/hooks/useAccount'
 import { isComment, isQuote } from '@/utils/event'
 import { amountFormat } from '@/constants/app'
 import ZapEventForm from './ZapEventForm'
+import classNames from 'classnames'
+import { ViewportList } from 'react-viewport-list'
 
 export const EventProfileCard: FC<
   PropsWithChildren & { hexpubkey: string }
@@ -115,6 +119,7 @@ export const ShortTextNotePane = ({
   comments = false,
   likes = false,
   zaps = false,
+  viewportRef,
 }: {
   event: NDKEvent
   reposts?: boolean
@@ -122,6 +127,7 @@ export const ShortTextNotePane = ({
   comments?: boolean
   likes?: boolean
   zaps?: boolean
+  viewportRef?: MutableRefObject<any>
 }) => {
   const { eventAction, setEventAction } = useContext(AppContext)
   const [muteList] = useMuting()
@@ -250,9 +256,14 @@ export const ShortTextNotePane = ({
   )
   return (
     <Box>
-      <ShortTextNoteCard event={event} indent={false} viewNoteButton={false} />
+      <ShortTextNoteCard
+        className="!shadow-none"
+        event={event}
+        indent={false}
+        viewNoteButton={false}
+      />
       {event.kind === NDKKind.Text && (
-        <>
+        <Paper className="sticky top-[59px] z-10">
           <Box>
             <ButtonGroup
               className="flex [&>button]:flex-1 w-full text-contrast-secondary"
@@ -260,6 +271,9 @@ export const ShortTextNotePane = ({
               color="inherit"
             >
               <Button
+                className={classNames({
+                  '!bg-secondary/10': !!eventAction?.options?.reposts,
+                })}
                 color={eventAction?.options?.reposts ? 'secondary' : undefined}
                 onClick={handleClickAction(EventActionType.View, {
                   reposts: true,
@@ -268,6 +282,9 @@ export const ShortTextNotePane = ({
                 Reposts
               </Button>
               <Button
+                className={classNames({
+                  '!bg-secondary/10': !!eventAction?.options?.quotes,
+                })}
                 color={eventAction?.options?.quotes ? 'secondary' : undefined}
                 onClick={handleClickAction(EventActionType.View, {
                   quotes: true,
@@ -276,6 +293,9 @@ export const ShortTextNotePane = ({
                 Quotes
               </Button>
               <Button
+                className={classNames({
+                  '!bg-secondary/10': !!eventAction?.options?.comments,
+                })}
                 color={eventAction?.options?.comments ? 'secondary' : undefined}
                 onClick={handleClickAction(EventActionType.View, {
                   comments: true,
@@ -284,6 +304,9 @@ export const ShortTextNotePane = ({
                 Comments
               </Button>
               <Button
+                className={classNames({
+                  '!bg-secondary/10': !!eventAction?.options?.likes,
+                })}
                 color={eventAction?.options?.likes ? 'secondary' : undefined}
                 onClick={handleClickAction(EventActionType.View, {
                   likes: true,
@@ -292,6 +315,9 @@ export const ShortTextNotePane = ({
                 Reactions
               </Button>
               <Button
+                className={classNames({
+                  '!bg-secondary/10': !!eventAction?.options?.zaps,
+                })}
                 color={eventAction?.options?.zaps ? 'secondary' : undefined}
                 onClick={handleClickAction(EventActionType.View, {
                   zaps: true,
@@ -302,11 +328,17 @@ export const ShortTextNotePane = ({
             </ButtonGroup>
           </Box>
           <Divider />
-        </>
+        </Paper>
       )}
       {relatedEventElements ? (
         relatedEventElements.length ? (
-          relatedEventElements
+          <ViewportList
+            viewportRef={viewportRef}
+            items={relatedEventElements}
+            withCache
+          >
+            {(element) => element}
+          </ViewportList>
         ) : (
           <Typography
             color="text.secondary"
@@ -325,15 +357,17 @@ export const ShortTextNotePane = ({
 }
 
 const EventActionModal = () => {
+  const viewportRef = useRef(null)
   const { user } = useContext(AccountContext)
-  const { eventAction, setEventAction, backToPreviosEventAction } =
+  const { eventAction, backToPreviosModalAction, clearActions } =
     useContext(AppContext)
   const handleClickBack = useCallback(() => {
-    backToPreviosEventAction()
-  }, [backToPreviosEventAction])
-  const handleClickCloseModal = useCallback(() => {
-    setEventAction(undefined)
-  }, [setEventAction])
+    backToPreviosModalAction('event')
+  }, [backToPreviosModalAction])
+  const handleClickCloseModal = useCallback(
+    () => clearActions(),
+    [clearActions],
+  )
   const renderAction = useCallback(() => {
     const { type, event } = eventAction || {}
     switch (type) {
@@ -354,6 +388,7 @@ const EventActionModal = () => {
           event && (
             <ShortTextNotePane
               event={event}
+              viewportRef={viewportRef}
               {...(eventAction?.options || {})}
             />
           )
@@ -384,8 +419,11 @@ const EventActionModal = () => {
   return (
     eventAction && (
       <Box className="relative max-h-full flex rounded-2xl overflow-hidden p-0.5 bg-gradient-primary">
-        <Paper className="w-full overflow-y-auto !rounded-2xl">
-          <Paper className="sticky top-0 z-10">
+        <Paper
+          ref={viewportRef}
+          className="w-full overflow-y-auto !rounded-2xl"
+        >
+          <Paper className="sticky top-0 z-10 !rounded-none">
             <Box className="flex items-center p-3 shadow gap-2">
               <IconButton size="small" onClick={handleClickBack}>
                 <ArrowBackOutlined />

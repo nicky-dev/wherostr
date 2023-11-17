@@ -28,10 +28,12 @@ import {
 import copy from 'copy-to-clipboard'
 
 export const ProfileCard = ({
+  className,
   hexpubkey,
   showAbout,
   onClick,
 }: {
+  className?: string
   hexpubkey?: string
   showAbout?: boolean
   onClick?: (user?: NDKUser) => void
@@ -49,7 +51,7 @@ export const ProfileCard = ({
   const clickable = useMemo(() => !!onClick, [onClick])
 
   return (
-    <Box>
+    <Box className={className}>
       <Box
         className={`aspect-[5/2] bg-cover bg-center${
           user?.profile?.banner ? '' : ' opacity-70 bg-gradient-primary'
@@ -109,9 +111,11 @@ export const ProfileCard = ({
 
 let copyStateTimeout: NodeJS.Timeout
 export const ProfileCardFull = ({
+  className,
   hexpubkey,
   onClick,
 }: {
+  className?: string
   hexpubkey?: string
   onClick?: (user?: NDKUser) => void
 }) => {
@@ -176,7 +180,7 @@ export const ProfileCardFull = ({
   }, [unfollow, user])
 
   return (
-    <Box>
+    <Box className={className}>
       <Box
         className={`relative aspect-[5/2] bg-cover bg-center`}
         style={
