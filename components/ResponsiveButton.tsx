@@ -17,7 +17,7 @@ const ResponsiveButton: FC<LoadingButtonProps> = (props) => {
         </LoadingButton>
       </Hidden>
       <Hidden mdUp>
-        <Tooltip title={children}>
+        <Tooltip title={children} disableInteractive>
           <LoadingButton
             {...other}
             size="small"

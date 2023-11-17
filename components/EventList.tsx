@@ -160,7 +160,11 @@ const EventList: FC<EventListProps> = ({
           withCache
         >
           {(item) => (
-            <ShortTextNoteCard key={item.deduplicationKey()} event={item} />
+            <ShortTextNoteCard
+              key={item.deduplicationKey()}
+              event={item}
+              limitedHeight
+            />
           )}
         </ViewportList>
       </Paper>

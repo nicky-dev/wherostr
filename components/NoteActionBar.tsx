@@ -151,7 +151,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
 
   return (
     <Box className="text-contrast-secondary grid grid-flow-col grid-rows-1 grid-cols-5 gap-1">
-      <Tooltip title="Repost">
+      <Tooltip title="Repost" disableInteractive>
         <Button
           color="inherit"
           size="small"
@@ -163,7 +163,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           </Typography>
         </Button>
       </Tooltip>
-      <Tooltip title="Quote">
+      <Tooltip title="Quote" disableInteractive>
         <Button
           color="inherit"
           size="small"
@@ -175,7 +175,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           </Typography>
         </Button>
       </Tooltip>
-      <Tooltip title="Comment">
+      <Tooltip title="Comment" disableInteractive>
         <Button
           color="inherit"
           size="small"
@@ -187,7 +187,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           </Typography>
         </Button>
       </Tooltip>
-      <Tooltip title="Like">
+      <Tooltip title="Like" disableInteractive>
         <Button
           color="inherit"
           size="small"
@@ -205,7 +205,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
           </Typography>
         </Button>
       </Tooltip>
-      <Tooltip title="Zap">
+      <Tooltip title="Zap" disableInteractive>
         <Box>
           <Button
             className="w-full"

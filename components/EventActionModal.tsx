@@ -239,6 +239,7 @@ export const ShortTextNotePane = ({
                 depth={1}
                 hideContent={item.kind !== NDKKind.Text}
                 indentLine
+                limitedHeight
               />
             )
         }

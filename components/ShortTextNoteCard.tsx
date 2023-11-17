@@ -5,6 +5,7 @@ import TextNote, { QuotedEvent } from '@/components/TextNote'
 import TimeFromNow from '@/components/TimeFromNow'
 import {
   Box,
+  Button,
   Card,
   CardContent,
   Divider,
@@ -12,7 +13,14 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { useCallback, useContext, useMemo } from 'react'
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   ArrowRightAlt,
   ChevronRightOutlined,
@@ -40,6 +48,7 @@ const ShortTextNoteCard = ({
   indent = true,
   indentLine,
   viewNoteButton = true,
+  limitedHeight = false,
 }: {
   className?: string
   event: NDKEvent
@@ -50,12 +59,26 @@ const ShortTextNoteCard = ({
   indent?: boolean
   indentLine?: boolean
   viewNoteButton?: boolean
+  limitedHeight?: boolean
 }) => {
   const pathname = usePathname()
   const query = useSearchParams()
   const router = useRouter()
   const { ndk } = useContext(NostrContext)
   const { map } = useContext(MapContext)
+
+  const contentRef = useRef(null)
+  const [overLimitedHeight, setOverLimitedHeight] = useState<
+    boolean | undefined
+  >(undefined)
+  useEffect(() => {
+    if (limitedHeight && (contentRef?.current as any)?.clientHeight > 480) {
+      setOverLimitedHeight(true)
+    } else if (overLimitedHeight) {
+      setOverLimitedHeight(false)
+    }
+  })
+
   const createdDate = useMemo(
     () => (event.created_at ? new Date(event.created_at * 1000) : undefined),
     [event],
@@ -143,7 +166,7 @@ const ShortTextNoteCard = ({
             <Typography variant="caption">
               {difficulty && (
                 <>
-                  <Tooltip title={event.id}>
+                  <Tooltip title={event.id} disableInteractive>
                     <Typography variant="caption" fontWeight="bold">
                       PoW-{difficulty}
                     </Typography>
@@ -212,7 +235,32 @@ const ShortTextNoteCard = ({
           </Box>
           {event.kind === NDKKind.Text ? (
             <CardContent className="flex-1 !pl-0 !pr-3 !pt-3 !pb-0 overflow-hidden">
-              <TextNote event={event} relatedNoteVariant={relatedNoteVariant} />
+              <Box
+                className={classNames({
+                  'max-h-[400px] overflow-hidden relative rounded-b-2xl':
+                    limitedHeight &&
+                    (overLimitedHeight || overLimitedHeight === undefined),
+                })}
+              >
+                <Box ref={contentRef}>
+                  <TextNote
+                    event={event}
+                    relatedNoteVariant={relatedNoteVariant}
+                  />
+                </Box>
+                {overLimitedHeight && (
+                  <Box className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-disabled-dark to-100% flex justify-center items-end pb-3">
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      size="small"
+                      onClick={handleClickViewNote}
+                    >
+                      Show more...
+                    </Button>
+                  </Box>
+                )}
+              </Box>
               {action && (
                 <Box className="mt-3">
                   <NoteActionBar event={event} />
