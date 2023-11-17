@@ -123,9 +123,13 @@ const EventList: FC<EventListProps> = ({
 
   const handleShowNewItems = useCallback(() => {
     onShowNewItems?.()
-    setTimeout(() => {
-      scrollRef.current?.scrollToIndex({ index: 0 })
-    }, 100)
+    if (!scrollRef.current) return
+    scrollRef.current?.scrollToIndex({
+      index: 0,
+      offset: -196,
+      alignToTop: true,
+      delay: 300,
+    })
   }, [onShowNewItems])
 
   return (

@@ -55,15 +55,6 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
     [],
   )
   useEffect(() => {
-    const onConnect = (...args: any[]) => {
-      console.debug('onConnect:args', args)
-    }
-    const onDisconnect = (...args: any[]) => {
-      console.debug('onDisconnect:args', args)
-    }
-    ndk.pool.on('connect', onConnect)
-    ndk.pool.on('disconnect', onDisconnect)
-    // ndk.pool.on('relay:connect', onConnect)
     ndk.connect()
     return () => {
       ndk.removeAllListeners()
