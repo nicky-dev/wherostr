@@ -35,13 +35,12 @@ import {
   NDKUser,
   zapInvoiceFromEvent,
 } from '@nostr-dev-kit/ndk'
-import { tryParseNostrLink, transformText } from '@snort/system'
 import numeral from 'numeral'
 import { useEvents } from '@/hooks/useEvent'
 import { CreateEventForm } from './CreateEventForm'
 import { LoadingButton } from '@mui/lab'
 import { useFollowing, useMuting, useUser } from '@/hooks/useAccount'
-import { isComment } from '@/utils/event'
+import { isComment, isQuote } from '@/utils/event'
 import { amountFormat } from '@/constants/app'
 import ZapEventForm from './ZapEventForm'
 
@@ -160,35 +159,10 @@ export const ShortTextNotePane = ({
           _reposts.push(item)
           break
         case NDKKind.Text:
-          const linkFound =
-            transformText(content, tags).filter(
-              ({ type, content }) =>
-                type === 'link' &&
-                (content.startsWith('nostr:nevent1') ||
-                  content.startsWith('nostr:note1')) &&
-                tryParseNostrLink(content)?.id === event.id,
-            ).length > 0
-
-          const iscomment = isComment(item)
-          const e = item.getMatchingTags('e')
-          if (
-            comments &&
-            iscomment &&
-            !linkFound &&
-            e.at(-1)?.[1] === event.id
-          ) {
+          if (quotes && isQuote(item, event)) {
+            _quotes.push(item)
+          } else if (comments && isComment(item, event, true)) {
             _comments.push(item)
-          } else if (
-            comments &&
-            iscomment &&
-            !linkFound &&
-            e.at(0)?.[3] === 'reply'
-          ) {
-            _comments.push(item)
-          } else if (quotes) {
-            if (linkFound) {
-              _quotes.push(item)
-            }
           }
           break
         case NDKKind.Reaction:
@@ -263,7 +237,7 @@ export const ShortTextNotePane = ({
             )
         }
       })
-  }, [comments, event.id, quotes, relatedEvents, muteList])
+  }, [relatedEvents, muteList, quotes, event, comments])
   const handleClickAction = useCallback(
     (type: EventActionType, options?: any) => () => {
       setEventAction({

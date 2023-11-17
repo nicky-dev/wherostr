@@ -18,11 +18,11 @@ import {
 } from '@nostr-dev-kit/ndk'
 import usePromise from 'react-use-promise'
 import numeral from 'numeral'
-import { tryParseNostrLink, transformText } from '@snort/system'
 import { useNDK } from '@/hooks/useNostr'
 import { useMuting, useUser } from '@/hooks/useAccount'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { amountFormat } from '@/constants/app'
+import { isComment, isQuote } from '@/utils/event'
 
 const NoteActionBar = ({ event }: { event: NDKEvent }) => {
   const ndk = useNDK()
@@ -73,18 +73,9 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
     const quotes: NDKEvent[] = []
     const comments: NDKEvent[] = []
     quoteAndCommentEvents.forEach((item) => {
-      const { content, tags } = item
-      if (
-        transformText(content, tags).filter(
-          ({ type, content }) =>
-            type === 'link' &&
-            (content.startsWith('nostr:nevent1') ||
-              content.startsWith('nostr:note1')) &&
-            tryParseNostrLink(content)?.id === event.id,
-        ).length > 0
-      ) {
+      if (isQuote(item, event)) {
         quotes.push(item)
-      } else if (item.getMatchingTags('e').some((d) => d?.[1] === event.id)) {
+      } else if (isComment(item, event, true)) {
         comments.push(item)
       }
     })
