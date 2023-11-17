@@ -419,11 +419,18 @@ const connectToUserRelays = async (user: NDKUser) => {
     })
     await Promise.allSettled(
       relayList.relays.map(async (url) => {
-        return new Promise<NDKRelay>((resolve) => {
+        return new Promise<NDKRelay>((resolve, reject) => {
           const relay = ndk.pool.relays.get(url)
           if (!relay) {
             const relay = new NDKRelay(url)
-            relay.once('connect', () => resolve(relay))
+            const timeout = setTimeout(() => {
+              relay.removeAllListeners()
+              reject('timeout')
+            }, 5000)
+            relay.once('connect', () => {
+              clearTimeout(timeout)
+              resolve(relay)
+            })
             ndk.pool.addRelay(relay)
           } else {
             if (relay.connectivity.status === NDKRelayStatus.CONNECTED) {
@@ -431,7 +438,14 @@ const connectToUserRelays = async (user: NDKUser) => {
             } else if (
               relay.connectivity.status === NDKRelayStatus.CONNECTING
             ) {
-              relay.once('connect', () => resolve(relay))
+              const timeout = setTimeout(() => {
+                relay.removeAllListeners()
+                reject('timeout')
+              }, 5000)
+              relay.once('connect', () => {
+                clearTimeout(timeout)
+                resolve(relay)
+              })
             }
           }
         })
