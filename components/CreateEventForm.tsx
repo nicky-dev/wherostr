@@ -208,7 +208,7 @@ export const CreateEventForm = ({
 
         relatedEvents.forEach((event) => {
           const { id, author, kind } = event
-          if (type !== EventActionType.Comment) {
+          if (type === EventActionType.Comment) {
             const tagE = event.getMatchingTags('e')
             tagE.forEach(([name, val, , mark], i) => {
               if (i === 0) {
