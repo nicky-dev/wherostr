@@ -46,13 +46,14 @@ export const useMuting = () => {
     async (muteUser: NDKUser) => {
       const event = new NDKEvent(ndk)
       event.kind = NDKKind.MuteList
-      muteList?.forEach((d) => {
-        event.tag(ndk.getUser({ hexpubkey: d }))
+      const muteSet = new Set(muteList)
+      muteSet.forEach((d) => {
+        event.tag(ndk.getUser({ pubkey: d }))
       })
       event.tag(muteUser)
-      const list = event.getMatchingTags('p').map(([tag, pubkey]) => pubkey)
+      muteSet.add(muteUser.pubkey)
       await event.publish()
-      setMuteList(list)
+      setMuteList(Array.from(muteSet))
     },
     [ndk, muteList, setMuteList],
   )
