@@ -237,7 +237,7 @@ const ShortTextNoteCard = ({
             <CardContent className="flex-1 !pl-0 !pr-3 !pt-3 !pb-0 overflow-hidden">
               <Box
                 className={classNames({
-                  'max-h-[400px] overflow-hidden relative rounded-b-2xl':
+                  'max-h-[400px] overflow-hidden relative':
                     limitedHeight &&
                     (overLimitedHeight || overLimitedHeight === undefined),
                 })}
@@ -249,7 +249,7 @@ const ShortTextNoteCard = ({
                   />
                 </Box>
                 {overLimitedHeight && (
-                  <Box className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-disabled-dark to-100% flex justify-center items-end pb-3">
+                  <Box className="absolute left-0 right-0 bottom-0 h-12 -mt-12 bg-gradient-to-t from-disabled-dark to-100% flex justify-center items-center">
                     <Button
                       variant="contained"
                       color="secondary"

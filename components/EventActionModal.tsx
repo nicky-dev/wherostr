@@ -47,6 +47,7 @@ import { amountFormat } from '@/constants/app'
 import ZapEventForm from './ZapEventForm'
 import classNames from 'classnames'
 import { ViewportList } from 'react-viewport-list'
+import { transformText } from '@snort/system'
 
 export const EventProfileCard: FC<
   PropsWithChildren & { hexpubkey: string }
@@ -188,17 +189,24 @@ export const ShortTextNotePane = ({
           case NDKKind.Repost:
             return <EventProfileCard key={index} hexpubkey={item.pubkey} />
           case NDKKind.Reaction:
+            const { type, content } = transformText(item.content, item.tags)[0]
             return (
               <EventProfileCard key={index} hexpubkey={item.pubkey}>
                 <Box className="px-3 w-14 text-center">
-                  {item.content === '+' ? (
+                  {type === 'custom_emoji' ? (
+                    <img
+                      className="inline-block max-h-[1.5em] max-w-[1.5em]"
+                      alt="emoji"
+                      src={content}
+                    />
+                  ) : content === '+' ? (
                     <ThumbUp color="secondary" />
                   ) : (
                     <Typography
                       className="overflow-hidden whitespace-nowrap text-ellipsis text-contrast-primary"
                       variant="h6"
                     >
-                      {item.content}
+                      {content}
                     </Typography>
                   )}
                 </Box>
@@ -264,94 +272,100 @@ export const ShortTextNotePane = ({
         viewNoteButton={false}
       />
       {event.kind === NDKKind.Text && (
-        <Paper className="sticky top-[59px] z-10">
-          <Box>
-            <ButtonGroup
-              className="flex [&>button]:flex-1 w-full text-contrast-secondary"
-              variant="text"
-              color="inherit"
-            >
-              <Button
-                className={classNames({
-                  '!bg-secondary/10': !!eventAction?.options?.reposts,
-                })}
-                color={eventAction?.options?.reposts ? 'secondary' : undefined}
-                onClick={handleClickAction(EventActionType.View, {
-                  reposts: true,
-                })}
+        <>
+          <Paper className="sticky top-[59px] z-10">
+            <Box>
+              <ButtonGroup
+                className="flex [&>button]:flex-1 w-full text-contrast-secondary"
+                variant="text"
+                color="inherit"
               >
-                Reposts
-              </Button>
-              <Button
-                className={classNames({
-                  '!bg-secondary/10': !!eventAction?.options?.quotes,
-                })}
-                color={eventAction?.options?.quotes ? 'secondary' : undefined}
-                onClick={handleClickAction(EventActionType.View, {
-                  quotes: true,
-                })}
+                <Button
+                  className={classNames({
+                    '!bg-secondary/10': !!eventAction?.options?.reposts,
+                  })}
+                  color={
+                    eventAction?.options?.reposts ? 'secondary' : undefined
+                  }
+                  onClick={handleClickAction(EventActionType.View, {
+                    reposts: true,
+                  })}
+                >
+                  Reposts
+                </Button>
+                <Button
+                  className={classNames({
+                    '!bg-secondary/10': !!eventAction?.options?.quotes,
+                  })}
+                  color={eventAction?.options?.quotes ? 'secondary' : undefined}
+                  onClick={handleClickAction(EventActionType.View, {
+                    quotes: true,
+                  })}
+                >
+                  Quotes
+                </Button>
+                <Button
+                  className={classNames({
+                    '!bg-secondary/10': !!eventAction?.options?.comments,
+                  })}
+                  color={
+                    eventAction?.options?.comments ? 'secondary' : undefined
+                  }
+                  onClick={handleClickAction(EventActionType.View, {
+                    comments: true,
+                  })}
+                >
+                  Comments
+                </Button>
+                <Button
+                  className={classNames({
+                    '!bg-secondary/10': !!eventAction?.options?.likes,
+                  })}
+                  color={eventAction?.options?.likes ? 'secondary' : undefined}
+                  onClick={handleClickAction(EventActionType.View, {
+                    likes: true,
+                  })}
+                >
+                  Reactions
+                </Button>
+                <Button
+                  className={classNames({
+                    '!bg-secondary/10': !!eventAction?.options?.zaps,
+                  })}
+                  color={eventAction?.options?.zaps ? 'secondary' : undefined}
+                  onClick={handleClickAction(EventActionType.View, {
+                    zaps: true,
+                  })}
+                >
+                  Zaps
+                </Button>
+              </ButtonGroup>
+            </Box>
+            <Divider />
+          </Paper>
+          {relatedEventElements ? (
+            relatedEventElements.length ? (
+              <ViewportList
+                viewportRef={viewportRef}
+                items={relatedEventElements}
+                withCache
               >
-                Quotes
-              </Button>
-              <Button
-                className={classNames({
-                  '!bg-secondary/10': !!eventAction?.options?.comments,
-                })}
-                color={eventAction?.options?.comments ? 'secondary' : undefined}
-                onClick={handleClickAction(EventActionType.View, {
-                  comments: true,
-                })}
+                {(element) => element}
+              </ViewportList>
+            ) : (
+              <Typography
+                color="text.secondary"
+                className="flex flex-1 justify-center items-end !py-2 italic"
               >
-                Comments
-              </Button>
-              <Button
-                className={classNames({
-                  '!bg-secondary/10': !!eventAction?.options?.likes,
-                })}
-                color={eventAction?.options?.likes ? 'secondary' : undefined}
-                onClick={handleClickAction(EventActionType.View, {
-                  likes: true,
-                })}
-              >
-                Reactions
-              </Button>
-              <Button
-                className={classNames({
-                  '!bg-secondary/10': !!eventAction?.options?.zaps,
-                })}
-                color={eventAction?.options?.zaps ? 'secondary' : undefined}
-                onClick={handleClickAction(EventActionType.View, {
-                  zaps: true,
-                })}
-              >
-                Zaps
-              </Button>
-            </ButtonGroup>
-          </Box>
-          <Divider />
-        </Paper>
-      )}
-      {relatedEventElements ? (
-        relatedEventElements.length ? (
-          <ViewportList
-            viewportRef={viewportRef}
-            items={relatedEventElements}
-            withCache
-          >
-            {(element) => element}
-          </ViewportList>
-        ) : (
-          <Typography
-            color="text.secondary"
-            className="flex flex-1 justify-center items-end !py-2 italic"
-          >
-            No more content.
-          </Typography>
-        )
-      ) : (
-        <Box p={1} textAlign="center">
-          <CircularProgress color="inherit" />
-        </Box>
+                No more content.
+              </Typography>
+            )
+          ) : (
+            <Box p={1} textAlign="center">
+              <CircularProgress color="inherit" />
+            </Box>
+          )}
+        </>
       )}
     </Box>
   )
