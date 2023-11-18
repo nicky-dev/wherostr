@@ -13,7 +13,10 @@ export const FollowHashtagButton: FC<FollowHashtagButtonProps> = ({
   const [followLists, followHashtag, unfollowHashtag] = useFollowList()
 
   const isFollowing = useMemo(
-    () => followLists?.find((d) => d.type === 'tag' && d.id === hashtag),
+    () =>
+      followLists?.find(
+        (d) => d.type === 'tag' && d.id.toLowerCase() === hashtag.toLowerCase(),
+      ),
     [followLists, hashtag],
   )
 

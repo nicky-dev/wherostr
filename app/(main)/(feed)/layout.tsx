@@ -1,19 +1,23 @@
 'use client'
+import EventActionModal from '@/components/EventActionModal'
 import MainPane from '@/components/MainPane'
 import { MapView } from '@/components/MapView'
+import ProfileActionModal from '@/components/ProfileActionModal'
+import { EventActionType } from '@/contexts/AppContext'
 import { MapContextProvider } from '@/contexts/MapContext'
+import { useAccount } from '@/hooks/useAccount'
+import { useAction } from '@/hooks/useApp'
+import { ChevronLeftOutlined, Draw } from '@mui/icons-material'
 import { Box, Fab, Hidden, Zoom, useMediaQuery, useTheme } from '@mui/material'
 import classNames from 'classnames'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { ChevronLeftOutlined, Draw } from '@mui/icons-material'
 import { useCallback, useMemo } from 'react'
-import { useAccount } from '@/hooks/useAccount'
-import { useAction } from '@/hooks/useApp'
-import { EventActionType } from '@/contexts/AppContext'
-import EventActionModal from '@/components/EventActionModal'
-import ProfileActionModal from '@/components/ProfileActionModal'
 
-export default function Page() {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const { readOnly } = useAccount()
   const { eventAction, profileAction, setEventAction } = useAction()
   const theme = useTheme()
@@ -44,7 +48,6 @@ export default function Page() {
           className={classNames('fixed inset-0 flex-1', {
             hidden: !mdUp && !hasMap,
             'z-10': hasMap && !mdUp,
-            // 'md:visible': true,
           })}
         >
           <Hidden mdUp>
@@ -60,7 +63,7 @@ export default function Page() {
             </Box>
           </Hidden>
         </MapView>
-        <MainPane />
+        <MainPane>{children}</MainPane>
         {eventAction ? (
           <Box
             className={classNames(

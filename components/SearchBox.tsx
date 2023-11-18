@@ -62,7 +62,7 @@ const SearchBox: React.FC<
       name: inputValue
         .split(' ')
         .filter((d) => !!d.trim())
-        .map((d) => `t:${d.trim()}`)
+        .map((d) => `t:${d.trim().toLowerCase()}`)
         .join(';'),
       display_name: `Search notes: ${inputValue
         .split(' ')

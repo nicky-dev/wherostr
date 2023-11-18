@@ -208,7 +208,7 @@ const renderChunk = (
       )
     case 'hashtag':
       return (
-        <NextLink href={`/?q=t:${content}`}>
+        <NextLink href={`/?q=t:${content.toLowerCase()}`}>
           <Link underline="hover" color="secondary" component="span">
             #{content}
           </Link>

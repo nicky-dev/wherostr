@@ -25,7 +25,6 @@ import {
 import { NostrContext } from '@/contexts/NostrContext'
 import { useAction } from '@/hooks/useApp'
 import { nip19 } from 'nostr-tools'
-import usePromise from 'react-use-promise'
 import { nanoid } from 'nanoid'
 
 export type SignInType = 'nip7' | 'nsec' | 'npub'
@@ -300,68 +299,72 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
     initUser()
   }, [user, initUser])
 
-  usePromise(async () => {
+  useEffect(() => {
     if (!user?.hexpubkey) return setMuteList([])
+    const fn = async () => {
+      const event = await ndk.fetchEvent(
+        {
+          kinds: [NDKKind.MuteList, NDKKind.ChannelMuteUser],
+          authors: [user?.hexpubkey],
+        },
+        { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, subId: nanoid(8) },
+      )
+      const list =
+        event?.getMatchingTags('p').map(([tag, pubkey]) => {
+          return pubkey
+        }) || []
+      setMuteList(list)
+    }
+    fn()
+  }, [ndk, user?.hexpubkey])
 
-    const event = await ndk.fetchEvent(
-      {
-        kinds: [NDKKind.MuteList, NDKKind.ChannelMuteUser],
-        authors: [user?.hexpubkey],
-      },
-      { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, subId: nanoid(8) },
-    )
-    const list =
-      event?.getMatchingTags('p').map(([tag, pubkey]) => {
-        return pubkey
-      }) || []
-    setMuteList(list)
-  }, [user?.hexpubkey])
-
-  usePromise(async () => {
+  useEffect(() => {
     if (!user?.hexpubkey) return setFollowLists([])
+    const fn = async () => {
+      const events = await ndk.fetchEvents(
+        [
+          {
+            kinds: [30002 as NDKKind],
+            authors: [user?.hexpubkey],
+            '#d': ['follow'],
+          },
+          {
+            kinds: [NDKKind.CategorizedPeopleList],
+            authors: [user?.hexpubkey],
+          },
+        ],
+        { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, subId: nanoid(8) },
+      )
 
-    const events = await ndk.fetchEvents(
-      [
-        {
-          kinds: [30002 as NDKKind],
-          authors: [user?.hexpubkey],
-          '#d': ['follow'],
-        },
-        {
-          kinds: [NDKKind.CategorizedPeopleList],
-          authors: [user?.hexpubkey],
-        },
-      ],
-      { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, subId: nanoid(8) },
-    )
-
-    let tagList: NDKEvent | undefined
-    let peopleList: FollowListItem[] = []
-    events?.forEach((ev) => {
-      if (ev.kind === 30002) {
-        tagList = ev
-      } else if (ev.kind) {
-        const value = ev.getMatchingTags('p')
-        if (!value.length) return
-        const name = ev.tagValue('title')
-        if (!name) return
-        const id = ev.tagValue('d')
-        if (!id) return
-        const naddr = nip19.naddrEncode({
-          identifier: id,
-          kind: ev.kind,
-          pubkey: ev.pubkey,
-        })
-        peopleList.push({ type: 'list', id, name, value: naddr })
-      }
-    })
-    const tags =
-      tagList?.getMatchingTags('t').map<FollowListItem>(([, tag]) => {
-        const tagLower = tag.toLowerCase()
-        return { type: 'tag', id: tagLower, name: tagLower, value: tagLower }
-      }) || []
-    setFollowLists(peopleList.concat(tags))
-  }, [user?.hexpubkey])
+      let tagList: NDKEvent | undefined
+      let peopleList: FollowListItem[] = []
+      events?.forEach((ev) => {
+        if (ev.kind === 30002) {
+          tagList = ev
+        } else if (ev.kind) {
+          const value = ev.getMatchingTags('p')
+          if (!value.length) return
+          const name = ev.tagValue('title')
+          if (!name) return
+          const id = ev.tagValue('d')
+          if (!id) return
+          const naddr = nip19.naddrEncode({
+            identifier: id,
+            kind: ev.kind,
+            pubkey: ev.pubkey,
+          })
+          peopleList.push({ type: 'list', id, name, value: naddr })
+        }
+      })
+      const tags =
+        tagList?.getMatchingTags('t').map<FollowListItem>(([, tag]) => {
+          const tagLower = tag.toLowerCase()
+          return { type: 'tag', id: tagLower, name: tagLower, value: tagLower }
+        }) || []
+      setFollowLists(peopleList.concat(tags))
+    }
+    fn()
+  }, [ndk, user?.hexpubkey])
 
   const value = useMemo((): AccountProps => {
     return {

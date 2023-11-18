@@ -10,6 +10,7 @@ import { useAction } from '@/hooks/useApp'
 import { EventActionType } from '@/contexts/AppContext'
 import EventActionModal from '@/components/EventActionModal'
 import ProfileActionModal from '@/components/ProfileActionModal'
+import Feed from '@/components/Feed'
 
 export default function Page() {
   const { readOnly } = useAccount()
@@ -29,7 +30,9 @@ export default function Page() {
 
   return (
     <Box className="relative mx:0 md:mx-auto overflow-visible">
-      <MainPane />
+      <MainPane>
+        <Feed />
+      </MainPane>
       <Zoom in={!readOnly && !showOnlyMap}>
         <Fab
           className={classNames('!fixed !bg-gradient-primary !z-40 bottom-6', {
