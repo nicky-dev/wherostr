@@ -472,10 +472,13 @@ const connectToUserRelays = async (user: NDKUser) => {
   if (ndk.pool.connectedRelays().length > 0) {
     await runUserFunctions(user)
   } else {
-    console.debug('Waiting for connection to main relays')
-    ndk.pool.once('relay:connect', (relay: NDKRelay) => {
-      console.debug('New relay came online', relay)
-      runUserFunctions(user)
+    await new Promise((resolve) => {
+      console.debug('Waiting for connection to main relays')
+      ndk.pool.once('relay:connect', async (relay: NDKRelay) => {
+        console.debug('New relay came online', relay)
+        await runUserFunctions(user)
+        resolve(undefined)
+      })
     })
   }
 }
