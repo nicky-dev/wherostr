@@ -15,6 +15,7 @@ import {
 import {
   NDKEvent,
   NDKKind,
+  NDKList,
   NDKNip07Signer,
   NDKPrivateKeySigner,
   NDKRelay,
@@ -162,7 +163,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       const followsSet = new Set(tags)
       followsSet.add(hashtagLow)
       const event = new NDKEvent(ndk)
-      event.kind = 30002
+      event.kind = 30001
       event.pubkey = user.pubkey
       event.tags.push(['d', 'follow'])
       followsSet.forEach((tag) => {
@@ -300,23 +301,34 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [user, initUser])
 
   useEffect(() => {
-    if (!user?.hexpubkey) return setMuteList([])
+    if (!user?.pubkey) return setMuteList([])
     const fn = async () => {
-      const event = await ndk.fetchEvent(
-        {
-          kinds: [NDKKind.MuteList, NDKKind.ChannelMuteUser],
-          authors: [user?.hexpubkey],
-        },
-        { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, subId: nanoid(8) },
+      const events = await ndk.fetchEvents(
+        [
+          {
+            kinds: [NDKKind.MuteList],
+            authors: [user.pubkey],
+          },
+          {
+            kinds: [NDKKind.CategorizedPeopleList],
+            authors: [user.pubkey],
+            '#d': ['mute'],
+            limit: 1,
+          },
+        ],
+        { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST, subId: nanoid(8) },
       )
-      const list =
-        event?.getMatchingTags('p').map(([tag, pubkey]) => {
-          return pubkey
-        }) || []
-      setMuteList(list)
+      const items: string[] = []
+      events.forEach((ev) => {
+        const list = NDKList.from(ev)
+        list.items.forEach((item) => {
+          items.push(item[1])
+        })
+      })
+      setMuteList(items)
     }
     fn()
-  }, [ndk, user?.hexpubkey])
+  }, [ndk, user?.pubkey])
 
   useEffect(() => {
     if (!user?.hexpubkey) return setFollowLists([])
@@ -324,22 +336,23 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       const events = await ndk.fetchEvents(
         [
           {
-            kinds: [30002 as NDKKind],
+            kinds: [30001 as NDKKind],
             authors: [user?.hexpubkey],
             '#d': ['follow'],
+            limit: 1,
           },
           {
             kinds: [NDKKind.CategorizedPeopleList],
             authors: [user?.hexpubkey],
           },
         ],
-        { cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY, subId: nanoid(8) },
+        { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST, subId: nanoid(8) },
       )
 
       let tagList: NDKEvent | undefined
       let peopleList: FollowListItem[] = []
       events?.forEach((ev) => {
-        if (ev.kind === 30002) {
+        if (ev.kind === 30001) {
           tagList = ev
         } else if (ev.kind) {
           const value = ev.getMatchingTags('p')
@@ -459,10 +472,13 @@ const connectToUserRelays = async (user: NDKUser) => {
   if (ndk.pool.connectedRelays().length > 0) {
     await runUserFunctions(user)
   } else {
-    console.debug('Waiting for connection to main relays')
-    ndk.pool.once('relay:connect', (relay: NDKRelay) => {
-      console.debug('New relay came online', relay)
-      runUserFunctions(user)
+    await new Promise((resolve) => {
+      console.debug('Waiting for connection to main relays')
+      ndk.pool.once('relay:connect', async (relay: NDKRelay) => {
+        console.debug('New relay came online', relay)
+        await runUserFunctions(user)
+        resolve(undefined)
+      })
     })
   }
 }
