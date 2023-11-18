@@ -7,9 +7,12 @@ import classNames from 'classnames'
 import { useUser } from '@/hooks/useAccount'
 import DrawerMenu from './DrawerMenu'
 import ProfileChip from './ProfileChip'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 const MainPane: FC<PropsWithChildren> = ({ children }) => {
   const user = useUser()
+  const pathname = usePathname()
   return (
     <Paper
       className={classNames(
@@ -22,7 +25,10 @@ const MainPane: FC<PropsWithChildren> = ({ children }) => {
           <Filter className="grow" user={user} />
           {user?.hexpubkey ? (
             <>
-              {/* <IconButton>
+              {/* <IconButton
+                LinkComponent={Link}
+                href={`${pathname}notifications/`}
+              >
                 <Notifications />
               </IconButton> */}
               <ProfileChip showName={false} hexpubkey={user.hexpubkey} />

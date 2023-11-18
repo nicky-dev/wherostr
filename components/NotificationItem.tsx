@@ -38,7 +38,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import NoteMenu from './NoteMenu'
 import classNames from 'classnames'
 
-const ShortTextNoteCard = ({
+const NotificationItem = ({
   className,
   event,
   action = true,
@@ -285,4 +285,4 @@ const ShortTextNoteCard = ({
   )
 }
 
-export default ShortTextNoteCard
+export default NotificationItem
