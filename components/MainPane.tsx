@@ -1,18 +1,48 @@
 import { FC, PropsWithChildren } from 'react'
-import Filter from '@/components/Filter'
-import { Box, IconButton, Paper, Toolbar } from '@mui/material'
-import { Notifications } from '@mui/icons-material'
+import { Box, IconButton, Paper, Typography } from '@mui/material'
+import {
+  // EmailOutlined,
+  HomeOutlined,
+  NotificationsOutlined,
+} from '@mui/icons-material'
 import UserBar from './UserBar'
 import classNames from 'classnames'
 import { useUser } from '@/hooks/useAccount'
 import DrawerMenu from './DrawerMenu'
 import ProfileChip from './ProfileChip'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import Image from 'next/image'
+
+const NavigationBar: FC<{ className?: string }> = ({ className }) => {
+  const user = useUser()
+  return (
+    <Box className={classNames('flex items-center gap-3 px-3 py-2', className)}>
+      <DrawerMenu />
+      <Image src="/logo.svg" width={40} height={40} alt="wherostr" />
+      <Typography variant="h5">Wherostr</Typography>
+      <Box className="flex-1 flex gap-3 justify-end items-center">
+        <IconButton LinkComponent={Link} href="/">
+          <HomeOutlined />
+        </IconButton>
+        {user?.hexpubkey ? (
+          <>
+            <IconButton LinkComponent={Link} href="/notifications">
+              <NotificationsOutlined />
+            </IconButton>
+            {/* <IconButton>
+              <EmailOutlined />
+            </IconButton> */}
+            <ProfileChip showName={false} hexpubkey={user.hexpubkey} />
+          </>
+        ) : (
+          <UserBar />
+        )}
+      </Box>
+    </Box>
+  )
+}
 
 const MainPane: FC<PropsWithChildren> = ({ children }) => {
-  const user = useUser()
-  const pathname = usePathname()
   return (
     <Paper
       className={classNames(
@@ -20,23 +50,7 @@ const MainPane: FC<PropsWithChildren> = ({ children }) => {
       )}
     >
       <Paper className="!sticky top-0 z-10">
-        <Toolbar className="gap-3 items-center !px-3 !min-h-[64px]">
-          <DrawerMenu />
-          <Filter className="grow" user={user} />
-          {user?.hexpubkey ? (
-            <>
-              {/* <IconButton
-                LinkComponent={Link}
-                href={`${pathname}notifications/`}
-              >
-                <Notifications />
-              </IconButton> */}
-              <ProfileChip showName={false} hexpubkey={user.hexpubkey} />
-            </>
-          ) : (
-            <UserBar />
-          )}
-        </Toolbar>
+        <NavigationBar />
         <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
       </Paper>
       {children}

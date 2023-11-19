@@ -27,7 +27,7 @@ interface SearchBoxProps {
 
 const SearchBox: React.FC<
   Omit<TextFieldProps, 'onChange'> & SearchBoxProps
-> = ({ placeholder, onChange, value, ...props }) => {
+> = ({ placeholder, onChange, value, onBlur, autoFocus, ...props }) => {
   const [loading, setLoading] = React.useState(false)
   const [inputText, setInputText] = React.useState('')
   const [inputValue, setInputValue] = React.useState('')
@@ -165,6 +165,7 @@ const SearchBox: React.FC<
       onChange={handleSelectValue}
       renderInput={(params) => (
         <TextField
+          className="!my-0"
           {...params}
           name="search"
           margin="dense"
@@ -175,6 +176,8 @@ const SearchBox: React.FC<
             autoComplete: 'off',
             ...params.InputProps,
           }}
+          onBlur={onBlur}
+          autoFocus={autoFocus}
           onChange={(e) => {
             const newValue = e.target.value
             setInputValue(newValue)

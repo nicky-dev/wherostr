@@ -44,6 +44,7 @@ export const FollowHashtagButton: FC<FollowHashtagButtonProps> = ({
       color="secondary"
       variant="outlined"
       onClick={handleClickUnfollow}
+      size='small'
     >
       Unfollow
     </LoadingButton>
@@ -54,6 +55,7 @@ export const FollowHashtagButton: FC<FollowHashtagButtonProps> = ({
       color="secondary"
       variant="contained"
       onClick={handleClickFollow}
+      size='small'
     >
       Follow
     </LoadingButton>

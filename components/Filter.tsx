@@ -12,7 +12,7 @@ export interface FilterProps extends BaseTextFieldProps {
   InputProps?: TextFieldProps['InputProps']
 }
 
-const Filter: FC<FilterProps> = ({ className, user, ...props }) => {
+const Filter: FC<FilterProps> = ({ className, user, InputProps, ...props }) => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -21,7 +21,7 @@ const Filter: FC<FilterProps> = ({ className, user, ...props }) => {
   return (
     <Paper
       className={classNames(
-        'flex flex-1 items-center justify-end !shadow-none',
+        'flex items-center justify-end !shadow-none',
         className,
       )}
     >
@@ -34,7 +34,10 @@ const Filter: FC<FilterProps> = ({ className, user, ...props }) => {
           const showMap =
             value?.startsWith('g:') || value?.startsWith('b:') ? 1 : ''
           router.push(`${pathname}?q=${value}&map=${showMap}`)
+          ;(document.activeElement as HTMLElement)?.blur?.()
         }}
+        onBlur={InputProps?.onBlur}
+        autoFocus={InputProps?.autoFocus}
         value={querySearch}
       />
     </Paper>

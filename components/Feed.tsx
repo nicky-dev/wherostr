@@ -13,13 +13,13 @@ import { useSubscribe } from '@/hooks/useSubscribe'
 import { fetchProfile, profilePin } from '@/hooks/useUserProfile'
 import { extractQuery } from '@/utils/extractQuery'
 import { WEEK, unixNow } from '@/utils/time'
-import { CropFree, List, LocationOn, Tag } from '@mui/icons-material'
+import { CropFree, List, LocationOn, Search, Tag } from '@mui/icons-material'
 import {
   Box,
   Chip,
   CircularProgress,
-  Divider,
-  Toolbar,
+  IconButton,
+  Paper,
   Typography,
   useMediaQuery,
   useTheme,
@@ -32,6 +32,7 @@ import Geohash from 'latlon-geohash'
 import { LngLat, LngLatBounds, Marker } from 'maplibre-gl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Filter from './Filter'
 
 const markers: Record<string, Marker> = {}
 export default function Feed() {
@@ -44,6 +45,7 @@ export default function Feed() {
   const { setEventAction } = useAction()
   const [follows] = useFollowing()
   const [mapLoaded, setMapLoaded] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
   const theme = useTheme()
   const xlUp = useMediaQuery(theme.breakpoints.up('lg'))
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
@@ -51,6 +53,9 @@ export default function Feed() {
   const q = useMemo(() => searchParams.get('q') || '', [searchParams])
   const queryRef = useRef(searchParams.get('q'))
   queryRef.current = searchParams.get('q')
+
+  const handleClickShowSearch = useCallback(() => setShowSearch(true), [])
+  const handleBlurSearchBox = useCallback(() => setShowSearch(false), [])
 
   const feedType = useMemo(() => {
     if (user) {
@@ -307,104 +312,124 @@ export default function Feed() {
 
   return (
     <>
-      <Toolbar>
-        {!query ? (
-          <Box className="flex flex-1 justify-center">
-            <FeedFilterMenu user={user} variant="contained" />
-          </Box>
-        ) : (
-          <Box mx="auto">
-            {query.tags?.map((d) => (
-              <Chip
-                icon={<Tag />}
-                key={d}
-                label={d}
-                onDelete={() =>
-                  router.replace(
-                    `${pathname}?q=${query.tags
-                      ?.filter((tag) => tag !== d)
-                      .map((d) => `t:${d}`)
-                      .join(';')}&map=${showMap ? '1' : ''}`,
-                  )
-                }
-              />
-            ))}
-            {query.bhash ? (
-              <Chip
-                icon={<CropFree />}
-                key={query.bhash?.join(', ')}
-                label={query.bhash?.join(', ')}
-                onClick={() => {
-                  if (!query.bbox) return
-                  const polygon = buffer(bboxPolygon(query.bbox), 5, {
-                    units: 'kilometers',
-                  })
-                  const [x1, y1, x2, y2] = bbox(polygon)
-                  router.replace(`${pathname}?q=${q}&map=1`, {
-                    scroll: false,
-                  })
-                  setTimeout(() => {
-                    map?.fitBounds([x1, y1, x2, y2], {
-                      duration: 1000,
-                      maxZoom: 16,
-                    })
-                  }, 300)
-                }}
-                onDelete={() => router.replace(`${pathname}?q=`)}
-              />
-            ) : undefined}
-            {query.geohash ? (
-              <Chip
-                icon={<LocationOn />}
-                key={query.geohash}
-                label={query.geohash}
-                onClick={() => {
-                  if (!query.lnglat) return
-                  const [lng, lat] = query.lnglat
-                  const lnglat = new LngLat(lng, lat)
-                  router.replace(`${pathname}?q=${q}&map=1`, {
-                    scroll: false,
-                  })
-                  setTimeout(() => {
-                    map?.fitBounds(LngLatBounds.fromLngLat(lnglat, 1000), {
-                      duration: 1000,
-                      maxZoom: 16,
-                    })
-                  }, 300)
-                }}
-                onDelete={() => router.replace(`${pathname}?q=`)}
-              />
-            ) : undefined}
-            {query.naddrDesc ? (
-              <Chip
-                icon={<List />}
-                clickable={false}
-                label={
-                  !loadingList ? (
-                    listEvent?.tagValue('title')
-                  ) : (
-                    <CircularProgress size={16} color="inherit" />
-                  )
-                }
-                onDelete={
-                  !loadingList
-                    ? () => router.replace(`${pathname}?q=`)
-                    : undefined
-                }
-              />
-            ) : undefined}
+      <Paper className="flex gap-3 items-center px-3 py-2 justify-end sticky top-[58px] z-10 !rounded-none">
+        {!showSearch && (
+          <Box className="absolute inset-0 flex items-center">
+            {!query ? (
+              <Box className="flex flex-1 justify-center">
+                <FeedFilterMenu user={user} variant="contained" />
+              </Box>
+            ) : (
+              <Box mx="auto">
+                {query.tags?.map((d) => (
+                  <Chip
+                    icon={<Tag />}
+                    key={d}
+                    label={d}
+                    onDelete={() =>
+                      router.replace(
+                        `${pathname}?q=${query.tags
+                          ?.filter((tag) => tag !== d)
+                          .map((d) => `t:${d}`)
+                          .join(';')}&map=${showMap ? '1' : ''}`,
+                      )
+                    }
+                  />
+                ))}
+                {query.bhash ? (
+                  <Chip
+                    icon={<CropFree />}
+                    key={query.bhash?.join(', ')}
+                    label={query.bhash?.join(', ')}
+                    onClick={() => {
+                      if (!query.bbox) return
+                      const polygon = buffer(bboxPolygon(query.bbox), 5, {
+                        units: 'kilometers',
+                      })
+                      const [x1, y1, x2, y2] = bbox(polygon)
+                      router.replace(`${pathname}?q=${q}&map=1`, {
+                        scroll: false,
+                      })
+                      setTimeout(() => {
+                        map?.fitBounds([x1, y1, x2, y2], {
+                          duration: 1000,
+                          maxZoom: 16,
+                        })
+                      }, 300)
+                    }}
+                    onDelete={() => router.replace(`${pathname}?q=`)}
+                  />
+                ) : undefined}
+                {query.geohash ? (
+                  <Chip
+                    icon={<LocationOn />}
+                    key={query.geohash}
+                    label={query.geohash}
+                    onClick={() => {
+                      if (!query.lnglat) return
+                      const [lng, lat] = query.lnglat
+                      const lnglat = new LngLat(lng, lat)
+                      router.replace(`${pathname}?q=${q}&map=1`, {
+                        scroll: false,
+                      })
+                      setTimeout(() => {
+                        map?.fitBounds(LngLatBounds.fromLngLat(lnglat, 1000), {
+                          duration: 1000,
+                          maxZoom: 16,
+                        })
+                      }, 300)
+                    }}
+                    onDelete={() => router.replace(`${pathname}?q=`)}
+                  />
+                ) : undefined}
+                {query.naddrDesc ? (
+                  <Chip
+                    icon={<List />}
+                    clickable={false}
+                    label={
+                      !loadingList ? (
+                        listEvent?.tagValue('title')
+                      ) : (
+                        <CircularProgress size={16} color="inherit" />
+                      )
+                    }
+                    onDelete={
+                      !loadingList
+                        ? () => router.replace(`${pathname}?q=`)
+                        : undefined
+                    }
+                  />
+                ) : undefined}
+              </Box>
+            )}
           </Box>
         )}
-      </Toolbar>
-      <Divider />
+        {showSearch ? (
+          <Filter
+            className="flex-1"
+            user={user}
+            InputProps={{
+              onBlur: handleBlurSearchBox,
+              autoFocus: true,
+            }}
+          />
+        ) : (
+          <IconButton
+            className="absolute right-0 flex items-center"
+            onClick={handleClickShowSearch}
+          >
+            <Search />
+          </IconButton>
+        )}
+      </Paper>
       {!!query?.tags?.[0] && (
-        <Toolbar>
+        <Box className="flex gap-3 items-center px-3 py-2 justify-between">
           <Typography fontWeight="bold" variant="h5">
             #{query.tags[0]}
           </Typography>
           <Box className="flex-1" />
           <FollowHashtagButton hashtag={query.tags[0]} />
-        </Toolbar>
+        </Box>
       )}
       <EventList
         parentRef={scrollRef}
