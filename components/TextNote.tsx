@@ -29,6 +29,7 @@ import { EmbedEventAddress } from './EmbedEventAddress'
 
 type RelatedNoteVariant = 'full' | 'fraction' | 'link'
 
+const nsfwTags = ['nsfw']
 export const UserMentionLink = ({ id }: { id: string }) => {
   const { setProfileAction } = useContext(AppContext)
   const user = useUserProfile(id)
@@ -261,7 +262,15 @@ const TextNote = ({
     return [{ content: event.content, type: 'text' }] as ParsedFragment[]
   }, [event])
 
-  const nsfw = useMemo(() => event.tagValue?.('content-warning'), [event])
+  const nsfw = useMemo(
+    () =>
+      event.tagValue?.('content-warning') ||
+      event
+        .getMatchingTags?.('t')
+        .find(([, v]) => nsfwTags.includes(v.toLowerCase()))?.[1]
+        ?.toUpperCase(),
+    [event],
+  )
 
   return (
     <Typography
