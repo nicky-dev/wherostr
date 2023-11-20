@@ -23,11 +23,14 @@ import {
 } from 'react'
 import {
   ArrowRightAlt,
+  Bolt,
   ChevronRightOutlined,
+  Comment,
   Repeat,
+  ThumbUp,
   TravelExploreOutlined,
 } from '@mui/icons-material'
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKKind, zapInvoiceFromEvent } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import { EventExt } from '@snort/system'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
@@ -37,6 +40,7 @@ import { LngLatBounds } from 'maplibre-gl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import NoteMenu from './NoteMenu'
 import classNames from 'classnames'
+import { useEvent } from '@/hooks/useEvent'
 
 const NotificationItem = ({
   className,
@@ -71,38 +75,46 @@ const NotificationItem = ({
   const [overLimitedHeight, setOverLimitedHeight] = useState<
     boolean | undefined
   >(undefined)
+
   useEffect(() => {
     if (limitedHeight) {
       setOverLimitedHeight((contentRef?.current as any)?.clientHeight > 480)
     } else {
       setOverLimitedHeight(undefined)
     }
-  }, [limitedHeight])
+  })
 
   const createdDate = useMemo(
     () => (event.created_at ? new Date(event.created_at * 1000) : undefined),
     [event],
   )
+
+  const refTag = event.getMatchingTags('e')?.at(-1)
+  const refId = refTag?.[1]
+  const refType = refTag?.[3]
+  const [refEvent] = useEvent(refId)
+
   const fromNote = useMemo(() => {
     if (event && depth === 0) {
       const thread = EventExt.extractThread(event as any)
       return thread?.root || thread?.replyTo
     }
   }, [event, depth])
+
   const { setEventAction } = useContext(AppContext)
   const handleClickRootNote = useCallback(async () => {
-    if (ndk && fromNote?.value) {
-      if (fromNote.value) {
+    if (ndk && refId) {
+      if (refId) {
         setEventAction({
           type: EventActionType.View,
-          event: fromNote.value,
+          event: refId,
           options: {
             comments: true,
           },
         })
       }
     }
-  }, [ndk, fromNote, setEventAction])
+  }, [ndk, refId, setEventAction])
 
   const lnglat = useMemo(() => extractLngLat(event), [event])
   const repostId = useMemo(
@@ -110,7 +122,11 @@ const NotificationItem = ({
     [event],
   )
   const hexpubkey = useMemo(() => {
-    if (event.kind === 30311) {
+    if (event.kind === NDKKind.Zap) {
+      const zap = zapInvoiceFromEvent(event)
+      console.log('zap', zap)
+      return zap?.zappee || event.pubkey
+    } else if (event.kind === 30311) {
       let hostPubkey
       const pTags = event.getMatchingTags('p')
       if (pTags.length) {
@@ -157,9 +173,17 @@ const NotificationItem = ({
     return idDiff
   }, [event])
 
+  console.log('refEvent', { event, refEvent, refId, refType })
+
+  const correctEvent = useMemo(
+    () => (event.kind !== NDKKind.Text && refEvent ? refEvent : event),
+    [event, refEvent],
+  )
+
   return (
     <Card className={classNames('!rounded-none', className)}>
       <Box className="px-3 pt-3 flex items-center gap-2 text-contrast-secondary">
+        <NotificationTypeIcon event={event} type={refType} />
         <ProfileChip hexpubkey={hexpubkey} />
         {createdDate && (
           <Box className="grow flex flex-col items-end shrink-0">
@@ -176,7 +200,7 @@ const NotificationItem = ({
               )}
               <TimeFromNow date={createdDate} />
             </Typography>
-            {depth === 0 && fromNote && (
+            {depth === 0 && refId && (
               <Typography
                 className="cursor-pointer"
                 variant="caption"
@@ -188,12 +212,17 @@ const NotificationItem = ({
                     <Repeat className="mr-1" fontSize="small" />
                     reposted note
                   </>
-                ) : (
+                ) : event.kind === 1 ? (
                   <>
                     <ArrowRightAlt className="mr-1" fontSize="small" />
                     commented note
                   </>
-                )}
+                ) : event.kind === 7 ? (
+                  <>
+                    <ArrowRightAlt className="mr-1" fontSize="small" />
+                    reacted note
+                  </>
+                ) : null}
               </Typography>
             )}
           </Box>
@@ -228,12 +257,12 @@ const NotificationItem = ({
       </Box>
       {!hideContent && (
         <Box className="flex min-h-[12px]">
-          <Box className={`flex justify-center ${indent ? 'w-16' : 'w-3'}`}>
+          <Box className={`flex justify-center ${indent ? 'w-20' : 'w-3'}`}>
             {indentLine && (
               <Box className="h-full w-[2px] bg-[rgba(255,255,255,0.12)]" />
             )}
           </Box>
-          {event.kind === NDKKind.Text ? (
+          {correctEvent?.kind === NDKKind.Text ? (
             <CardContent className="flex-1 !pl-0 !pr-3 !pt-3 !pb-0 overflow-hidden">
               <Box
                 className={classNames({
@@ -244,7 +273,7 @@ const NotificationItem = ({
               >
                 <Box ref={contentRef}>
                   <TextNote
-                    event={event}
+                    event={correctEvent}
                     relatedNoteVariant={relatedNoteVariant}
                   />
                 </Box>
@@ -263,7 +292,7 @@ const NotificationItem = ({
               </Box>
               {action && (
                 <Box className="mt-3">
-                  <NoteActionBar event={event} />
+                  <NoteActionBar event={correctEvent} />
                 </Box>
               )}
             </CardContent>
@@ -286,3 +315,49 @@ const NotificationItem = ({
 }
 
 export default NotificationItem
+
+const NotificationTypeIcon = ({
+  event,
+  type,
+}: {
+  event: NDKEvent
+  type?: string
+}) => {
+  const typeIcon = useMemo(() => {
+    switch (event.kind) {
+      case NDKKind.Zap:
+        return (
+          <Typography variant="h6">
+            <Bolt color="primary" />
+          </Typography>
+        )
+      case NDKKind.Reaction:
+        return event.content === '+' ? (
+          <ThumbUp color="secondary" />
+        ) : (
+          <TextNote textVariant="h6" event={event} />
+        )
+      case NDKKind.Repost:
+        return (
+          <Typography variant="h6">
+            <Repeat color="inherit" />
+          </Typography>
+        )
+      case NDKKind.Text:
+        if (type === 'mention') {
+          return (
+            <Typography variant="h6">
+              <Repeat color="inherit" />
+            </Typography>
+          )
+        }
+        return (
+          <Typography variant="h6">
+            <Comment color="inherit" />
+          </Typography>
+        )
+    }
+  }, [event, type])
+
+  return <Box className="px-3 w-14 text-center">{typeIcon}</Box>
+}
