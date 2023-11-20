@@ -91,7 +91,7 @@ const ShortTextNoteCard = ({
   const fromNote = useMemo(() => {
     if (event && depth === 0) {
       const thread = EventExt.extractThread(event as any)
-      return thread?.root || thread?.replyTo
+      return thread?.replyTo || thread?.root
     }
   }, [event, depth])
   const { setEventAction } = useContext(AppContext)
