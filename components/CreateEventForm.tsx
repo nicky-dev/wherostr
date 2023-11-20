@@ -60,6 +60,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/hooks/useAccount'
 import powWorker from '@/utils/powWorker'
 import NostrTextField from './NostrTextField'
+import { getMentionTags } from '@/utils/post'
 
 export const CreateEventForm = ({
   type,
@@ -123,8 +124,6 @@ export const CreateEventForm = ({
   mdDownRef.current = mdDown
 
   const q = query.get('q')
-  // const mentions = getContentMentions(correctContentMentions(contentValue))
-  // console.log('mentions', mentions)
 
   const handleShowMap = (show: boolean) => {
     let querystring = []
@@ -284,6 +283,7 @@ export const CreateEventForm = ({
           }
         }
 
+        getMentionTags(noteContent).forEach((tag) => newEvent.tag(tag))
         const nostrEvent = newEvent
           .content(noteContent)
           .processContent()
