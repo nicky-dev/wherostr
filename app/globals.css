@@ -19,6 +19,12 @@ html {
   overflow: visible;
 }
 
+.text-gradient {
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
 .MuiButton-root {
   text-transform: none !important;
 }

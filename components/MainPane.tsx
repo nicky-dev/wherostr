@@ -19,7 +19,7 @@ const NavigationBar: FC<{ className?: string }> = ({ className }) => {
     <Box className={classNames('flex items-center gap-3 px-3 py-2', className)}>
       <DrawerMenu />
       <Image src="/logo.svg" width={36} height={36} alt="wherostr" />
-      <Typography variant="h5" className="!font-bold">
+      <Typography className="!font-bold !text-2xl sm:!text-3xl text-gradient bg-gradient-primary">
         Wherostr
       </Typography>
       <Box className="flex-1 flex gap-3 justify-end items-center">
