@@ -73,7 +73,12 @@ const ShortTextNoteCard = ({
   >(undefined)
   useEffect(() => {
     if (limitedHeight) {
-      setOverLimitedHeight((contentRef?.current as any)?.clientHeight > 480)
+      if (!contentRef.current) return
+      const resizeObserver = new ResizeObserver(() => {
+        setOverLimitedHeight((contentRef?.current as any)?.clientHeight > 480)
+      })
+      resizeObserver.observe(contentRef.current)
+      return () => resizeObserver.disconnect()
     } else {
       setOverLimitedHeight(undefined)
     }
