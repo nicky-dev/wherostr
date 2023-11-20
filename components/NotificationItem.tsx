@@ -331,13 +331,7 @@ const NotificationItem = ({
                   id={refEvent.id}
                   relatedNoteVariant={relatedNoteVariant}
                   icon={
-                    event.kind === NDKKind.Repost ? (
-                      <Repeat />
-                    ) : refType === 'mention' ? (
-                      <FormatQuote />
-                    ) : (
-                      <Comment />
-                    )
+                    event.kind === NDKKind.Repost ? <Repeat /> : <Comment />
                   }
                 />
               </CardContent>
