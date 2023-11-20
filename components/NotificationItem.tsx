@@ -98,7 +98,20 @@ const NotificationItem = ({
   const fromNote = useMemo(() => {
     if (event && depth === 0) {
       const thread = EventExt.extractThread(event as any)
-      return thread?.replyTo || thread?.root
+      if (!thread && event.kind === 6) {
+        const tagE = event.getMatchingTags('e')
+        const [key, value, relay, marker] =
+          tagE.find(([_1, _2, _3, desc]) => desc === 'mention') || []
+        return value
+          ? {
+              key,
+              value,
+              relay,
+              marker,
+            }
+          : undefined
+      }
+      return thread?.replyTo || thread?.root || thread?.mentions.at(-1)
     }
   }, [event, depth])
 
