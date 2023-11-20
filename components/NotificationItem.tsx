@@ -97,30 +97,9 @@ const NotificationItem = ({
 
   const refTag = event.getMatchingTags('e')?.at(-1)
   const refId = refTag?.[1]
-  const refType = refTag?.[3]
   const [refEvent] = useEvent(refId)
 
-  const fromNote = useMemo(() => {
-    if (event && depth === 0) {
-      const thread = EventExt.extractThread(event as any)
-      return thread?.root || thread?.replyTo
-    }
-  }, [event, depth])
-
   const { setEventAction } = useContext(AppContext)
-  const handleClickRootNote = useCallback(async () => {
-    if (ndk && refId) {
-      if (refId) {
-        setEventAction({
-          type: EventActionType.View,
-          event: refId,
-          options: {
-            comments: true,
-          },
-        })
-      }
-    }
-  }, [ndk, refId, setEventAction])
 
   const lnglat = useMemo(() => extractLngLat(event), [event])
   const hexpubkey = useMemo(() => {
@@ -149,7 +128,9 @@ const NotificationItem = ({
     const _event = event.kind === NDKKind.Text ? event : refEvent
     if (_event) {
       const options: any = {}
-      if (event.kind !== NDKKind.Text) {
+      if (event.kind === NDKKind.Text) {
+        options.comments = true
+      } else {
         switch (event.kind) {
           case NDKKind.Zap:
             options.zaps = true
@@ -160,17 +141,10 @@ const NotificationItem = ({
           case NDKKind.Repost:
             options.reposts = true
             break
-          case NDKKind.Text:
-            if (refType === 'mention') {
-              options.quotes = true
-              break
-            }
           default:
             options.comments = true
             break
         }
-      } else {
-        options.comments = true
       }
       setEventAction({
         type: EventActionType.View,
@@ -178,7 +152,7 @@ const NotificationItem = ({
         options,
       })
     }
-  }, [event, refEvent, refType, setEventAction])
+  }, [event, refEvent, setEventAction])
 
   const difficulty = useMemo(() => {
     const diff = event.getMatchingTags('nonce').at(0)?.[2]
@@ -202,12 +176,10 @@ const NotificationItem = ({
     return idDiff
   }, [event])
 
-  console.log('refEvent', { event, refEvent, refId, refType })
-
   return (
     <Card className={className} square>
       <Box className="px-3 pt-3 flex items-center gap-3">
-        <NotificationTypeIcon event={event} type={refType} />
+        <NotificationTypeIcon event={event} />
         <Box className="flex-1 flex items-center gap-2 text-contrast-secondary">
           <ProfileChip hexpubkey={hexpubkey} />
           {createdDate && (
@@ -225,31 +197,6 @@ const NotificationItem = ({
                 )}
                 <TimeFromNow date={createdDate} />
               </Typography>
-              {depth === 0 && refId && (
-                <Typography
-                  className="cursor-pointer"
-                  variant="caption"
-                  color="secondary"
-                  onClick={handleClickRootNote}
-                >
-                  {event.kind === 6 ? (
-                    <>
-                      <Repeat className="mr-1" fontSize="small" />
-                      reposted note
-                    </>
-                  ) : event.kind === 1 ? (
-                    <>
-                      <ArrowRightAlt className="mr-1" fontSize="small" />
-                      commented note
-                    </>
-                  ) : event.kind === 7 ? (
-                    <>
-                      <ArrowRightAlt className="mr-1" fontSize="small" />
-                      reacted note
-                    </>
-                  ) : null}
-                </Typography>
-              )}
             </Box>
           )}
           {action && (
@@ -346,13 +293,7 @@ const NotificationItem = ({
 
 export default NotificationItem
 
-const NotificationTypeIcon = ({
-  event,
-  type,
-}: {
-  event: NDKEvent
-  type?: string
-}) => {
+const NotificationTypeIcon = ({ event }: { event: NDKEvent }) => {
   const typeIcon = useMemo(() => {
     switch (event.kind) {
       case NDKKind.Zap:
@@ -386,20 +327,13 @@ const NotificationTypeIcon = ({
           </Typography>
         )
       case NDKKind.Text:
-        if (type === 'mention') {
-          return (
-            <Typography variant="h6">
-              <FormatQuote />
-            </Typography>
-          )
-        }
         return (
           <Typography variant="h6">
             <Comment />
           </Typography>
         )
     }
-  }, [event, type])
+  }, [event])
 
   return <Box className="w-10 text-center">{typeIcon}</Box>
 }
