@@ -1,4 +1,4 @@
-import { tryParseNostrLink } from '@snort/system'
+import { NostrPrefix, tryParseNostrLink } from '@snort/system'
 import { nip19 } from 'nostr-tools'
 
 export function correctContentMentions(content: string) {
@@ -19,21 +19,4 @@ export function getContentMentions(content: string) {
       return parsed.data
     })
     .filter(Boolean) as string[]
-}
-
-export function getMentionTags(content = '') {
-  const tags: string[][] = []
-  Array.from(
-    new Set(
-      content.match(
-        /nostr:n(pub|profile|event|ote|addr|)1[acdefghjklmnpqrstuvwxyz023456789]+/g,
-      ) || [],
-    ),
-  ).forEach((item) => {
-    const link = tryParseNostrLink(item)
-    if (link) {
-      tags.push(['p', link.id])
-    }
-  })
-  return tags
 }

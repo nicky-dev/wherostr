@@ -16,17 +16,16 @@ export const isComment = (
   let isDirect = false
   if (isReply && isDirectOnly && targetEvent) {
     if (
+      (tagE.some(
+        ([_1, id, _3, desc]) => id === targetEvent.id && desc === 'root',
+      ) &&
+        !tagE.some(([_1, id, _3, desc]) => desc === 'reply')) ||
       tagE.some(
         ([_1, id, _3, desc]) => id === targetEvent.id && desc === 'reply',
       ) ||
-      tagE.at(-1)?.[1] === targetEvent.id
+      (!tagE.at(-1)?.[3] && tagE.at(-1)?.[1] === targetEvent.id)
     ) {
       isDirect = true
-    } else {
-      const [_1, id, _3, desc] = tagE.at(-1) || []
-      if (id === targetEvent.id && (!desc || desc === 'reply')) {
-        isDirect = true
-      }
     }
   }
   return event.kind === NDKKind.Text && isReply && (!isDirectOnly || isDirect)

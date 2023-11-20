@@ -60,7 +60,6 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/hooks/useAccount'
 import powWorker from '@/utils/powWorker'
 import NostrTextField from './NostrTextField'
-import { getMentionTags } from '@/utils/post'
 
 export const CreateEventForm = ({
   type,
@@ -196,56 +195,27 @@ export const CreateEventForm = ({
           case EventActionType.Repost:
             noteContent = JSON.stringify(relatedEvents[0].rawEvent())
             newEvent.kind(EventKind.Repost)
+            newEvent.tag(['e', relatedEvents[0].id, '', 'mention'])
+            newEvent.tag(['p', relatedEvents[0].author.hexpubkey])
             break
           case EventActionType.Quote:
             newEvent.kind(EventKind.TextNote)
             break
           case EventActionType.Comment:
             newEvent.kind(EventKind.TextNote)
+            const tagE = relatedEvents[0].getMatchingTags('e')
+            const root = tagE.find(([_1, _2, _3, desc]) => desc === 'root')
+            if (root) {
+              newEvent.tag(root)
+              newEvent.tag(['e', relatedEvents[0].id, '', 'reply'])
+            } else {
+              newEvent.tag(['e', relatedEvents[0].id, '', 'root'])
+            }
+            const tagP = relatedEvents[0].getMatchingTags('p')
+            tagP.forEach((tag) => newEvent.tag(tag))
+            newEvent.tag(['p', relatedEvents[0].author.hexpubkey])
             break
         }
-
-        relatedEvents.forEach((event) => {
-          const { id, author, kind } = event
-          if (type === EventActionType.Comment) {
-            const tagE = event.getMatchingTags('e')
-            tagE.forEach(([name, val, , mark], i) => {
-              if (i === 0) {
-                newEvent.tag([name, val, '', 'root'])
-              } else {
-                newEvent.tag([name, val])
-              }
-            })
-          }
-          newEvent.tag([
-            'e',
-            id,
-            '',
-            type === EventActionType.Quote
-              ? 'mention'
-              : type === EventActionType.Comment
-              ? 'reply'
-              : '',
-          ])
-          newEvent.tag([
-            'p',
-            author.hexpubkey,
-            '',
-            type === EventActionType.Quote
-              ? 'mention'
-              : type === EventActionType.Comment
-              ? 'reply'
-              : '',
-          ])
-        })
-
-        // Array.from(
-        //   new Set(
-        //     transformText(content, [])
-        //       .filter(({ type }) => type === 'hashtag')
-        //       .map(({ content }) => content.toLowerCase()),
-        //   ),
-        // ).forEach((item) => newEvent.tag(['t', item]))
 
         if (positingOptions?.location && geohash) {
           const length = geohash.length
@@ -282,8 +252,6 @@ export const CreateEventForm = ({
             }
           }
         }
-
-        getMentionTags(noteContent).forEach((tag) => newEvent.tag(tag))
         const nostrEvent = newEvent
           .content(noteContent)
           .processContent()
