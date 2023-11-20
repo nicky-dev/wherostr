@@ -136,7 +136,7 @@ export default function Feed() {
       ...(tags ? tags : authors),
       kinds: [NDKKind.Text, NDKKind.Repost],
       since: unixNow() - WEEK,
-      limit: 50,
+      limit: 100,
     } as NDKFilter
   }, [signing, geohashFilter, tags, authors, loadingList])
 
@@ -427,9 +427,7 @@ export default function Feed() {
       </Paper>
       {!!query?.tags?.[0] && (
         <Box className="flex gap-3 items-center px-3 py-2 justify-between">
-          <Typography variant="h6">
-            #{query.tags[0]}
-          </Typography>
+          <Typography variant="h6">#{query.tags[0]}</Typography>
           <Box className="flex-1" />
           <FollowHashtagButton hashtag={query.tags[0]} />
         </Box>

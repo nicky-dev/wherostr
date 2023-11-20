@@ -18,7 +18,7 @@ export default function Page() {
     if (!user?.pubkey) return
     return {
       kinds: [NDKKind.Text, NDKKind.Reaction, NDKKind.Zap, NDKKind.Repost],
-      limit: 20,
+      limit: 50,
       '#p': [user.pubkey],
       until: unixNow() + WEEK,
     }

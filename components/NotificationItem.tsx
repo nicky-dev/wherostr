@@ -31,8 +31,12 @@ import {
   TravelExploreOutlined,
 } from '@mui/icons-material'
 import { NDKEvent, NDKKind, zapInvoiceFromEvent } from '@nostr-dev-kit/ndk'
-import { NostrContext } from '@/contexts/NostrContext'
-import { EventExt, transformText } from '@snort/system'
+import {
+  EventExt,
+  Fragment,
+  ParsedFragment,
+  transformText,
+} from '@snort/system'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
 import { extractLngLat } from '@/utils/extractLngLat'
 import { MapContext } from '@/contexts/MapContext'
@@ -40,7 +44,6 @@ import { LngLatBounds } from 'maplibre-gl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import NoteMenu from './NoteMenu'
 import classNames from 'classnames'
-import { useEvent } from '@/hooks/useEvent'
 import { amountFormat } from '@/constants/app'
 import numeral from 'numeral'
 
@@ -381,4 +384,36 @@ const NotificationTypeIcon = ({
   }, [event, type])
 
   return <Box className="w-10 text-center">{typeIcon}</Box>
+}
+
+function extractCustomEmoji(fragments: Fragment[], tags: Array<Array<string>>) {
+  return fragments
+    .map((f) => {
+      if (typeof f === 'string') {
+        if (f === ':heart-eyes:') console.log(f)
+        return f.split(/:(.*):/g).map((i) => {
+          if (f === ':heart-eyes:') console.log(i)
+          const t = tags.find((a) => a[0] === 'emoji' && a[1] === i)
+          if (t) {
+            return {
+              type: 'custom_emoji',
+              content: t[2],
+            } as ParsedFragment
+          } else {
+            return i
+          }
+        })
+      }
+      return f
+    })
+    .flat()
+    .filter((a) => a)
+    .map((a) => unwrap(a)) as Array<ParsedFragment>
+}
+
+export function unwrap<T>(v: T | undefined | null): T {
+  if (v === undefined || v === null) {
+    throw new Error('missing value')
+  }
+  return v
 }

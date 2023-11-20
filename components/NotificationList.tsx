@@ -24,7 +24,7 @@ import { ArrowUpward } from '@mui/icons-material'
 import classNames from 'classnames'
 import ProfileAvatar from './ProfileAvatar'
 import _ from 'lodash'
-import { useMuting } from '@/hooks/useAccount'
+import { useMuting, useUser } from '@/hooks/useAccount'
 import NotificationItem from './NotificationItem'
 
 export interface NotificationListProps {
@@ -44,6 +44,7 @@ const NotificationList: FC<NotificationListProps> = ({
   onFetchMore,
   onShowNewItems,
 }) => {
+  const user = useUser()
   const noteRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<ViewportListRef>(null)
   const [muteList] = useMuting()
@@ -53,17 +54,19 @@ const NotificationList: FC<NotificationListProps> = ({
 
   const notes = useMemo(() => {
     return events.filter((d) => {
+      if (user?.pubkey === d.author.hexpubkey) return false
       if (muteList.includes(d.author.hexpubkey)) return false
       return true
     })
-  }, [events, muteList])
+  }, [events, user?.pubkey, muteList])
 
   const newNotes = useMemo(() => {
     return newItems.filter((d) => {
+      if (user?.pubkey === d.author.hexpubkey) return false
       if (muteList.includes(d.author.hexpubkey)) return false
       return true
     })
-  }, [newItems, muteList])
+  }, [newItems, user?.pubkey, muteList])
 
   const totalEvent = useMemo(() => notes.length || 0, [notes.length])
 
