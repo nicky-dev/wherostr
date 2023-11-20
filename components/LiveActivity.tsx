@@ -13,7 +13,7 @@ import { LiveVideoPlayer } from './LiveVideoPlayer'
 import { LiveChat } from './LiveChat'
 import { useCallback, useMemo, useState } from 'react'
 import ProfileChip from './ProfileChip'
-import { Bolt, Share, SubscriptionsSharp } from '@mui/icons-material'
+import { ElectricBolt, Share, SubscriptionsSharp } from '@mui/icons-material'
 import { LiveStreamTime } from './LiveStreamTime'
 import ResponsiveButton from './ResponsiveButton'
 import { useUserProfile } from '@/hooks/useUserProfile'
@@ -131,7 +131,7 @@ const LiveActivity = ({
                 color="primary"
                 variant="contained"
                 size="small"
-                startIcon={<Bolt />}
+                startIcon={<ElectricBolt />}
                 onClick={handleClickAction(EventActionType.Zap)}
               >
                 Zap
