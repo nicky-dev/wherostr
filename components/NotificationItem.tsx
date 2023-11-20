@@ -22,10 +22,9 @@ import {
   useState,
 } from 'react'
 import {
-  ArrowRightAlt,
-  Bolt,
   ChevronRightOutlined,
   Comment,
+  ElectricBolt,
   FormatQuote,
   Repeat,
   ThumbUp,
@@ -42,6 +41,8 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import NoteMenu from './NoteMenu'
 import classNames from 'classnames'
 import { useEvent } from '@/hooks/useEvent'
+import { amountFormat } from '@/constants/app'
+import numeral from 'numeral'
 
 const NotificationItem = ({
   className,
@@ -69,7 +70,6 @@ const NotificationItem = ({
   const pathname = usePathname()
   const query = useSearchParams()
   const router = useRouter()
-  const { ndk } = useContext(NostrContext)
   const { map } = useContext(MapContext)
 
   const contentRef = useRef(null)
@@ -95,17 +95,18 @@ const NotificationItem = ({
     [event],
   )
 
-  const refTag = event.getMatchingTags('e')?.at(-1)
-  const refId = refTag?.[1]
-  const [refEvent] = useEvent(refId)
+  const fromNote = useMemo(() => {
+    if (event && depth === 0) {
+      const thread = EventExt.extractThread(event as any)
+      return thread?.replyTo || thread?.root
+    }
+  }, [event, depth])
 
   const { setEventAction } = useContext(AppContext)
-
   const lnglat = useMemo(() => extractLngLat(event), [event])
   const hexpubkey = useMemo(() => {
     if (event.kind === NDKKind.Zap) {
       const zap = zapInvoiceFromEvent(event)
-      console.log('zap', zap)
       return zap?.zappee || event.pubkey
     } else if (event.kind === 30311) {
       let hostPubkey
@@ -125,12 +126,10 @@ const NotificationItem = ({
     }
   }, [event])
   const handleClickViewNote = useCallback(() => {
-    const _event = event.kind === NDKKind.Text ? event : refEvent
+    const _event = event.kind === NDKKind.Text ? event : fromNote?.value
     if (_event) {
       const options: any = {}
-      if (event.kind === NDKKind.Text) {
-        options.comments = true
-      } else {
+      if (event.kind !== NDKKind.Text) {
         switch (event.kind) {
           case NDKKind.Zap:
             options.zaps = true
@@ -141,10 +140,17 @@ const NotificationItem = ({
           case NDKKind.Repost:
             options.reposts = true
             break
+          case NDKKind.Text:
+            if (fromNote?.marker === 'mention') {
+              options.quotes = true
+              break
+            }
           default:
             options.comments = true
             break
         }
+      } else {
+        options.comments = true
       }
       setEventAction({
         type: EventActionType.View,
@@ -152,7 +158,7 @@ const NotificationItem = ({
         options,
       })
     }
-  }, [event, refEvent, setEventAction])
+  }, [event, fromNote, setEventAction])
 
   const difficulty = useMemo(() => {
     const diff = event.getMatchingTags('nonce').at(0)?.[2]
@@ -179,7 +185,7 @@ const NotificationItem = ({
   return (
     <Card className={className} square>
       <Box className="px-3 pt-3 flex items-center gap-3">
-        <NotificationTypeIcon event={event} />
+        <NotificationTypeIcon event={event} type={fromNote?.marker} />
         <Box className="flex-1 flex items-center gap-2 text-contrast-secondary">
           <ProfileChip hexpubkey={hexpubkey} />
           {createdDate && (
@@ -272,10 +278,10 @@ const NotificationItem = ({
               )}
             </CardContent>
           ) : (
-            refEvent && (
+            fromNote?.value && (
               <CardContent className="flex-1 !pl-0 !pr-3 !py-0 overflow-hidden">
                 <QuotedEvent
-                  id={refEvent.id}
+                  id={fromNote?.value}
                   relatedNoteVariant={relatedNoteVariant}
                   icon={
                     event.kind === NDKKind.Repost ? <Repeat /> : <Comment />
@@ -293,31 +299,50 @@ const NotificationItem = ({
 
 export default NotificationItem
 
-const NotificationTypeIcon = ({ event }: { event: NDKEvent }) => {
+const NotificationTypeIcon = ({
+  event,
+  type,
+}: {
+  event: NDKEvent
+  type?: string
+}) => {
   const typeIcon = useMemo(() => {
     switch (event.kind) {
       case NDKKind.Zap:
+        const zapInvoice = zapInvoiceFromEvent(event)
+
+        const amount = numeral((zapInvoice?.amount || 0) / 1000).format(
+          amountFormat,
+        )
+
         return (
-          <Typography variant="h6">
-            <Bolt color="primary" />
-          </Typography>
+          <Box className="flex flex-col items-center">
+            <ElectricBolt className="mr-1" color="primary" fontSize="small" />
+            <Typography
+              className="w-8 !font-bold"
+              variant="body2"
+              color="primary"
+            >
+              {amount}
+            </Typography>
+          </Box>
         )
       case NDKKind.Reaction:
         const reactionContent = transformText(event.content, event.tags)[0]
-        return reactionContent.type === 'custom_emoji' ? (
+        return reactionContent?.type === 'custom_emoji' ? (
           <img
             className="inline-block max-h-[1.5em] max-w-[1.5em]"
             alt="emoji"
             src={reactionContent.content}
           />
-        ) : reactionContent.content === '+' ? (
+        ) : reactionContent?.content === '+' ? (
           <ThumbUp color="secondary" />
         ) : (
           <Typography
             className="overflow-hidden whitespace-nowrap text-ellipsis text-contrast-primary"
             variant="h6"
           >
-            {reactionContent.content}
+            {reactionContent?.content}
           </Typography>
         )
       case NDKKind.Repost:
@@ -327,13 +352,20 @@ const NotificationTypeIcon = ({ event }: { event: NDKEvent }) => {
           </Typography>
         )
       case NDKKind.Text:
+        if (type === 'mention') {
+          return (
+            <Typography variant="h6">
+              <FormatQuote />
+            </Typography>
+          )
+        }
         return (
           <Typography variant="h6">
             <Comment />
           </Typography>
         )
     }
-  }, [event])
+  }, [event, type])
 
   return <Box className="w-10 text-center">{typeIcon}</Box>
 }

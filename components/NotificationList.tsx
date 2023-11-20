@@ -1,5 +1,5 @@
 'use client'
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
+import { NDKEvent } from '@nostr-dev-kit/ndk'
 import {
   FC,
   RefObject,
@@ -22,7 +22,6 @@ import { ViewportList, ViewportListRef } from 'react-viewport-list'
 import { SubscribeResult } from '@/hooks/useSubscribe'
 import { ArrowUpward } from '@mui/icons-material'
 import classNames from 'classnames'
-import { isComment } from '@/utils/event'
 import ProfileAvatar from './ProfileAvatar'
 import _ from 'lodash'
 import { useMuting } from '@/hooks/useAccount'
@@ -35,7 +34,6 @@ export interface NotificationListProps {
   onFetchMore?: SubscribeResult[1]
   newItems?: SubscribeResult[2]
   onShowNewItems?: SubscribeResult[3]
-  showComments?: boolean
 }
 
 const NotificationList: FC<NotificationListProps> = ({
@@ -45,7 +43,6 @@ const NotificationList: FC<NotificationListProps> = ({
   newItems = [],
   onFetchMore,
   onShowNewItems,
-  showComments,
 }) => {
   const noteRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<ViewportListRef>(null)
@@ -56,19 +53,17 @@ const NotificationList: FC<NotificationListProps> = ({
 
   const notes = useMemo(() => {
     return events.filter((d) => {
-      if (showComments && d.kind === NDKKind.Repost) return false
       if (muteList.includes(d.author.hexpubkey)) return false
-      return showComments || !isComment(d)
+      return true
     })
-  }, [showComments, events, muteList])
+  }, [events, muteList])
 
   const newNotes = useMemo(() => {
     return newItems.filter((d) => {
-      if (showComments && d.kind === NDKKind.Repost) return false
       if (muteList.includes(d.author.hexpubkey)) return false
-      return showComments || !isComment(d)
+      return true
     })
-  }, [showComments, newItems, muteList])
+  }, [newItems, muteList])
 
   const totalEvent = useMemo(() => notes.length || 0, [notes.length])
 
