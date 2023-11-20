@@ -312,7 +312,10 @@ export default function Feed() {
 
   return (
     <>
-      <Paper className="flex gap-3 items-center px-3 py-2 justify-end sticky top-[58px] z-10 !rounded-none">
+      <Paper
+        className="flex gap-3 items-center px-3 py-2 justify-end sticky top-[58px] z-10"
+        square
+      >
         {!showSearch && (
           <Box className="absolute inset-0 flex items-center">
             {!query ? (
@@ -424,7 +427,7 @@ export default function Feed() {
       </Paper>
       {!!query?.tags?.[0] && (
         <Box className="flex gap-3 items-center px-3 py-2 justify-between">
-          <Typography fontWeight="bold" variant="h5">
+          <Typography variant="h6">
             #{query.tags[0]}
           </Typography>
           <Box className="flex-1" />

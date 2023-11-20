@@ -26,13 +26,14 @@ import {
   Bolt,
   ChevronRightOutlined,
   Comment,
+  FormatQuote,
   Repeat,
   ThumbUp,
   TravelExploreOutlined,
 } from '@mui/icons-material'
 import { NDKEvent, NDKKind, zapInvoiceFromEvent } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
-import { EventExt } from '@snort/system'
+import { EventExt, transformText } from '@snort/system'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
 import { extractLngLat } from '@/utils/extractLngLat'
 import { MapContext } from '@/contexts/MapContext'
@@ -78,11 +79,16 @@ const NotificationItem = ({
 
   useEffect(() => {
     if (limitedHeight) {
-      setOverLimitedHeight((contentRef?.current as any)?.clientHeight > 480)
+      if (!contentRef.current) return
+      const resizeObserver = new ResizeObserver(() => {
+        setOverLimitedHeight((contentRef?.current as any)?.clientHeight > 480)
+      })
+      resizeObserver.observe(contentRef.current)
+      return () => resizeObserver.disconnect()
     } else {
       setOverLimitedHeight(undefined)
     }
-  })
+  }, [limitedHeight])
 
   const createdDate = useMemo(
     () => (event.created_at ? new Date(event.created_at * 1000) : undefined),
@@ -117,10 +123,6 @@ const NotificationItem = ({
   }, [ndk, refId, setEventAction])
 
   const lnglat = useMemo(() => extractLngLat(event), [event])
-  const repostId = useMemo(
-    () => (event.kind === NDKKind.Repost ? event.tagValue('e') : undefined),
-    [event],
-  )
   const hexpubkey = useMemo(() => {
     if (event.kind === NDKKind.Zap) {
       const zap = zapInvoiceFromEvent(event)
@@ -144,12 +146,39 @@ const NotificationItem = ({
     }
   }, [event])
   const handleClickViewNote = useCallback(() => {
-    setEventAction({
-      type: EventActionType.View,
-      event,
-      options: { comments: true },
-    })
-  }, [event, setEventAction])
+    const _event = event.kind === NDKKind.Text ? event : refEvent
+    if (_event) {
+      const options: any = {}
+      if (event.kind !== NDKKind.Text) {
+        switch (event.kind) {
+          case NDKKind.Zap:
+            options.zaps = true
+            break
+          case NDKKind.Reaction:
+            options.likes = true
+            break
+          case NDKKind.Repost:
+            options.reposts = true
+            break
+          case NDKKind.Text:
+            if (refType === 'mention') {
+              options.quotes = true
+              break
+            }
+          default:
+            options.comments = true
+            break
+        }
+      } else {
+        options.comments = true
+      }
+      setEventAction({
+        type: EventActionType.View,
+        event: _event,
+        options,
+      })
+    }
+  }, [event, refEvent, refType, setEventAction])
 
   const difficulty = useMemo(() => {
     const diff = event.getMatchingTags('nonce').at(0)?.[2]
@@ -175,85 +204,84 @@ const NotificationItem = ({
 
   console.log('refEvent', { event, refEvent, refId, refType })
 
-  const correctEvent = useMemo(
-    () => (event.kind !== NDKKind.Text && refEvent ? refEvent : event),
-    [event, refEvent],
-  )
-
   return (
-    <Card className={classNames('!rounded-none', className)}>
-      <Box className="px-3 pt-3 flex items-center gap-2 text-contrast-secondary">
+    <Card className={className} square>
+      <Box className="px-3 pt-3 flex items-center gap-3">
         <NotificationTypeIcon event={event} type={refType} />
-        <ProfileChip hexpubkey={hexpubkey} />
-        {createdDate && (
-          <Box className="grow flex flex-col items-end shrink-0">
-            <Typography variant="caption">
-              {difficulty && (
-                <>
-                  <Tooltip title={event.id} disableInteractive>
-                    <Typography variant="caption" fontWeight="bold">
-                      PoW-{difficulty}
-                    </Typography>
-                  </Tooltip>
-                  <Box component="span" className="mx-1" />
-                </>
-              )}
-              <TimeFromNow date={createdDate} />
-            </Typography>
-            {depth === 0 && refId && (
-              <Typography
-                className="cursor-pointer"
-                variant="caption"
-                color="secondary"
-                onClick={handleClickRootNote}
-              >
-                {event.kind === 6 ? (
+        <Box className="flex-1 flex items-center gap-2 text-contrast-secondary">
+          <ProfileChip hexpubkey={hexpubkey} />
+          {createdDate && (
+            <Box className="grow flex flex-col items-end shrink-0">
+              <Typography variant="caption">
+                {difficulty && (
                   <>
-                    <Repeat className="mr-1" fontSize="small" />
-                    reposted note
+                    <Tooltip title={event.id} disableInteractive>
+                      <Typography variant="caption" fontWeight="bold">
+                        PoW-{difficulty}
+                      </Typography>
+                    </Tooltip>
+                    <Box component="span" className="mx-1" />
                   </>
-                ) : event.kind === 1 ? (
-                  <>
-                    <ArrowRightAlt className="mr-1" fontSize="small" />
-                    commented note
-                  </>
-                ) : event.kind === 7 ? (
-                  <>
-                    <ArrowRightAlt className="mr-1" fontSize="small" />
-                    reacted note
-                  </>
-                ) : null}
+                )}
+                <TimeFromNow date={createdDate} />
               </Typography>
-            )}
-          </Box>
-        )}
-        {action && (
-          <>
-            {!!lnglat && (
-              <IconButton
-                size="small"
-                onClick={() => {
-                  setTimeout(() => {
-                    map?.fitBounds(LngLatBounds.fromLngLat(lnglat), {
-                      duration: 1000,
-                      maxZoom: 16,
+              {depth === 0 && refId && (
+                <Typography
+                  className="cursor-pointer"
+                  variant="caption"
+                  color="secondary"
+                  onClick={handleClickRootNote}
+                >
+                  {event.kind === 6 ? (
+                    <>
+                      <Repeat className="mr-1" fontSize="small" />
+                      reposted note
+                    </>
+                  ) : event.kind === 1 ? (
+                    <>
+                      <ArrowRightAlt className="mr-1" fontSize="small" />
+                      commented note
+                    </>
+                  ) : event.kind === 7 ? (
+                    <>
+                      <ArrowRightAlt className="mr-1" fontSize="small" />
+                      reacted note
+                    </>
+                  ) : null}
+                </Typography>
+              )}
+            </Box>
+          )}
+          {action && (
+            <>
+              {!!lnglat && (
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    setTimeout(() => {
+                      map?.fitBounds(LngLatBounds.fromLngLat(lnglat), {
+                        duration: 1000,
+                        maxZoom: 16,
+                      })
+                    }, 300)
+                    const q = query.get('q') || ''
+                    router.replace(`${pathname}?q=${q}&map=1`, {
+                      scroll: false,
                     })
-                  }, 300)
-                  const q = query.get('q') || ''
-                  router.replace(`${pathname}?q=${q}&map=1`, { scroll: false })
-                }}
-              >
-                <TravelExploreOutlined className="text-contrast-secondary" />
-              </IconButton>
-            )}
-            <NoteMenu event={event} />
-            {viewNoteButton && (
-              <IconButton size="small" onClick={handleClickViewNote}>
-                <ChevronRightOutlined className="text-contrast-secondary" />
-              </IconButton>
-            )}
-          </>
-        )}
+                  }}
+                >
+                  <TravelExploreOutlined className="text-contrast-secondary" />
+                </IconButton>
+              )}
+              <NoteMenu event={event} />
+              {viewNoteButton && (
+                <IconButton size="small" onClick={handleClickViewNote}>
+                  <ChevronRightOutlined className="text-contrast-secondary" />
+                </IconButton>
+              )}
+            </>
+          )}
+        </Box>
       </Box>
       {!hideContent && (
         <Box className="flex min-h-[12px]">
@@ -262,7 +290,7 @@ const NotificationItem = ({
               <Box className="h-full w-[2px] bg-[rgba(255,255,255,0.12)]" />
             )}
           </Box>
-          {correctEvent?.kind === NDKKind.Text ? (
+          {event?.kind === NDKKind.Text ? (
             <CardContent className="flex-1 !pl-0 !pr-3 !pt-3 !pb-0 overflow-hidden">
               <Box
                 className={classNames({
@@ -273,7 +301,7 @@ const NotificationItem = ({
               >
                 <Box ref={contentRef}>
                   <TextNote
-                    event={correctEvent}
+                    event={event}
                     relatedNoteVariant={relatedNoteVariant}
                   />
                 </Box>
@@ -292,17 +320,25 @@ const NotificationItem = ({
               </Box>
               {action && (
                 <Box className="mt-3">
-                  <NoteActionBar event={correctEvent} />
+                  <NoteActionBar event={event} />
                 </Box>
               )}
             </CardContent>
           ) : (
-            repostId && (
+            refEvent && (
               <CardContent className="flex-1 !pl-0 !pr-3 !py-0 overflow-hidden">
                 <QuotedEvent
-                  id={repostId}
+                  id={refEvent.id}
                   relatedNoteVariant={relatedNoteVariant}
-                  icon={<Repeat />}
+                  icon={
+                    event.kind === NDKKind.Repost ? (
+                      <Repeat />
+                    ) : refType === 'mention' ? (
+                      <FormatQuote />
+                    ) : (
+                      <Comment />
+                    )
+                  }
                 />
               </CardContent>
             )
@@ -332,32 +368,44 @@ const NotificationTypeIcon = ({
           </Typography>
         )
       case NDKKind.Reaction:
-        return event.content === '+' ? (
+        const reactionContent = transformText(event.content, event.tags)[0]
+        return reactionContent.type === 'custom_emoji' ? (
+          <img
+            className="inline-block max-h-[1.5em] max-w-[1.5em]"
+            alt="emoji"
+            src={reactionContent.content}
+          />
+        ) : reactionContent.content === '+' ? (
           <ThumbUp color="secondary" />
         ) : (
-          <TextNote textVariant="h6" event={event} />
+          <Typography
+            className="overflow-hidden whitespace-nowrap text-ellipsis text-contrast-primary"
+            variant="h6"
+          >
+            {reactionContent.content}
+          </Typography>
         )
       case NDKKind.Repost:
         return (
           <Typography variant="h6">
-            <Repeat color="inherit" />
+            <Repeat />
           </Typography>
         )
       case NDKKind.Text:
         if (type === 'mention') {
           return (
             <Typography variant="h6">
-              <Repeat color="inherit" />
+              <FormatQuote />
             </Typography>
           )
         }
         return (
           <Typography variant="h6">
-            <Comment color="inherit" />
+            <Comment />
           </Typography>
         )
     }
   }, [event, type])
 
-  return <Box className="px-3 w-14 text-center">{typeIcon}</Box>
+  return <Box className="w-10 text-center">{typeIcon}</Box>
 }

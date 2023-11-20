@@ -1,5 +1,5 @@
 'use client'
-import { Paper, Toolbar, Typography, useTheme } from '@mui/material'
+import { Paper, Typography, useTheme } from '@mui/material'
 import { useSearchParams } from 'next/navigation'
 import { useMemo, useRef } from 'react'
 import { useAccount } from '@/hooks/useAccount'
@@ -31,14 +31,13 @@ export default function Page() {
 
   return (
     <>
-      <Toolbar
-        component={Paper}
+      <Paper
+        className="flex gap-3 items-center px-3 py-2 sticky top-[58px] z-10"
         square
-        className="flex gap-3 items-center justify-start top-[58px] !sticky z-10"
       >
-        <Notifications />
-        <Typography variant="subtitle1">Notifications</Typography>
-      </Toolbar>
+        <Notifications className='m-2' />
+        <Typography variant="h6">Notifications</Typography>
+      </Paper>
       <NotificationList
         parentRef={scrollRef}
         events={data}

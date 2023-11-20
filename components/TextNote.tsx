@@ -26,6 +26,7 @@ import { PhotoProvider, PhotoView } from 'react-photo-view'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import ReactPlayer from 'react-player/lazy'
 import { EmbedEventAddress } from './EmbedEventAddress'
+import classNames from 'classnames'
 
 type RelatedNoteVariant = 'full' | 'fraction' | 'link'
 
@@ -238,11 +239,13 @@ const renderChunk = (
 }
 
 const TextNote = ({
+  className,
   event,
   relatedNoteVariant = 'fraction',
   textVariant = 'body1',
   skipEmbedLink = false,
 }: {
+  className?: string
   event: Partial<NDKEvent>
   relatedNoteVariant?: RelatedNoteVariant
   textVariant?: Variant
@@ -274,7 +277,7 @@ const TextNote = ({
 
   return (
     <Typography
-      className="whitespace-break-spaces break-words"
+      className={classNames('whitespace-break-spaces break-words', className)}
       variant={textVariant}
       component="div"
     >

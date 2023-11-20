@@ -78,7 +78,7 @@ export const EventProfileCard: FC<
     }
   }, [unfollow, user])
   return (
-    <Card className="!rounded-none">
+    <Card square>
       <Box className="px-3 pt-3 flex items-center gap-2 text-contrast-secondary">
         {children}
         <ProfileChip hexpubkey={hexpubkey} />
@@ -438,7 +438,7 @@ const EventActionModal = () => {
           ref={viewportRef}
           className="w-full overflow-y-auto !rounded-2xl"
         >
-          <Paper className="sticky top-0 z-10 !rounded-none">
+          <Paper className="sticky top-0 z-10" square>
             <Box className="flex items-center p-3 shadow gap-2">
               <IconButton size="small" onClick={handleClickBack}>
                 <ArrowBackOutlined />

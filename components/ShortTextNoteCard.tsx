@@ -163,7 +163,7 @@ const ShortTextNoteCard = ({
   }, [event])
 
   return (
-    <Card className={classNames('!rounded-none', className)}>
+    <Card className={className} square>
       <Box className="px-3 pt-3 flex items-center gap-2 text-contrast-secondary">
         <ProfileChip hexpubkey={hexpubkey} />
         {createdDate && (

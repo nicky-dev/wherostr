@@ -46,7 +46,7 @@ const ProfileActionModal = () => {
   return (
     <Box className="relative max-h-full flex rounded-2xl overflow-hidden p-0.5 bg-gradient-primary">
       <Paper className="relative w-full overflow-y-auto !rounded-2xl" ref={ref}>
-        <Paper className="sticky top-0 !rounded-none z-10">
+        <Paper className="sticky top-0 z-10" square>
           <Box className="flex items-center p-3 shadow gap-2">
             <IconButton size="small" onClick={handleClickBack}>
               <ArrowBackOutlined />

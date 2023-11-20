@@ -45,9 +45,10 @@ const NavigationBar: FC<{ className?: string }> = ({ className }) => {
 const MainPane: FC<PropsWithChildren> = ({ children }) => {
   return (
     <Paper
-      className={classNames(
-        'relative w-full md:w-[640px] flex flex-col !rounded-none min-h-full will-change-transform',
-      )}
+      className={
+        'relative w-full md:w-[640px] flex flex-col min-h-full will-change-transform'
+      }
+      square
     >
       <Paper className="!sticky top-0 z-10">
         <NavigationBar />
