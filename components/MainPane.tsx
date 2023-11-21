@@ -16,13 +16,13 @@ import Image from 'next/image'
 const NavigationBar: FC<{ className?: string }> = ({ className }) => {
   const user = useUser()
   return (
-    <Box className={classNames('flex items-center gap-3 px-3 py-2', className)}>
+    <Box className={classNames('flex items-center gap-2 px-3 py-2', className)}>
       <DrawerMenu />
       <Image src="/logo.svg" width={36} height={36} alt="wherostr" />
-      <Typography className="!font-bold !text-2xl sm:!text-3xl text-gradient bg-gradient-primary">
+      <Typography className="!font-bold !text-2xl sm:!text-3xl text-gradient bg-gradient-primary overflow-hidden text-ellipsis whitespace-nowrap">
         Wherostr
       </Typography>
-      <Box className="flex-1 flex gap-3 justify-end items-center">
+      <Box className="flex-1 flex gap-2 justify-end items-center">
         <IconButton LinkComponent={Link} href="/">
           <HomeOutlined />
         </IconButton>

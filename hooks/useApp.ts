@@ -10,6 +10,8 @@ export const useAction = () => {
     setEventAction,
     eventAction,
     profileAction,
+    backToPreviosModalAction,
+    clearActions,
   } = useContext(AppContext)
   return useMemo(() => {
     return {
@@ -19,6 +21,8 @@ export const useAction = () => {
       setEventAction,
       eventAction,
       profileAction,
+      backToPreviosModalAction,
+      clearActions,
     }
   }, [
     showSnackbar,
@@ -27,5 +31,7 @@ export const useAction = () => {
     setEventAction,
     eventAction,
     profileAction,
+    backToPreviosModalAction,
+    clearActions,
   ])
 }

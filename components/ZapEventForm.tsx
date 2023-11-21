@@ -24,7 +24,7 @@ const amountFormat = '0,0.[0]a'
 
 const ZapEventForm = ({ event }: { event: NDKEvent }) => {
   const ndk = useNDK()
-  const { setEventAction, showSnackbar } = useContext(AppContext)
+  const { backToPreviosModalAction, showSnackbar } = useContext(AppContext)
   const { register, handleSubmit, setValue, watch } = useForm()
   const [loading, setLoading] = useState(false)
   const _amountValue = watch('amount')
@@ -86,12 +86,12 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
             },
           },
         })
-        setEventAction(undefined)
+        backToPreviosModalAction('event')
       } finally {
         setLoading(false)
       }
     },
-    [event, ndk, zaps, setEventAction, showSnackbar],
+    [event, ndk, zaps, backToPreviosModalAction, showSnackbar],
   )
   const amountValue = useMemo(
     () =>

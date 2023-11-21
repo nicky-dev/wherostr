@@ -131,9 +131,14 @@ export const QuotedEvent = ({
 const renderChunk = (
   { type, content, mimeType }: ParsedFragment,
   {
+    clearActions,
     skipEmbedLink,
     relatedNoteVariant,
-  }: { skipEmbedLink?: boolean; relatedNoteVariant: RelatedNoteVariant },
+  }: {
+    clearActions: () => void
+    skipEmbedLink?: boolean
+    relatedNoteVariant: RelatedNoteVariant
+  },
 ) => {
   switch (type) {
     case 'media':
@@ -210,7 +215,10 @@ const renderChunk = (
       )
     case 'hashtag':
       return (
-        <NextLink href={`/?q=t:${content.toLowerCase()}`}>
+        <NextLink
+          href={`/?q=t:${content.toLowerCase()}`}
+          onClick={() => clearActions()}
+        >
           <Link underline="hover" color="secondary" component="span">
             #{content}
           </Link>
@@ -251,6 +259,7 @@ const TextNote = ({
   textVariant?: Variant
   skipEmbedLink?: boolean
 }) => {
+  const { clearActions } = useContext(AppContext)
   const [show, setShow] = useState(false)
   const chunks = useMemo(() => {
     try {
@@ -301,6 +310,7 @@ const TextNote = ({
               {renderChunk(chunk, {
                 relatedNoteVariant,
                 skipEmbedLink,
+                clearActions,
               })}
             </Fragment>
           ))}

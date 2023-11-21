@@ -75,7 +75,7 @@ export const CreateEventForm = ({
   const router = useRouter()
   const pathname = usePathname()
   const query = useSearchParams()
-  const { setEventAction, showSnackbar } = useAction()
+  const { showSnackbar, backToPreviosModalAction } = useAction()
   const [busy, setBusy] = useState(false)
   const [appendMapLink, setAppendMapLink] = useState(false)
   const [locating, setLocating] = useState(false)
@@ -280,7 +280,7 @@ export const CreateEventForm = ({
         } else {
           await new NDKEvent(ndk, publishEvent as NostrEvent).publish()
         }
-        setEventAction(undefined)
+        backToPreviosModalAction('event')
       } catch (err: any) {
         showSnackbar(err.message, {
           slotProps: {
@@ -300,7 +300,7 @@ export const CreateEventForm = ({
       positingOptions?.pow,
       ndk,
       appendMapLink,
-      setEventAction,
+      backToPreviosModalAction,
       showSnackbar,
     ],
   )
