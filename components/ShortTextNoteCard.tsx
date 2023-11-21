@@ -251,7 +251,7 @@ const ShortTextNoteCard = ({
               <Box className="h-full w-[2px] bg-[rgba(255,255,255,0.12)]" />
             )}
           </Box>
-          {event.kind === NDKKind.Text ? (
+          {event.kind === NDKKind.Text || event.kind === NDKKind.Article ? (
             <CardContent className="flex-1 !pl-0 !pr-3 !pt-3 !pb-0 overflow-hidden">
               <Box
                 className={classNames({

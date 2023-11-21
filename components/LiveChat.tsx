@@ -25,19 +25,10 @@ export function LiveChat({
   const { user } = useContext(AccountContext)
   const [message, setMessage] = useState<string>()
   const [busy, setBusy] = useState<boolean>(false)
-  const ref = useRef<Window>(
-    typeof window !== 'undefined' ? window.frames : null,
-  )
-
-  //   useEffect(() => {
-  //     if (!ref.current) return
-  //     console.log('session', ref.current.localStorage.getItem('session'))
-  //   }, [])
 
   return (
     <Box {...props} display="flex" flexDirection="column" minHeight={256}>
       <iframe
-        // ref={ref}
         style={{ backgroundColor: 'transparent' }}
         src={`https://zap.stream/chat/${naddr}`}
         width="100%"

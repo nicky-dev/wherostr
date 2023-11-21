@@ -271,7 +271,7 @@ export const ShortTextNotePane = ({
         indent={false}
         viewNoteButton={false}
       />
-      {event.kind === NDKKind.Text && (
+      {event.kind === NDKKind.Text || event.kind === NDKKind.Article ? (
         <>
           <Paper className="sticky top-[59px] z-10">
             <Box>
@@ -366,7 +366,7 @@ export const ShortTextNotePane = ({
             </Box>
           )}
         </>
-      )}
+      ) : null}
     </Box>
   )
 }
@@ -413,7 +413,7 @@ const EventActionModal = () => {
     }
   }, [eventAction])
   const title = useMemo(() => {
-    const { type } = eventAction || {}
+    const { type, event } = eventAction || {}
     switch (type) {
       case EventActionType.Create:
         return 'Create'
@@ -426,7 +426,11 @@ const EventActionModal = () => {
       case EventActionType.Zap:
         return 'Zap'
       case EventActionType.View:
-        return 'Note'
+        if (event?.kind === NDKKind.Text) {
+          return 'Note'
+        } else if (event?.kind === NDKKind.Article) {
+          return 'Article'
+        }
       default:
         return undefined
     }
