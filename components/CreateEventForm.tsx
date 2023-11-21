@@ -626,13 +626,15 @@ export const CreateEventForm = ({
           </>
         )}
         <Box className="flex">
-          <PostingOptions
-            disabled={disabled}
-            onChange={handlePostingOptionsChange}
-            slotProps={{
-              dropzone: { onDrop: dropzoneOptions.onDrop },
-            }}
-          />
+          {type !== EventActionType.Repost && (
+            <PostingOptions
+              disabled={disabled}
+              onChange={handlePostingOptionsChange}
+              slotProps={{
+                dropzone: { onDrop: dropzoneOptions.onDrop },
+              }}
+            />
+          )}
           <Box flex={1} />
           <LoadingButton
             disabled={disabled}
