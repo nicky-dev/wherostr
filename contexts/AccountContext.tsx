@@ -9,7 +9,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react'
 import {
@@ -27,6 +26,7 @@ import { NostrContext } from '@/contexts/NostrContext'
 import { useAction } from '@/hooks/useApp'
 import { nip19 } from 'nostr-tools'
 import { nanoid } from 'nanoid'
+import { hasNip7Extension } from '@/utils/nostr'
 
 export type SignInType = 'nip7' | 'nsec' | 'npub'
 
@@ -35,6 +35,13 @@ export interface FollowListItem {
   id: string
   name: string
   value: any
+}
+
+export interface SessionItem {
+  type?: SignInType
+  pubkey?: string
+  encNsec?: string
+  pin?: string
 }
 
 export interface AccountProps {
@@ -80,13 +87,6 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const [follows, setFollows] = useState<NDKUser[]>([])
   const [followLists, setFollowLists] = useState<FollowListItem[]>([])
   const [muteList, setMuteList] = useState<string[]>([])
-  const nostrRef = useRef<typeof window.nostr>(
-    typeof window !== 'undefined' ? window.nostr : undefined,
-  )
-  nostrRef.current = typeof window !== 'undefined' ? window.nostr : undefined
-  const hasNip7Extension = useCallback(() => {
-    return !!nostrRef.current
-  }, [nostrRef])
 
   const updateFollows = useCallback(
     async (user: NDKUser) => {
@@ -245,14 +245,11 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
           if (!ndk.activeUser) {
             ndk.activeUser = user
           }
-          localStorage.setItem(
-            'session',
-            JSON.stringify({
-              pubkey: user.hexpubkey,
-              type,
-              ...(type === 'nsec' ? { nsec: key } : undefined),
-            }),
-          )
+          setSession({
+            pubkey: user.hexpubkey,
+            type,
+            ...(type === 'nsec' ? { nsec: key } : undefined),
+          })
           await connectToUserRelays(user)
           await updateFollows(user)
           setUser(user)
@@ -267,24 +264,24 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
         setSigning(false)
       }
     },
-    [ndk, hasNip7Extension, getUser, updateFollows, showSnackbar],
+    [ndk, showSnackbar, getUser, updateFollows],
   )
 
   const signOut = useCallback(async () => {
     ndk.signer = undefined
-    localStorage.removeItem('session')
+    removeSession()
     setUser(undefined)
     setReadOnly(true)
   }, [ndk])
 
   const initUser = useCallback(async () => {
     try {
+      const session = getSession()
       setSigning(true)
-      const session = JSON.parse(localStorage.getItem('session') || '{}')
-      if (session?.pubkey) {
+      if (session?.pubkey && session.type) {
         await signIn(
           session.type,
-          session.type === 'nsec' ? session?.nsec : session?.pubkey,
+          session.type === 'nsec' ? session?.encNsec : session?.pubkey,
         )
         return
       }
@@ -481,4 +478,26 @@ const connectToUserRelays = async (user: NDKUser) => {
       })
     })
   }
+}
+
+// function encryptMessage(text: string, key: CryptoKey) {
+//   const key = new CryptoKey()
+//   generateKey(algorithm, extractable, keyUsages)
+
+//   const enc = new TextEncoder()
+//   const encoded = enc.encode(text)
+//   const iv = window.crypto.getRandomValues(new Uint8Array(12))
+//   return window.crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, encoded)
+// }
+
+const setSession = (session: SessionItem) => {
+  localStorage.setItem('session', JSON.stringify(session))
+}
+const removeSession = () => {
+  localStorage.removeItem('session')
+}
+
+const getSession = () => {
+  const session = localStorage.getItem('session')
+  return session ? JSON.parse(session) : {}
 }

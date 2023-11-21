@@ -21,15 +21,17 @@ export const useEvent = (
   return usePromise(
     async () =>
       idOrFilter
-        ? ndk.fetchEvent(
-            idOrFilter,
-            {
-              cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
-              subId: nanoid(8),
-            },
-            relaySet,
-          )
-        : null,
+        ? ndk
+            .fetchEvent(
+              idOrFilter,
+              {
+                cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+                subId: nanoid(8),
+              },
+              relaySet,
+            )
+            .then((res) => res || undefined)
+        : undefined,
     [idOrFilter, relaySet],
   )
 }

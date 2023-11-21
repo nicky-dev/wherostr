@@ -30,6 +30,7 @@ import { LoadingButton } from '@mui/lab'
 import { SignInType } from '@/contexts/AccountContext'
 import { useForm } from 'react-hook-form'
 import { usePathname, useRouter } from 'next/navigation'
+import { hasNip7Extension } from '@/utils/nostr'
 
 const UserBar = ({ className }: { className?: string }) => {
   const router = useRouter()
@@ -38,10 +39,6 @@ const UserBar = ({ className }: { className?: string }) => {
   const { user, signing, signIn, signOut } = useAccount()
   const [open, setOpen] = useState(false)
   const [loginType, setLoginType] = useState<SignInType>()
-  const nostrRef = useRef<typeof window.nostr>(
-    typeof window !== 'undefined' ? window.nostr : undefined,
-  )
-  nostrRef.current = typeof window !== 'undefined' ? window.nostr : undefined
 
   const signedIn = useMemo(() => {
     return !!user
@@ -140,7 +137,7 @@ const UserBar = ({ className }: { className?: string }) => {
           {!loginType ? (
             <>
               <Box className="flex flex-col items-center justify-center">
-                {!!nostrRef.current && (
+                {!!hasNip7Extension() && (
                   <Button
                     variant="contained"
                     color="secondary"
