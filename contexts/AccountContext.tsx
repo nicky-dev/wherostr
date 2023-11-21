@@ -40,7 +40,7 @@ export interface FollowListItem {
 export interface SessionItem {
   type?: SignInType
   pubkey?: string
-  encNsec?: string
+  nsec?: string
   pin?: string
 }
 
@@ -281,7 +281,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       if (session?.pubkey && session.type) {
         await signIn(
           session.type,
-          session.type === 'nsec' ? session?.encNsec : session?.pubkey,
+          session.type === 'nsec' ? session?.nsec : session?.pubkey,
         )
         return
       }
