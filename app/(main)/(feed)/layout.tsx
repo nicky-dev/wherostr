@@ -45,7 +45,7 @@ export default function RootLayout({
         )}
       >
         <MapView
-          className={classNames('fixed inset-0 flex-1', {
+          className={classNames('fixed inset-0 md:left-[640px] flex-1', {
             hidden: !mdUp && !hasMap,
             'z-10': hasMap && !mdUp,
           })}

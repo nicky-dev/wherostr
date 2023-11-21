@@ -213,34 +213,6 @@ export default function Feed() {
   }, [map])
 
   useEffect(() => {
-    if (!map) return
-    try {
-      const source = map.getSource('nostr-event') as any
-      if (!source) return
-      source?.setData({
-        type: 'FeatureCollection',
-        features,
-      })
-    } catch (err) {}
-  }, [map, features])
-
-  useEffect(() => {
-    if (!map) return
-    const basePadding = 32
-    const left = xlUp ? 640 : mdUp ? 640 : 0
-    map.easeTo({
-      padding: {
-        left: left + basePadding,
-        right: basePadding,
-        top: basePadding,
-        bottom: basePadding,
-      },
-      animate: false,
-      easeId: 'mainpane',
-    })
-  }, [map, mdUp, xlUp])
-
-  useEffect(() => {
     if (!map || !mapLoaded) return
     try {
       if (!bounds.isEmpty()) {
