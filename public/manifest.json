@@ -1,12 +1,12 @@
 {
-  "theme_color": "rgb(3, 149, 252)",
+  "theme_color": "#0394fc",
   "background_color": "#121212",
   "display": "standalone",
   "scope": "/",
   "start_url": "/",
   "name": "Wherostr",
   "short_name": "Wherostr",
-  "description": "Where are Nostr people ?",
+  "description": "Where are Nostriches ?",
   "icons": [
     {
       "src": "windows11/SmallTile.scale-100.png",
@@ -456,5 +456,8 @@
       "src": "ios/1024.png",
       "sizes": "1024x1024"
     }
-  ]
+  ],
+  "id": "wherostr",
+  "orientation": "portrait",
+  "categories": ["social"]
 }
