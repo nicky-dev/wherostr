@@ -78,7 +78,7 @@ const UserBar = ({ className }: { className?: string }) => {
       router.replace(`/?q=following&map=`)
       setOpen(false)
     },
-    [handleClickSignIn, router, loginType],
+    [loginType, router, signIn],
   )
 
   return (

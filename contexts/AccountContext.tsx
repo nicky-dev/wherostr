@@ -279,10 +279,14 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       const session = getSession()
       setSigning(true)
       if (session?.pubkey && session.type) {
-        await signIn(
-          session.type,
-          session.type === 'nsec' ? session?.nsec : session?.pubkey,
-        )
+        await new Promise((resolve) => {
+          setTimeout(() => {
+            signIn(
+              session.type,
+              session.type === 'nsec' ? session?.nsec : session?.pubkey,
+            ).then(resolve)
+          }, 1000)
+        })
         return
       }
     } catch (err) {
