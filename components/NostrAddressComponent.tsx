@@ -5,6 +5,7 @@ import { NDKFilter } from '@nostr-dev-kit/ndk'
 import { nip19 } from 'nostr-tools'
 import { useStreamRelaySet } from '@/hooks/useNostr'
 import { useSubscribe } from '@/hooks/useSubscribe'
+import { DAY, unixNow } from '@/utils/time'
 
 export interface NostrAddressComponentProps {
   data: nip19.AddressPointer
@@ -18,6 +19,7 @@ export const NostrAddressComponent: FC<NostrAddressComponentProps> = ({
       kinds: [data.kind],
       authors: [data.pubkey],
       '#d': [data.identifier],
+      until: unixNow() + DAY,
     }
   }, [data])
   const relaySet = useStreamRelaySet()

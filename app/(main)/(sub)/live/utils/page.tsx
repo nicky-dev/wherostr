@@ -1,7 +1,7 @@
 'use client'
 import { useUser } from '@/hooks/useAccount'
+import { useEvent } from '@/hooks/useEvent'
 import { useNDK, useStreamRelaySet } from '@/hooks/useNostr'
-import { useSubscribe } from '@/hooks/useSubscribe'
 import { WEEK, unixNow } from '@/utils/time'
 import {
   Box,
@@ -12,14 +12,17 @@ import {
   Typography,
 } from '@mui/material'
 import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
+import Link from 'next/link'
 import {
   FormEvent,
   FormEventHandler,
   useCallback,
   useEffect,
   useMemo,
-  useState,
+  useRef,
 } from 'react'
+import { nip19 } from 'nostr-tools'
+import { useSubscribe } from '@/hooks/useSubscribe'
 
 const twitchRegex = /(?:https:\/\/)?clips\.twitch\.tv\/(\S+)/i
 const youtubeRegex = /(?:https:\/\/)?clips\.youtube\.com\/(\S+)/i
@@ -29,7 +32,6 @@ export default function Page() {
   const ndk = useNDK()
   const user = useUser()
   const since = useMemo(() => unixNow() - WEEK, [])
-  const [ev, setEv] = useState<NDKEvent>()
   const filter = useMemo<NDKFilter | undefined>(() => {
     return {
       kinds: [30311 as NDKKind],
@@ -39,60 +41,30 @@ export default function Page() {
   }, [since, user])
   const relaySet = useStreamRelaySet()
   const [items] = useSubscribe(filter, true, relaySet)
-
-  useEffect(() => {
-    setEv(items[0])
-  }, [items])
-
-  const fetchStatsUrl = useMemo(() => {
-    const streamingUrl = ev?.tagValue('streaming')
-    if (!streamingUrl) return
-    const url = new URL(streamingUrl)
-    if (twitchRegex.test(streamingUrl)) {
-      return
-    } else if (youtubeRegex.test(streamingUrl)) {
-      return
-    } else if (streamingUrl.endsWith('.m3u8')) {
-      const streamKey = streamingUrl?.match(
-        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/,
-      )?.[0]
-      return `${url.protocol}//${url.host}/api/v3/widget/process/restreamer-ui:ingest:${streamKey}`
-    }
-  }, [ev])
-
-  const fetchStats = useCallback(async () => {
-    if (!fetchStatsUrl) return
-    try {
-      const result = await fetch(fetchStatsUrl)
-      const jsonResult = await result.json()
-      return {
-        viewers: jsonResult.current_sessions,
-        uptime: jsonResult.uptime,
-      }
-    } catch (err) {
-      console.log(err)
-    }
-  }, [fetchStatsUrl])
+  const ev = useRef(items[0])
+  ev.current = items[0]
 
   const createEvent = useCallback(() => {
-    if (!ndk || !ev) return
+    if (!ndk || !ev.current) return
     const ndkEvent = new NDKEvent(ndk)
-    ndkEvent.content = ev.content
-    ndkEvent.kind = ev.kind
-    ndkEvent.author = ev.author
-    ndkEvent.tags = ev.tags
+    ndkEvent.content = ev.current.content
+    ndkEvent.kind = ev.current.kind
+    ndkEvent.author = ev.current.author
+    ndkEvent.tags = ev.current.tags
     return ndkEvent
-  }, [ndk, ev])
+  }, [ndk])
 
   const updateLiveStats = useCallback(
     async (ev: NDKEvent) => {
       try {
+        const imageUrl = getImageUrl(ev)
+        console.debug('updateLiveStats', 'status', ev.tagValue('status'))
         if (ev.tagValue('status') !== 'live') return
-        const stats = await fetchStats().catch((err) => console.error(err))
+        const stats = await fetchStats(ev).catch((err) => console.error(err))
+        console.debug('updateLiveStats', 'stats', stats)
         if (!stats) return
         let currentPaticipants = ev.tagValue('current_participants') || '0'
-        if (currentPaticipants === stats.viewers?.toString()) return
-        if (!currentPaticipants) return
+        // if (currentPaticipants === stats.viewers?.toString()) return
         currentPaticipants = stats.viewers?.toString()
         const ndkEvent = createEvent()
         if (!ndkEvent) return
@@ -100,59 +72,88 @@ export default function Page() {
         ndkEvent.tags.push(['current_participants', currentPaticipants])
         ev.removeTag('current_participants')
         ev.tags.push(['current_participants', currentPaticipants])
+        if (imageUrl && imageUrl !== ev.tagValue('image')) {
+          // const time = unixNow()
+          console.debug('updateLiveStats', 'imageUrl', imageUrl)
+          ndkEvent.removeTag('image')
+          ndkEvent.tags.push(['image', imageUrl])
+          ev.removeTag('image')
+          ev.tags.push(['image', imageUrl])
+        }
         await ndkEvent.publish(relaySet)
-      } catch (err) {
-      } finally {
-        timeoutHandler = setTimeout(() => {
-          updateLiveStats(ev)
-        }, 30000)
-      }
+      } catch (err) {}
     },
-    [fetchStats, createEvent, relaySet],
+    [createEvent, relaySet],
   )
 
-  useEffect(() => {
+  const triggerInterval = useCallback(async () => {
     clearTimeout(timeoutHandler)
-    if (!ev) return
-    updateLiveStats(ev)
+    console.debug('triggerInterval', ev.current)
+    if (ev.current) {
+      await updateLiveStats(ev.current)
+      timeoutHandler = setTimeout(() => {
+        triggerInterval()
+      }, 60000)
+    } else {
+      timeoutHandler = setTimeout(() => {
+        triggerInterval()
+      }, 5000)
+    }
+  }, [updateLiveStats])
+
+  useEffect(() => {
+    triggerInterval()
     return () => {
       clearTimeout(timeoutHandler)
     }
-  }, [ev, updateLiveStats])
+  }, [triggerInterval])
 
   const handleUpdate = useCallback<(name: string) => FormEventHandler>(
     (name: string) => async (evt: FormEvent<HTMLFormElement>) => {
       evt.preventDefault()
-      if (!ev) return
+      if (!ev.current) return
       const form = new FormData(evt.currentTarget)
       const value = form.get(name)?.toString()
       if (!value) return
       const ndkEvent = createEvent()
       if (!ndkEvent) return
       if (ndkEvent.tagValue('status') === 'ended') {
-        ev.removeTag(name)
+        ev.current.removeTag(name)
         ndkEvent.removeTag(name)
       }
-      ev.removeTag(name)
-      ev.tags.push([name, value])
+      ev.current.removeTag(name)
+      ev.current.tags.push([name, value])
       ndkEvent.removeTag(name)
       ndkEvent.tags.push([name, value])
       await ndkEvent.publish(relaySet)
     },
-    [ev, createEvent, relaySet],
+    [createEvent, relaySet],
   )
 
-  const isLive = useMemo(() => ev?.tagValue('status') === 'live', [ev])
-  const tags = useMemo(() => ev?.getMatchingTags('t') || [], [ev])
+  const isLive = ev.current?.tagValue('status') === 'live'
+  const tags = ev.current?.getMatchingTags('t') || []
+  const id = ev.current?.tagValue('d')
+  const naddr = useMemo(
+    () =>
+      nip19.naddrEncode({
+        identifier: id || '',
+        kind: 30311,
+        pubkey: ev.current?.pubkey || '',
+      }),
+    [id],
+  )
   return (
     <>
       <Box className="flex-1 flex flex-col p-4">
-        {ev ? (
+        {ev.current ? (
           <>
-            <Typography variant="h6" fontWeight="bold">
-              {ev?.tagValue('title')}
+            <Typography component={Link} href={'/' + naddr} target="_blank">
+              View stream
             </Typography>
-            <Typography>{ev?.tagValue('summary')}</Typography>
+            <Typography variant="h6" fontWeight="bold">
+              {ev.current?.tagValue('title')}
+            </Typography>
+            <Typography>{ev.current?.tagValue('summary')}</Typography>
             <Box className="flex mt-2 gap-2">
               <Chip
                 color={isLive ? 'primary' : 'secondary'}
@@ -162,7 +163,8 @@ export default function Page() {
                 <Chip
                   variant="outlined"
                   label={
-                    (ev?.tagValue('current_participants') || 0) + ' viewers'
+                    (ev.current?.tagValue('current_participants') || 0) +
+                    ' viewers'
                   }
                 />
               )}
@@ -181,7 +183,7 @@ export default function Page() {
                   autoComplete="off"
                   label="Streaming URL"
                   placeholder="https://..."
-                  defaultValue={ev?.tagValue('streaming')}
+                  defaultValue={ev.current?.tagValue('streaming')}
                   InputProps={{
                     sx: { pr: 0 },
                     endAdornment: (
@@ -204,7 +206,7 @@ export default function Page() {
                   autoComplete="off"
                   label="Recording URL"
                   placeholder="https://..."
-                  defaultValue={ev?.tagValue('recording')}
+                  defaultValue={ev.current?.tagValue('recording')}
                   InputProps={{
                     sx: { pr: 0 },
                     endAdornment: (
@@ -223,4 +225,48 @@ export default function Page() {
       </Box>
     </>
   )
+}
+
+const getAPIUrl = (ev: NDKEvent) => {
+  const streamingUrl = ev?.tagValue('streaming')
+  if (!streamingUrl) return
+  const url = new URL(streamingUrl)
+  if (twitchRegex.test(streamingUrl)) {
+    return
+  } else if (youtubeRegex.test(streamingUrl)) {
+    return
+  } else if (streamingUrl.endsWith('.m3u8')) {
+    const streamKey = streamingUrl?.match(
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/,
+    )?.[0]
+    return `${url.protocol}//${url.host}/api/v3/widget/process/restreamer-ui:ingest:${streamKey}`
+  }
+}
+
+const getImageUrl = (ev: NDKEvent) => {
+  const streamingUrl = ev?.tagValue('streaming')
+  if (!streamingUrl) return
+  if (twitchRegex.test(streamingUrl)) {
+    return
+  } else if (youtubeRegex.test(streamingUrl)) {
+    return
+  } else if (streamingUrl.endsWith('.m3u8')) {
+    return streamingUrl.replace('.m3u8', '.jpg')
+  }
+}
+
+const fetchStats = async (ev: NDKEvent) => {
+  const apiUrl = getAPIUrl(ev)
+  console.debug('fetchStats', 'apiUrl', apiUrl)
+  if (!apiUrl) return
+  try {
+    const result = await fetch(apiUrl)
+    const jsonResult = await result.json()
+    return {
+      viewers: jsonResult.current_sessions,
+      uptime: jsonResult.uptime,
+    }
+  } catch (err) {
+    console.log(err)
+  }
 }
