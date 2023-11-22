@@ -289,7 +289,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
               session.type,
               session.type === 'nsec' ? session?.nsec : session?.pubkey,
             ).then(resolve)
-          }, 1000)
+          }, 500)
         })
         return
       }

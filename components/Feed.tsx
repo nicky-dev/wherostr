@@ -241,7 +241,7 @@ export default function Feed() {
   useEffect(() => {
     if (!map || !mapLoaded) return
     Object.keys(markers).forEach((key) => markers[key].remove())
-    const tasks = Promise.all(
+    const tasks = Promise.allSettled(
       features
         .slice()
         .sort((a, b) => a!.properties.created_at - b!.properties.created_at)
@@ -276,8 +276,10 @@ export default function Feed() {
     tasks.then((newMarkers) => {
       Object.keys(markers).forEach((key) => markers[key].remove())
       newMarkers.forEach((newMarker) => {
-        newMarker?.remove()
-        newMarker?.addTo(map)
+        if (newMarker.status === 'fulfilled' && newMarker.value) {
+          newMarker.value.remove()
+          newMarker.value.addTo(map)
+        }
       })
     })
   }, [generatePin, map, mapLoaded, features])
