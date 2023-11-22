@@ -113,7 +113,11 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
           follows.add(user)
         })
       }
-      setFollows(Array.from(follows))
+      const _follows = Array.from(follows)
+      follows.forEach((item) => {
+        ndk.cacheAdapter?.fetchProfile?.(item.pubkey)
+      })
+      setFollows(_follows)
     },
     [ndk],
   )
