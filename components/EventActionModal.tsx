@@ -1,117 +1,34 @@
 'use client'
-import '@getalby/bitcoin-connect-react'
 import ProfileChip from '@/components/ProfileChip'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import {
   Box,
   Button,
   ButtonGroup,
-  Card,
-  CircularProgress,
   Divider,
   IconButton,
   Paper,
   Typography,
 } from '@mui/material'
 import {
-  FC,
   MutableRefObject,
-  PropsWithChildren,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
-  useState,
 } from 'react'
-import {
-  ArrowBackOutlined,
-  Close,
-  ElectricBolt,
-  ThumbUp,
-} from '@mui/icons-material'
+import { ArrowBackOutlined, Close } from '@mui/icons-material'
 import { AccountContext } from '@/contexts/AccountContext'
 import { EventActionType, AppContext } from '@/contexts/AppContext'
-import {
-  NDKEvent,
-  NDKKind,
-  NDKUser,
-  zapInvoiceFromEvent,
-} from '@nostr-dev-kit/ndk'
-import numeral from 'numeral'
-import { useEvents } from '@/hooks/useEvent'
+import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
 import { CreateEventForm } from './CreateEventForm'
-import { LoadingButton } from '@mui/lab'
-import { useFollowing, useMuting, useUser } from '@/hooks/useAccount'
 import { isComment, isQuote } from '@/utils/event'
-import { amountFormat } from '@/constants/app'
 import ZapEventForm from './ZapEventForm'
 import classNames from 'classnames'
-import { ViewportList } from 'react-viewport-list'
-import { transformText } from '@snort/system'
-
-export const EventProfileCard: FC<
-  PropsWithChildren & { hexpubkey: string }
-> = ({ children, hexpubkey }) => {
-  const [loading, setLoading] = useState(false)
-  const account = useUser()
-  const [follows, follow, unfollow] = useFollowing()
-  const itsYou = useMemo(
-    () => account?.hexpubkey === hexpubkey,
-    [account?.hexpubkey, hexpubkey],
-  )
-  const isFollowing = follows.find((d) => d.hexpubkey === hexpubkey)
-  const user = useMemo(() => new NDKUser({ hexpubkey }), [hexpubkey])
-  const handleClickFollow = useCallback(async () => {
-    try {
-      setLoading(true)
-      await follow(user)
-    } finally {
-      setLoading(false)
-    }
-  }, [follow, user])
-  const handleClickUnfollow = useCallback(async () => {
-    try {
-      setLoading(true)
-      await unfollow(user)
-    } finally {
-      setLoading(false)
-    }
-  }, [unfollow, user])
-  return (
-    <Card square>
-      <Box className="px-3 pt-3 flex items-center gap-2 text-contrast-secondary">
-        {children}
-        <ProfileChip hexpubkey={hexpubkey} />
-        {account && !itsYou && (
-          <Box className="grow flex flex-col items-end shrink-0">
-            {isFollowing ? (
-              <LoadingButton
-                loading={loading}
-                color="secondary"
-                size="small"
-                variant="outlined"
-                onClick={handleClickUnfollow}
-              >
-                Unfollow
-              </LoadingButton>
-            ) : (
-              <LoadingButton
-                loading={loading}
-                color="secondary"
-                size="small"
-                variant="contained"
-                onClick={handleClickFollow}
-              >
-                Follow
-              </LoadingButton>
-            )}
-          </Box>
-        )}
-      </Box>
-      <Divider className="!mt-3" />
-    </Card>
-  )
-}
+import EventList from './EventList'
+import { DAY, unixNow } from '@/utils/time'
+import { useSubscribe } from '@/hooks/useSubscribe'
 
 export const ShortTextNotePane = ({
   event,
@@ -131,39 +48,39 @@ export const ShortTextNotePane = ({
   viewportRef?: MutableRefObject<any>
 }) => {
   const { eventAction, setEventAction } = useContext(AppContext)
-  const [muteList] = useMuting()
-  const filter = useMemo(() => {
-    const kinds: NDKKind[] = []
-    if (comments || quotes) {
-      kinds.push(NDKKind.Text)
-    }
-    if (reposts) {
-      kinds.push(NDKKind.Repost)
-    }
-    if (likes) {
-      kinds.push(NDKKind.Reaction)
-    }
-    if (zaps) {
-      kinds.push(NDKKind.Zap)
-    }
-    return { kinds, '#e': [event.id] }
-  }, [comments, quotes, reposts, likes, zaps, event.id])
 
-  const [relatedEvents, error, state] = useEvents(filter)
+  const relatedEventsfilter = useMemo<NDKFilter | undefined>(
+    () =>
+      event.kind === NDKKind.Text || event.kind === NDKKind.Article
+        ? {
+            kinds: [
+              NDKKind.Repost,
+              NDKKind.Text,
+              NDKKind.Zap,
+              NDKKind.Reaction,
+            ],
+            '#e': [event.id],
+            until: unixNow() + DAY,
+          }
+        : undefined,
+    [event],
+  )
+  const [relatedEvents] = useSubscribe(relatedEventsfilter, true)
 
-  const relatedEventElements = useMemo(() => {
-    if (!relatedEvents) return
+  const filteredRelatedEvents = useMemo(() => {
+    if (!relatedEvents?.length) return []
     const _reposts: NDKEvent[] = []
     const _quotes: NDKEvent[] = []
     const _comments: NDKEvent[] = []
     const _likes: NDKEvent[] = []
     const _zaps: NDKEvent[] = []
     relatedEvents.forEach((item) => {
-      if (muteList.includes(item.pubkey)) return
-      const { content, tags, kind } = item
+      const { content, kind } = item
       switch (kind) {
         case NDKKind.Repost:
-          _reposts.push(item)
+          if (reposts) {
+            _reposts.push(item)
+          }
           break
         case NDKKind.Text:
           if (quotes && isQuote(item, event)) {
@@ -173,85 +90,20 @@ export const ShortTextNotePane = ({
           }
           break
         case NDKKind.Reaction:
-          if (content !== '-') {
+          if (likes && content !== '-') {
             _likes.push(item)
           }
           break
         case NDKKind.Zap:
-          _zaps.push(item)
+          if (zaps) {
+            _zaps.push(item)
+          }
           break
       }
     })
     return [..._reposts, ..._quotes, ..._comments, ..._likes, ..._zaps]
-      .sort((a, b) => a.created_at! - b.created_at!)
-      .map((item, index) => {
-        switch (item.kind) {
-          case NDKKind.Repost:
-            return <EventProfileCard key={index} hexpubkey={item.pubkey} />
-          case NDKKind.Reaction:
-            const { type, content } = transformText(item.content, item.tags)[0]
-            return (
-              <EventProfileCard key={index} hexpubkey={item.pubkey}>
-                <Box className="px-3 w-14 text-center">
-                  {type === 'custom_emoji' ? (
-                    <img
-                      className="inline-block max-h-[1.5em] max-w-[1.5em]"
-                      alt="emoji"
-                      src={content}
-                    />
-                  ) : content === '+' ? (
-                    <ThumbUp color="secondary" />
-                  ) : (
-                    <Typography
-                      className="overflow-hidden whitespace-nowrap text-ellipsis text-contrast-primary"
-                      variant="h6"
-                    >
-                      {content}
-                    </Typography>
-                  )}
-                </Box>
-              </EventProfileCard>
-            )
-          case NDKKind.Zap:
-            const zapInvoice = zapInvoiceFromEvent(item)
-            if (zapInvoice?.zappee && zapInvoice.amount) {
-              const amount = numeral(zapInvoice.amount / 1000).format(
-                amountFormat,
-              )
-              return (
-                <EventProfileCard key={index} hexpubkey={zapInvoice.zappee}>
-                  <Box className="flex justify-center">
-                    <ElectricBolt
-                      className="mr-1"
-                      color="primary"
-                      fontSize="small"
-                    />
-                    <Typography
-                      className="w-8 !font-bold"
-                      variant="body2"
-                      color="primary"
-                    >
-                      {amount}
-                    </Typography>
-                  </Box>
-                </EventProfileCard>
-              )
-            } else {
-              return
-            }
-          default:
-            return (
-              <ShortTextNoteCard
-                key={index}
-                event={item}
-                depth={1}
-                hideContent={item.kind !== NDKKind.Text}
-                limitedHeight
-              />
-            )
-        }
-      })
-  }, [relatedEvents, muteList, quotes, event, comments])
+  }, [relatedEvents, reposts, quotes, event, comments, likes, zaps])
+
   const handleClickAction = useCallback(
     (type: EventActionType, options?: any) => () => {
       setEventAction({
@@ -269,6 +121,7 @@ export const ShortTextNotePane = ({
         event={event}
         indent={false}
         viewNoteButton={false}
+        relatedEvents={relatedEvents}
       />
       {event.kind === NDKKind.Text || event.kind === NDKKind.Article ? (
         <>
@@ -342,27 +195,19 @@ export const ShortTextNotePane = ({
             </Box>
             <Divider />
           </Paper>
-          {relatedEventElements ? (
-            relatedEventElements.length ? (
-              <ViewportList
-                viewportRef={viewportRef}
-                items={relatedEventElements}
-                withCache
-              >
-                {(element) => element}
-              </ViewportList>
-            ) : (
-              <Typography
-                color="text.secondary"
-                className="flex flex-1 justify-center items-end !py-2 italic"
-              >
-                No more content.
-              </Typography>
-            )
+          {filteredRelatedEvents.length ? (
+            <EventList
+              events={filteredRelatedEvents}
+              depth={1}
+              parentRef={viewportRef}
+            />
           ) : (
-            <Box p={1} textAlign="center">
-              <CircularProgress color="inherit" />
-            </Box>
+            <Typography
+              color="text.secondary"
+              className="flex flex-1 justify-center items-end !py-2 italic bg-[inherit]"
+            >
+              No more content.
+            </Typography>
           )}
         </>
       ) : null}

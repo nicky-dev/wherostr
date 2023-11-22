@@ -17,7 +17,7 @@ import { useFollowing, useUser } from '@/hooks/useAccount'
 import { LoadingButton } from '@mui/lab'
 import {
   // Bolt,
-  BoltRounded,
+  ElectricBolt,
   Check,
   CopyAll,
   Link as LinkIcon,
@@ -326,7 +326,7 @@ export const ProfileCardFull = ({
           )}
           {user?.profile?.lud16 || user?.profile?.lud06 ? (
             <Typography variant="subtitle2">
-              <BoltRounded sx={{ color: 'primary.main' }} />{' '}
+              <ElectricBolt sx={{ color: 'primary.main' }} />{' '}
               <span>
                 {user.profile.lud16 ||
                   (user.profile.lud06

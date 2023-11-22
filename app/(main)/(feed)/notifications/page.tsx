@@ -4,9 +4,19 @@ import { useMemo, useRef } from 'react'
 import { useAccount } from '@/hooks/useAccount'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { WEEK, unixNow } from '@/utils/time'
-import NotificationList from '@/components/NotificationList'
 import { Notifications } from '@mui/icons-material'
-import { NDKKind } from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
+import EventList from '@/components/EventList'
+import NotificationItem from '@/components/NotificationItem'
+
+const renderNotificationItem = (item: NDKEvent, props: any) => (
+  <NotificationItem
+    key={item.deduplicationKey()}
+    event={item}
+    limitedHeight
+    {...(props || {})}
+  />
+)
 
 export default function Page() {
   const { signing, user } = useAccount()
@@ -34,12 +44,13 @@ export default function Page() {
         <Notifications className="m-2" />
         <Typography variant="h6">Notifications</Typography>
       </Paper>
-      <NotificationList
+      <EventList
         parentRef={scrollRef}
         events={data}
         newItems={newItems}
         onShowNewItems={showNewItems}
         onFetchMore={fetchMore}
+        renderEventItem={renderNotificationItem}
       />
     </>
   )

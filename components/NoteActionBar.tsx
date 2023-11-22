@@ -13,10 +13,9 @@ import { EventActionType, AppContext } from '@/contexts/AppContext'
 import {
   NDKEvent,
   NDKKind,
-  NDKSubscriptionCacheUsage,
+  NDKZapInvoice,
   zapInvoiceFromEvent,
 } from '@nostr-dev-kit/ndk'
-import usePromise from 'react-use-promise'
 import numeral from 'numeral'
 import { useNDK } from '@/hooks/useNostr'
 import { useMuting, useUser } from '@/hooks/useAccount'
@@ -24,7 +23,13 @@ import { useUserProfile } from '@/hooks/useUserProfile'
 import { amountFormat } from '@/constants/app'
 import { isComment, isQuote } from '@/utils/event'
 
-const NoteActionBar = ({ event }: { event: NDKEvent }) => {
+const NoteActionBar = ({
+  event,
+  relatedEvents,
+}: {
+  event: NDKEvent
+  relatedEvents?: NDKEvent[]
+}) => {
   const ndk = useNDK()
   const user = useUser()
   const [muteList] = useMuting()
@@ -35,60 +40,50 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
     disliked: 0,
   })
 
-  const fetchRelatedEvent = useCallback(async () => {
-    if (!ndk || !event) return
-    const events = await ndk.fetchEvents(
-      {
-        kinds: [NDKKind.Repost, NDKKind.Text, NDKKind.Zap, NDKKind.Reaction],
-        '#e': [event.id],
-      },
-      { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
-    )
-
+  const data = useMemo(() => {
+    const reposts: NDKEvent[] = []
     const reacts: NDKEvent[] = []
-
-    const repostEvents: NDKEvent[] = []
-    const quoteAndCommentEvents: NDKEvent[] = []
-    const zapEvents: NDKEvent[] = []
-
-    setReacted(undefined)
-    events.forEach((evt) => {
-      if (evt.kind === NDKKind.Text) {
-        if (muteList.includes(evt.pubkey)) return
-        quoteAndCommentEvents.push(evt)
-      } else if (evt.kind === NDKKind.Repost) {
-        if (muteList.includes(evt.pubkey)) return
-        repostEvents.push(evt)
-      } else if (evt.kind === NDKKind.Zap) {
-        zapEvents.push(evt)
-      } else if (evt.kind === NDKKind.Reaction) {
-        if (muteList.includes(evt.pubkey)) return
-        if (evt.pubkey === user?.hexpubkey) {
-          setReacted(evt.content === '-' ? '-' : '+')
+    const zaps: (
+      | NDKZapInvoice
+      | {
+          amount: number
         }
-        reacts.push(evt)
-      }
-    })
-
+    )[] = []
     const quotes: NDKEvent[] = []
     const comments: NDKEvent[] = []
-    quoteAndCommentEvents.forEach((item) => {
-      if (isQuote(item, event)) {
-        quotes.push(item)
-      } else if (isComment(item, event, true)) {
-        comments.push(item)
+    setReacted(undefined)
+    relatedEvents?.forEach((item) => {
+      if (muteList.includes(item.pubkey)) return
+      switch (item.kind) {
+        case NDKKind.Text:
+          if (isQuote(item, event)) {
+            quotes.push(item)
+          } else if (isComment(item, event, true)) {
+            comments.push(item)
+          }
+          break
+        case NDKKind.Repost:
+          reposts.push(item)
+          break
+        case NDKKind.Reaction:
+          if (item.pubkey === user?.hexpubkey) {
+            setReacted(item.content === '-' ? '-' : '+')
+          }
+          reacts.push(item)
+          break
+        case NDKKind.Zap:
+          zaps.push(zapInvoiceFromEvent(item) || { amount: 0 })
+          break
       }
     })
     return {
-      reacts,
-      reposts: repostEvents,
       quotes,
       comments,
-      zaps: zapEvents.map((item) => zapInvoiceFromEvent(item) || { amount: 0 }),
+      reposts,
+      reacts,
+      zaps,
     }
-  }, [ndk, event, muteList, user?.hexpubkey])
-
-  const [data] = usePromise(fetchRelatedEvent, [fetchRelatedEvent])
+  }, [event, muteList, relatedEvents, user?.hexpubkey])
 
   useEffect(() => {
     if (!data) return

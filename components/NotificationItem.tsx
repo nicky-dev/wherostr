@@ -57,6 +57,7 @@ const NotificationItem = ({
   indent = true,
   viewNoteButton = true,
   limitedHeight = false,
+  relatedEvents,
 }: {
   className?: string
   event: NDKEvent
@@ -67,6 +68,7 @@ const NotificationItem = ({
   indent?: boolean
   viewNoteButton?: boolean
   limitedHeight?: boolean
+  relatedEvents?: NDKEvent[]
 }) => {
   const pathname = usePathname()
   const query = useSearchParams()
@@ -287,7 +289,7 @@ const NotificationItem = ({
               </Box>
               {action && (
                 <Box className="mt-3">
-                  <NoteActionBar event={event} />
+                  <NoteActionBar event={event} relatedEvents={relatedEvents} />
                 </Box>
               )}
             </CardContent>

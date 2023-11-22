@@ -36,6 +36,10 @@ export interface NotificationListProps {
   onShowNewItems?: SubscribeResult[3]
 }
 
+const renderNotificationItem = (item: NDKEvent) => (
+  <NotificationItem key={item.deduplicationKey()} event={item} limitedHeight />
+)
+
 const NotificationList: FC<NotificationListProps> = ({
   className,
   events = [],
@@ -157,13 +161,7 @@ const NotificationList: FC<NotificationListProps> = ({
           onViewportIndexesChange={onViewportIndexesChange}
           withCache
         >
-          {(item) => (
-            <NotificationItem
-              key={item.deduplicationKey()}
-              event={item}
-              limitedHeight
-            />
-          )}
+          {renderNotificationItem}
         </ViewportList>
       </Paper>
       {fetching && <LinearProgress sx={{ minHeight: 4 }} />}
