@@ -38,12 +38,7 @@ export default function RootLayout({
 
   return (
     <MapContextProvider>
-      <Box
-        className={classNames(
-          'flex-1 flex flex-col',
-          'md:[&_.maplibregl-ctrl-bottom-left]:!left-[640px]',
-        )}
-      >
+      <Box className={classNames('flex-1 flex flex-col')}>
         <MapView
           className={classNames('fixed inset-0 md:left-[640px] flex-1', {
             hidden: !mdUp && !hasMap,
