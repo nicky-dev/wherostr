@@ -52,6 +52,7 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
     const quoteAndCommentEvents: NDKEvent[] = []
     const zapEvents: NDKEvent[] = []
 
+    setReacted(undefined)
     events.forEach((evt) => {
       if (evt.kind === NDKKind.Text) {
         if (muteList.includes(evt.pubkey)) return
