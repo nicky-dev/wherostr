@@ -31,7 +31,7 @@ import classNames from 'classnames'
 import { isComment } from '@/utils/event'
 import ProfileAvatar from './ProfileAvatar'
 import _ from 'lodash'
-import { useMuting } from '@/hooks/useAccount'
+import { useMuting, useUser } from '@/hooks/useAccount'
 import { EventProfileCard } from './EventProfileCard'
 import numeral from 'numeral'
 import { amountFormat } from '@/constants/app'
@@ -48,6 +48,7 @@ export interface EventListProps {
   showComments?: boolean
   depth?: number
   renderEventItem?: (event: NDKEvent, props: any) => JSX.Element | undefined
+  excludedMe?: boolean
 }
 
 const EventList: FC<EventListProps> = ({
@@ -60,9 +61,11 @@ const EventList: FC<EventListProps> = ({
   showComments,
   depth = 0,
   renderEventItem,
+  excludedMe = false,
 }) => {
   const noteRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<ViewportListRef>(null)
+  const user = useUser()
   const [muteList] = useMuting()
   const [scrollEnd, setScrollEnd] = useState(false)
   const [fetching, setFetching] = useState(false)
@@ -70,11 +73,12 @@ const EventList: FC<EventListProps> = ({
 
   const notes = useMemo(() => {
     return events.filter((d) => {
+      if (excludedMe && user?.pubkey === d.author.hexpubkey) return false
       if (showComments && d.kind === NDKKind.Repost) return false
       if (muteList.includes(d.author.hexpubkey)) return false
       return showComments || showComments === undefined || !isComment(d)
     })
-  }, [showComments, events, muteList])
+  }, [events, excludedMe, user?.pubkey, showComments, muteList])
   const relatedEventsfilter = useMemo<NDKFilter | undefined>(() => {
     return notes.length
       ? ({
@@ -179,11 +183,12 @@ const EventList: FC<EventListProps> = ({
 
   const newNotes = useMemo(() => {
     return newItems.filter((d) => {
+      if (excludedMe && user?.pubkey === d.author.hexpubkey) return false
       if (showComments && d.kind === NDKKind.Repost) return false
       if (muteList.includes(d.author.hexpubkey)) return false
       return showComments || showComments === undefined || !isComment(d)
     })
-  }, [showComments, newItems, muteList])
+  }, [newItems, excludedMe, user?.pubkey, showComments, muteList])
 
   const totalEvent = useMemo(() => notes.length || 0, [notes.length])
 

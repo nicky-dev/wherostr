@@ -51,6 +51,7 @@ export default function Page() {
         onShowNewItems={showNewItems}
         onFetchMore={fetchMore}
         renderEventItem={renderNotificationItem}
+        excludedMe
       />
     </>
   )
