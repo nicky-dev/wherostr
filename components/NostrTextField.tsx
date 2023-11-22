@@ -7,6 +7,7 @@ import {
   Typography,
 } from '@mui/material'
 import {
+  ChangeEventHandler,
   KeyboardEventHandler,
   forwardRef,
   useCallback,
@@ -21,7 +22,7 @@ import { ViewportList, ViewportListRef } from 'react-viewport-list'
 import { NostrPrefix, createNostrLink, tryParseNostrLink } from '@snort/system'
 
 const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
-  function NostrTextField({ onKeyUp, onKeyDown, inputRef, ...props }, ref) {
+  function NostrTextField({ onChange, onKeyDown, inputRef, ...props }, ref) {
     const innerInputRef = useRef(null)
     const viewportListRef = useRef<ViewportListRef>(null)
     const viewportRef = useRef(null)
@@ -92,15 +93,18 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
         )
         .slice(0, 10)
     }, [profiles, searchText])
-    const handleKeyUp: KeyboardEventHandler<HTMLDivElement> = useCallback(
+    const handleChange: ChangeEventHandler<
+      HTMLInputElement | HTMLTextAreaElement
+    > = useCallback(
       (event) => {
+        const nativeEvent = event.nativeEvent as InputEvent
         const target: any = event.target
         const selectionStart = target.selectionStart
         const selectionEnd = target.selectionEnd
         const value: string = target.value
         const previousCharacter = value[selectionEnd - 2]
         if (
-          event.key === '@' &&
+          nativeEvent?.data === '@' &&
           selectionStart === selectionEnd &&
           (previousCharacter === undefined ||
             /\s|\r|\n/.exec(previousCharacter))
@@ -132,12 +136,12 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
             }
           }
         }
-        onKeyUp?.(event)
+        onChange?.(event)
       },
       [
         handleClosePopover,
         mentionPopoverAnchorEl,
-        onKeyUp,
+        onChange,
         replaceMentionValue,
       ],
     )
@@ -205,7 +209,7 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
           {...props}
           ref={ref}
           inputRef={inputRef || innerInputRef}
-          onKeyUp={handleKeyUp}
+          onChange={handleChange}
           onKeyDown={handleKeyDown}
         />
         <Popover
