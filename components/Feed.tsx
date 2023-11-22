@@ -285,7 +285,7 @@ export default function Feed() {
   return (
     <>
       <Paper
-        className="flex gap-3 items-center px-3 py-2 justify-end sticky top-[58px] z-10"
+        className="flex gap-2 items-center px-3 py-2 justify-end sticky top-[58px] z-10"
         square
       >
         {!showSearch && (
@@ -398,7 +398,7 @@ export default function Feed() {
         )}
       </Paper>
       {!!query?.tags?.[0] && (
-        <Box className="flex gap-3 items-center px-3 py-2 justify-between">
+        <Box className="flex gap-2 items-center px-3 py-2 justify-between">
           <Typography variant="h6">#{query.tags[0]}</Typography>
           <Box className="flex-1" />
           <FollowHashtagButton hashtag={query.tags[0]} />

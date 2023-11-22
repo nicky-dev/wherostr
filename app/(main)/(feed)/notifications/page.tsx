@@ -28,7 +28,7 @@ export default function Page() {
   return (
     <>
       <Paper
-        className="flex gap-3 items-center px-3 py-2 sticky top-[58px] z-10"
+        className="flex gap-2 items-center px-3 py-2 sticky top-[58px] z-10"
         square
       >
         <Notifications className="m-2" />

@@ -55,7 +55,6 @@ const NotificationItem = ({
   depth = 0,
   hideContent = false,
   indent = true,
-  indentLine,
   viewNoteButton = true,
   limitedHeight = false,
 }: {
@@ -66,7 +65,6 @@ const NotificationItem = ({
   depth?: number
   hideContent?: boolean
   indent?: boolean
-  indentLine?: boolean
   viewNoteButton?: boolean
   limitedHeight?: boolean
 }) => {
@@ -200,7 +198,7 @@ const NotificationItem = ({
 
   return (
     <Card className={className} square>
-      <Box className="px-3 pt-3 flex items-center gap-3">
+      <Box className="px-3 pt-3 flex items-center gap-2">
         <NotificationTypeIcon event={event} type={fromNote?.marker} />
         <Box className="flex-1 flex items-center gap-2 text-contrast-secondary">
           <ProfileChip hexpubkey={hexpubkey} />
@@ -254,11 +252,11 @@ const NotificationItem = ({
       </Box>
       {!hideContent && (
         <Box className="flex min-h-[12px]">
-          <Box className={`flex justify-center ${indent ? 'w-20' : 'w-3'}`}>
-            {indentLine && (
-              <Box className="h-full w-[2px] bg-[rgba(255,255,255,0.12)]" />
-            )}
-          </Box>
+          <Box
+            className={classNames('flex justify-center pl-3', {
+              'w-[60px]': indent,
+            })}
+          />
           {event?.kind === NDKKind.Text ? (
             <CardContent className="flex-1 !pl-0 !pr-3 !pt-3 !pb-0 overflow-hidden">
               <Box

@@ -45,7 +45,6 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
       { cacheUsage: NDKSubscriptionCacheUsage.PARALLEL },
     )
 
-    const reactedEvent: NDKEvent[] = []
     const reacts: NDKEvent[] = []
 
     const repostEvents: NDKEvent[] = []
@@ -81,7 +80,6 @@ const NoteActionBar = ({ event }: { event: NDKEvent }) => {
       }
     })
     return {
-      reacted: reactedEvent,
       reacts,
       reposts: repostEvents,
       quotes,

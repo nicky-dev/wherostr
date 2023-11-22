@@ -46,7 +46,6 @@ const ShortTextNoteCard = ({
   depth = 0,
   hideContent = false,
   indent = true,
-  indentLine,
   viewNoteButton = true,
   limitedHeight = false,
 }: {
@@ -57,7 +56,6 @@ const ShortTextNoteCard = ({
   depth?: number
   hideContent?: boolean
   indent?: boolean
-  indentLine?: boolean
   viewNoteButton?: boolean
   limitedHeight?: boolean
 }) => {
@@ -246,11 +244,11 @@ const ShortTextNoteCard = ({
       </Box>
       {!hideContent && (
         <Box className="flex min-h-[12px]">
-          <Box className={`flex justify-center ${indent ? 'w-16' : 'w-3'}`}>
-            {indentLine && (
-              <Box className="h-full w-[2px] bg-[rgba(255,255,255,0.12)]" />
-            )}
-          </Box>
+          <Box
+            className={classNames('flex justify-center pl-3', {
+              'w-[60px]': indent,
+            })}
+          />
           {event.kind === NDKKind.Text || event.kind === NDKKind.Article ? (
             <CardContent className="flex-1 !pl-0 !pr-3 !pt-3 !pb-0 overflow-hidden">
               <Box
