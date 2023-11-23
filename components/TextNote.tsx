@@ -160,14 +160,15 @@ const renderChunk = (
         )
       } else if (mimeType?.startsWith('video/')) {
         return (
-          <Box className="rounded-2xl overflow-hidden w-full aspect-video border-[1px] border-solid border-disabled">
+          <Box className="[&_video]:!w-full [&_video]:!h-full [&_video]:max-h-full [&>div]:absolute [&>div]:inset-0 relative rounded-2xl overflow-hidden w-full aspect-video border-[1px] border-solid border-disabled">
             <ReactPlayer
               url={content}
-              width="100%"
-              height="100%"
+              width="auto"
+              height="auto"
               controls
               playsinline
               muted
+              playing
             />
           </Box>
         )
@@ -175,14 +176,15 @@ const renderChunk = (
     case 'link':
       if (!skipEmbedLink && ReactPlayer.canPlay(content)) {
         return (
-          <Box className="border-none rounded-2xl overflow-hidden w-full aspect-video">
+          <Box className="[&_video]:!w-full [&_video]:!h-full [&_video]:max-h-full [&>div]:absolute [&>div]:inset-0 relative border-none rounded-2xl overflow-hidden w-full aspect-video">
             <ReactPlayer
               url={content}
-              width="100%"
-              height="100%"
+              width="auto"
+              height="auto"
               controls
               playsinline
               muted
+              playing
             />
           </Box>
         )
