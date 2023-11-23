@@ -190,7 +190,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       const followsSet = new Set(tags)
       followsSet.delete(hashtagLow)
       const event = new NDKEvent(ndk)
-      event.kind = 30002
+      event.kind = 30001
       event.pubkey = user.pubkey
       event.tags.push(['d', 'follow'])
       followsSet.forEach((tag) => {
