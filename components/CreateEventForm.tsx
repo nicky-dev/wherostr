@@ -171,8 +171,8 @@ export const CreateEventForm = ({
         0,
         -1,
       )}`
-      // content += `\nDuck Duck Go Maps | ${duckduck.url}`
-      // content += `\nGoogle Maps | ${google.url}`
+      content += `\nDuck Duck Go Maps | ${duckduck.url}`
+      content += `\nGoogle Maps | ${google.url}`
       return content
     }
   }, [ndk, geohashValue, appendMapLink])
@@ -242,12 +242,12 @@ export const CreateEventForm = ({
                 0,
                 -1,
               )}`
-              // noteContent += `\nDuck Duck Go Maps | ${duckduck.url}`
-              // noteContent += `\nGoogle Maps | ${google.url}`
-              // await Promise.all([
-              //   duckduck.event.publish(),
-              //   google.event.publish(),
-              // ])
+              noteContent += `\nDuck Duck Go Maps | ${duckduck.url}`
+              noteContent += `\nGoogle Maps | ${google.url}`
+              await Promise.all([
+                duckduck.event.publish(),
+                google.event.publish(),
+              ])
             }
           }
         }
