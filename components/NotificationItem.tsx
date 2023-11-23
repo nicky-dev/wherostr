@@ -1,7 +1,7 @@
 'use client'
 import NoteActionBar from '@/components/NoteActionBar'
 import ProfileChip from '@/components/ProfileChip'
-import TextNote, { QuotedEvent } from '@/components/TextNote'
+import TextNote, { RepostedNote, QuotedNote } from '@/components/TextNote'
 import TimeFromNow from '@/components/TimeFromNow'
 import {
   Box,
@@ -296,13 +296,19 @@ const NotificationItem = ({
           ) : (
             fromNote?.value && (
               <CardContent className="flex-1 !pl-0 !pr-3 !py-0 overflow-hidden">
-                <QuotedEvent
-                  id={fromNote?.value}
-                  relatedNoteVariant={relatedNoteVariant}
-                  icon={
-                    event.kind === NDKKind.Repost ? <Repeat /> : <Comment />
-                  }
-                />
+                {event.kind === NDKKind.Repost ? (
+                  <RepostedNote
+                    id={fromNote?.value}
+                    content={event.content}
+                    relatedNoteVariant={relatedNoteVariant}
+                  />
+                ) : (
+                  <QuotedNote
+                    id={fromNote?.value}
+                    relatedNoteVariant={relatedNoteVariant}
+                    icon={<Comment />}
+                  />
+                )}
               </CardContent>
             )
           )}

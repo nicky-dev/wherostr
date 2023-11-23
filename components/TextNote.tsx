@@ -13,7 +13,13 @@ import {
 import { Fragment } from 'react'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
-import { FormatQuote, InfoOutlined, ZoomIn, ZoomOut } from '@mui/icons-material'
+import {
+  FormatQuote,
+  InfoOutlined,
+  Repeat,
+  ZoomIn,
+  ZoomOut,
+} from '@mui/icons-material'
 import NextLink from 'next/link'
 import {
   EventActionType,
@@ -27,6 +33,7 @@ import { useUserProfile } from '@/hooks/useUserProfile'
 import ReactPlayer from 'react-player/lazy'
 import { EmbedEventAddress } from './EmbedEventAddress'
 import classNames from 'classnames'
+import { useNDK } from '@/hooks/useNostr'
 
 type RelatedNoteVariant = 'full' | 'fraction' | 'link'
 
@@ -65,7 +72,43 @@ export const UserMentionLink = ({ id }: { id: string }) => {
   )
 }
 
-export const QuotedEvent = ({
+export const RepostedNote = ({
+  id,
+  content,
+  relatedNoteVariant,
+}: {
+  id?: string
+  content: string
+  relatedNoteVariant: RelatedNoteVariant
+}) => {
+  const ndk = useNDK()
+  const eventObject = useMemo(() => {
+    try {
+      return JSON.parse(content)
+    } catch (error) {}
+  }, [content])
+  const event = useMemo(
+    () => (eventObject ? new NDKEvent(ndk, eventObject) : undefined),
+    [eventObject, ndk],
+  )
+  const state = useMemo(() => (event ? 'resolved' : 'pending'), [event])
+  return !eventObject && id ? (
+    <QuotedNote
+      id={id}
+      relatedNoteVariant={relatedNoteVariant}
+      icon={<Repeat />}
+    />
+  ) : (
+    <ReferredNote
+      event={event}
+      relatedNoteVariant={relatedNoteVariant}
+      state={state}
+      icon={<Repeat />}
+    />
+  )
+}
+
+export const QuotedNote = ({
   id,
   relatedNoteVariant,
   icon,
@@ -74,8 +117,29 @@ export const QuotedEvent = ({
   relatedNoteVariant: RelatedNoteVariant
   icon?: ReactNode
 }) => {
-  const { setEventAction } = useContext(AppContext)
   const [event, error, state] = useEventCache(id)
+  return (
+    <ReferredNote
+      event={event}
+      relatedNoteVariant={relatedNoteVariant}
+      state={state}
+      icon={icon || <FormatQuote />}
+    />
+  )
+}
+
+export const ReferredNote = ({
+  event,
+  relatedNoteVariant,
+  icon,
+  state,
+}: {
+  event?: NDKEvent | null | undefined
+  relatedNoteVariant: RelatedNoteVariant
+  icon: ReactNode
+  state: 'pending' | 'rejected' | 'resolved'
+}) => {
+  const { setEventAction } = useContext(AppContext)
   const handleClickNote = useCallback(() => {
     if (event) {
       setEventAction({
@@ -122,7 +186,7 @@ export const QuotedEvent = ({
         <Box className="absolute top-0 left-0 w-full h-full min-h-[192px] bg-gradient-to-t from-disabled-dark to-25% hover:bg-secondary-dark hover:bg-opacity-5" />
       )}
       <Box className="absolute right-0 bottom-0 border-t-2 border-l-2 border-secondary-dark p-2 rounded-tl-2xl text-contrast-secondary bg-secondary-dark">
-        {icon ? icon : <FormatQuote />}
+        {icon}
       </Box>
     </Box>
   )

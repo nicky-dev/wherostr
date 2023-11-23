@@ -1,7 +1,7 @@
 import { Typography } from '@mui/material'
 import { FC, useMemo } from 'react'
 import { nip19 } from 'nostr-tools'
-import { QuotedEvent, UserMentionLink } from './TextNote'
+import { QuotedNote, UserMentionLink } from './TextNote'
 import { EmbedLiveActivity } from './EmbedLiveActivity'
 import { EmbedLongFormContent } from './EmbedLongFormContent'
 
@@ -18,7 +18,7 @@ export const EmbedEventAddress: FC<EmbedEventAddressProps> = ({ naddr }) => {
 
   const component = useMemo(() => {
     if (naddrDesc?.type === 'note') {
-      return <QuotedEvent id={naddrDesc.data} relatedNoteVariant="fraction" />
+      return <QuotedNote id={naddrDesc.data} relatedNoteVariant="fraction" />
     } else if (naddrDesc?.type === 'npub') {
       return <UserMentionLink id={naddrDesc.data} />
     } else if (naddrDesc?.type === 'nprofile') {
@@ -32,11 +32,11 @@ export const EmbedEventAddress: FC<EmbedEventAddressProps> = ({ naddr }) => {
     } else if (naddrDesc?.type === 'nevent') {
       if (naddrDesc.data.kind === 1 || naddrDesc.data.kind === 6) {
         return (
-          <QuotedEvent id={naddrDesc.data.id} relatedNoteVariant="fraction" />
+          <QuotedNote id={naddrDesc.data.id} relatedNoteVariant="fraction" />
         )
       } else {
         return (
-          <QuotedEvent id={naddrDesc.data.id} relatedNoteVariant="fraction" />
+          <QuotedNote id={naddrDesc.data.id} relatedNoteVariant="fraction" />
         )
       }
     } else {

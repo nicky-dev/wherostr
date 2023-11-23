@@ -1,7 +1,7 @@
 'use client'
 import NoteActionBar from '@/components/NoteActionBar'
 import ProfileChip from '@/components/ProfileChip'
-import TextNote, { QuotedEvent } from '@/components/TextNote'
+import TextNote, { RepostedNote } from '@/components/TextNote'
 import TimeFromNow from '@/components/TimeFromNow'
 import {
   Box,
@@ -288,10 +288,10 @@ const ShortTextNoteCard = ({
           ) : (
             repostId && (
               <CardContent className="flex-1 !pl-0 !pr-3 !py-0 overflow-hidden">
-                <QuotedEvent
+                <RepostedNote
                   id={repostId}
+                  content={event.content}
                   relatedNoteVariant={relatedNoteVariant}
-                  icon={<Repeat />}
                 />
               </CardContent>
             )
