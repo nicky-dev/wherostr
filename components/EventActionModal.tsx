@@ -65,7 +65,18 @@ export const ShortTextNotePane = ({
         : undefined,
     [event],
   )
-  const [relatedEvents] = useSubscribe(relatedEventsfilter, true)
+  const relatedEventsOptions = useMemo(
+    () => ({
+      sortDesc: false,
+    }),
+    [],
+  )
+  const [relatedEvents] = useSubscribe(
+    relatedEventsfilter,
+    true,
+    undefined,
+    relatedEventsOptions,
+  )
 
   const filteredRelatedEvents = useMemo(() => {
     if (!relatedEvents?.length) return []

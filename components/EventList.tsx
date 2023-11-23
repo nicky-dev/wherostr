@@ -94,7 +94,18 @@ const EventList: FC<EventListProps> = ({
       until: unixNow() + DAY,
     }
   }, [eventIds])
-  const [relatedEvents] = useSubscribe(relatedEventsfilter, true)
+  const relatedEventsOptions = useMemo(
+    () => ({
+      sortDesc: false,
+    }),
+    [],
+  )
+  const [relatedEvents] = useSubscribe(
+    relatedEventsfilter,
+    true,
+    undefined,
+    relatedEventsOptions,
+  )
   const getRelatedEvents = useCallback(
     (event: NDKEvent) =>
       relatedEvents.filter((item) =>

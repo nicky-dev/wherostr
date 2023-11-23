@@ -236,7 +236,7 @@ const ShortTextNoteCard = ({
               </IconButton>
             )}
             <NoteMenu event={event} />
-            {viewNoteButton && (
+            {viewNoteButton && event.kind !== 6 && (
               <IconButton size="small" onClick={handleClickViewNote}>
                 <ChevronRightOutlined className="text-contrast-secondary" />
               </IconButton>

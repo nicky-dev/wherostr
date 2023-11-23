@@ -21,17 +21,22 @@ export type SubscribeResult = [
 
 const sortItems = (
   items: NDKEvent[] | Set<NDKEvent> | IterableIterator<NDKEvent>,
+  desc = true
 ) => {
+  const sorter = desc ? (a: NDKEvent, b: NDKEvent) => b.created_at! - a.created_at! : (a: NDKEvent, b: NDKEvent) => a.created_at! - b.created_at!
   return Array.from(items)
     .slice()
-    .sort((a, b) => b.created_at! - a.created_at!)
+    .sort(sorter)
 }
 
 export const useSubscribe = (
   filter?: NDKFilter<NDKKind>,
   alwaysShowNewItems: boolean = false,
   optRelaySet?: NDKRelaySet,
-  subOptions?: NDKSubscriptionOptions,
+  options?: {
+    subOptions?: NDKSubscriptionOptions
+    sortDesc?: boolean
+  },
 ) => {
   const ndk = useNDK()
   const { signing } = useAccount()
@@ -41,6 +46,8 @@ export const useSubscribe = (
   const eos = useRef(false)
 
   const relaySet = useMemo(() => optRelaySet, [optRelaySet])
+  const subOptions = useMemo(() => options?.subOptions, [options?.subOptions])
+  const sortDesc = useMemo(() => options?.sortDesc, [options?.sortDesc])
 
   useEffect(() => {
     if (signing || !ndk) return
@@ -94,12 +101,12 @@ export const useSubscribe = (
       evetns.set(dedupKey, event)
       if (eos.current) {
         if (!existingEvent) {
-          setNewItems((prev) => sortItems([event, ...prev]))
+          setNewItems((prev) => sortItems([event, ...prev], sortDesc))
         } else {
-          setItems(sortItems(evetns.values()))
+          setItems(sortItems(evetns.values(), sortDesc))
         }
       } else {
-        // setItems(sortItems(evetns.values()))
+        // setItems(sortItems(evetns.values(), sortDesc))
       }
     }
     const onEvent = (item: NDKEvent) => {
@@ -113,33 +120,33 @@ export const useSubscribe = (
       evetns.set(dedupKey, event)
       if (eos.current) {
         if (!existingEvent || !sub.eventFirstSeen.has(existingEvent.tagId())) {
-          setNewItems((prev) => sortItems([event, ...prev]))
+          setNewItems((prev) => sortItems([event, ...prev], sortDesc))
         } else {
-          setItems(sortItems(evetns.values()))
+          setItems(sortItems(evetns.values(), sortDesc))
         }
       } else {
-        // setItems(sortItems(evetns.values()))
+        // setItems(sortItems(evetns.values(), sortDesc))
       }
     }
     sub.on('show-new-items', (newItems: NDKEvent[]) => {
       newItems.forEach((ev) => {
         evetns.set(ev.deduplicationKey(), ev)
       })
-      setItems(sortItems(evetns.values()))
+      setItems(sortItems(evetns.values(), sortDesc))
       setNewItems([])
     })
     sub.on('event', onEvent)
     // sub.on('event:dup', onEventDup)
     sub.once('eose', () => {
       eos.current = true
-      setItems(sortItems(evetns.values()))
+      setItems(sortItems(evetns.values(), sortDesc))
     })
     sub.start()
     return () => {
       sub.removeAllListeners()
       sub.stop()
     }
-  }, [signing, sub, ndk])
+  }, [signing, sub, ndk, sortDesc])
 
   const oldestEvent = useMemo(() => items[items.length - 1], [items])
   const fetchMore = useCallback(async () => {
@@ -153,7 +160,7 @@ export const useSubscribe = (
       },
       relaySet,
     )
-    const items = sortItems(events)
+    const items = sortItems(events, sortDesc)
     let nonDupItems: NDKEvent[] = []
     setItems((prev) => {
       nonDupItems = items.filter(
@@ -163,12 +170,12 @@ export const useSubscribe = (
       return [...prev, ...nonDupItems]
     })
     return nonDupItems
-  }, [relaySet, ndk, filter, oldestEvent])
+  }, [filter, oldestEvent, ndk, relaySet, sortDesc])
 
   const showNewItems = useCallback(() => {
     if (!newItems.length) return
     sub?.emit('show-new-items', newItems)
-    // setItems((prev) => sortItems([...newItems, ...prev]))
+    // setItems((prev) => sortItems([...newItems, ...prev], sortDesc))
     // setNewItems([])
   }, [newItems, sub])
 
