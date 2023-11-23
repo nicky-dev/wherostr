@@ -261,7 +261,7 @@ const EventList: FC<EventListProps> = ({
         className={classNames('relative', className)}
       >
         <Slide in={!!newNotes.length} unmountOnExit>
-          <Box className="sticky z-[1] top-[72px] left-0 right-0 text-center opacity-80 mt-2">
+          <Box className="sticky z-[1] top-[128px] left-0 right-0 text-center opacity-80 mt-2">
             <Chip
               avatar={avatars}
               color="secondary"
