@@ -2,7 +2,7 @@ import { EventActionType } from '@/contexts/AppContext'
 import { useAction } from '@/hooks/useApp'
 import { useMap } from '@/hooks/useMap'
 import { useNDK } from '@/hooks/useNostr'
-import { NDKEvent } from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKRelayStatus } from '@nostr-dev-kit/ndk'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import {
@@ -271,7 +271,7 @@ export const CreateEventForm = ({
             powEvent.sig = await ndk.signer.sign(powEvent as NostrEvent)
           }
           const pool = ndk.pool || ndk.outboxPool
-          await Promise.race(
+          await Promise.allSettled(
             pool.connectedRelays().map((relay) => {
               return relay.connectivity.relay.publish(powEvent as NostrEvent)
             }),
