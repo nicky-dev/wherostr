@@ -79,19 +79,21 @@ const EventList: FC<EventListProps> = ({
       return showComments || showComments === undefined || !isComment(d)
     })
   }, [events, excludedMe, user?.pubkey, showComments, muteList])
+  const eventIds = useMemo(
+    () =>
+      notes
+        .filter(({ kind }) => kind === NDKKind.Text || kind === NDKKind.Article)
+        .map(({ id }) => id),
+    [notes],
+  )
   const relatedEventsfilter = useMemo<NDKFilter | undefined>(() => {
-    return notes.length
-      ? ({
-          kinds: [NDKKind.Repost, NDKKind.Text, NDKKind.Zap, NDKKind.Reaction],
-          '#e': notes
-            .filter(
-              ({ kind }) => kind === NDKKind.Text || kind === NDKKind.Article,
-            )
-            .map(({ id }) => id),
-          until: unixNow() + DAY,
-        } as NDKFilter)
-      : undefined
-  }, [notes])
+    if (!eventIds.length) return
+    return {
+      kinds: [NDKKind.Repost, NDKKind.Text, NDKKind.Zap, NDKKind.Reaction],
+      '#e': eventIds,
+      until: unixNow() + DAY,
+    }
+  }, [eventIds])
   const [relatedEvents] = useSubscribe(relatedEventsfilter, true)
   const getRelatedEvents = useCallback(
     (event: NDKEvent) =>
