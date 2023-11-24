@@ -12,7 +12,7 @@ export default function RootLayout({
     <AppContextProvider>
       <AccountContextProvider>
         <main className="relative min-h-full h-full flex flex-col flex-1">
-          <NoSsr>{children}</NoSsr>
+          {children}
         </main>
       </AccountContextProvider>
     </AppContextProvider>

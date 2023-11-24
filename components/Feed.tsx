@@ -21,10 +21,8 @@ import {
   IconButton,
   Paper,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material'
-import { NDKFilter, NDKKind, NostrEvent } from '@nostr-dev-kit/ndk'
+import { NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
 import bbox from '@turf/bbox'
 import bboxPolygon from '@turf/bbox-polygon'
 import buffer from '@turf/buffer'
@@ -46,13 +44,12 @@ export default function Feed() {
   const [follows] = useFollowing()
   const [mapLoaded, setMapLoaded] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
-  const theme = useTheme()
-  const xlUp = useMediaQuery(theme.breakpoints.up('lg'))
-  const mdUp = useMediaQuery(theme.breakpoints.up('md'))
   const showMap = searchParams.get('map') === '1'
   const q = useMemo(() => searchParams.get('q') || '', [searchParams])
   const queryRef = useRef(searchParams.get('q'))
   queryRef.current = searchParams.get('q')
+  const pathRef = useRef(pathname)
+  pathRef.current = pathname
 
   const handleClickShowSearch = useCallback(() => setShowSearch(true), [])
   const handleBlurSearchBox = useCallback(() => setShowSearch(false), [])
@@ -136,7 +133,7 @@ export default function Feed() {
       ...(tags ? tags : authors),
       kinds: [NDKKind.Text, NDKKind.Repost],
       since: unixNow() - WEEK,
-      limit: 100,
+      limit: 50,
     } as NDKFilter
   }, [signing, geohashFilter, tags, authors, loadingList])
 
@@ -172,7 +169,10 @@ export default function Feed() {
           type: 'Feature',
           geometry: { type: 'Point', coordinates: [lon, lat] },
           id: event.id,
-          properties: nostrEvent,
+          properties: {
+            ...nostrEvent,
+            event,
+          },
         }
         return geojson
       })
@@ -184,10 +184,9 @@ export default function Feed() {
       features?: maplibregl.MapGeoJSONFeature[] | undefined
     } & Object,
   ) => {
-    const feat = ev?.features?.[0]?.properties as NostrEvent
-    const event = events.find((ev) => ev.id === feat.id)
+    const { event } = ev?.features?.[0].properties || {}
     if (!event) return
-    router.replace(`${pathname}?q=${queryRef.current || ''}`, {
+    router.replace(`${pathRef.current}?q=${queryRef.current || ''}`, {
       scroll: false,
     })
     setEventAction({

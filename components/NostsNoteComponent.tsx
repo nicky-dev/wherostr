@@ -23,5 +23,5 @@ export const NostrNoteComponent: FC<NostrNoteComponentProps> = ({ data }) => {
     return <LinearProgress />
   }
 
-  return <ShortTextNotePane event={event} comments />
+  return <ShortTextNotePane event={event} />
 }

@@ -14,13 +14,13 @@ import {
   MutableRefObject,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react'
 import { ArrowBackOutlined, Close } from '@mui/icons-material'
 import { AccountContext } from '@/contexts/AccountContext'
-import { EventActionType, AppContext } from '@/contexts/AppContext'
+import { EventActionType, AppContext, EventAction } from '@/contexts/AppContext'
 import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
 import { CreateEventForm } from './CreateEventForm'
 import { isComment, isQuote } from '@/utils/event'
@@ -32,22 +32,17 @@ import { useSubscribe } from '@/hooks/useSubscribe'
 
 export const ShortTextNotePane = ({
   event,
-  reposts = false,
-  quotes = false,
-  comments = false,
-  likes = false,
-  zaps = false,
   viewportRef,
 }: {
   event: NDKEvent
-  reposts?: boolean
-  quotes?: boolean
-  comments?: boolean
-  likes?: boolean
-  zaps?: boolean
   viewportRef?: MutableRefObject<any>
 }) => {
-  const { eventAction, setEventAction } = useContext(AppContext)
+  const { eventAction } = useContext(AppContext)
+  const [eventActionState, setEventActionState] = useState<EventAction>({
+    type: EventActionType.Comment,
+    options: { comments: true },
+    ...eventAction,
+  })
 
   const relatedEventsfilter = useMemo<NDKFilter | undefined>(
     () =>
@@ -85,6 +80,8 @@ export const ShortTextNotePane = ({
     const _comments: NDKEvent[] = []
     const _likes: NDKEvent[] = []
     const _zaps: NDKEvent[] = []
+    const { reposts, quotes, comments, likes, zaps } =
+      eventActionState?.options || {}
     relatedEvents.forEach((item) => {
       const { content, kind } = item
       switch (kind) {
@@ -113,18 +110,19 @@ export const ShortTextNotePane = ({
       }
     })
     return [..._reposts, ..._quotes, ..._comments, ..._likes, ..._zaps]
-  }, [relatedEvents, reposts, quotes, event, comments, likes, zaps])
+  }, [event, eventActionState?.options, relatedEvents])
 
   const handleClickAction = useCallback(
     (type: EventActionType, options?: any) => () => {
-      setEventAction({
+      setEventActionState({
         type,
         event,
         options,
       })
     },
-    [event, setEventAction],
+    [event],
   )
+
   return (
     <Box>
       <ShortTextNoteCard
@@ -145,10 +143,10 @@ export const ShortTextNotePane = ({
               >
                 <Button
                   className={classNames({
-                    '!bg-secondary/10': !!eventAction?.options?.reposts,
+                    '!bg-secondary/10': !!eventActionState?.options?.reposts,
                   })}
                   color={
-                    eventAction?.options?.reposts ? 'secondary' : undefined
+                    eventActionState?.options?.reposts ? 'secondary' : undefined
                   }
                   onClick={handleClickAction(EventActionType.View, {
                     reposts: true,
@@ -158,9 +156,11 @@ export const ShortTextNotePane = ({
                 </Button>
                 <Button
                   className={classNames({
-                    '!bg-secondary/10': !!eventAction?.options?.quotes,
+                    '!bg-secondary/10': !!eventActionState?.options?.quotes,
                   })}
-                  color={eventAction?.options?.quotes ? 'secondary' : undefined}
+                  color={
+                    eventActionState?.options?.quotes ? 'secondary' : undefined
+                  }
                   onClick={handleClickAction(EventActionType.View, {
                     quotes: true,
                   })}
@@ -169,10 +169,12 @@ export const ShortTextNotePane = ({
                 </Button>
                 <Button
                   className={classNames({
-                    '!bg-secondary/10': !!eventAction?.options?.comments,
+                    '!bg-secondary/10': !!eventActionState?.options?.comments,
                   })}
                   color={
-                    eventAction?.options?.comments ? 'secondary' : undefined
+                    eventActionState?.options?.comments
+                      ? 'secondary'
+                      : undefined
                   }
                   onClick={handleClickAction(EventActionType.View, {
                     comments: true,
@@ -182,9 +184,11 @@ export const ShortTextNotePane = ({
                 </Button>
                 <Button
                   className={classNames({
-                    '!bg-secondary/10': !!eventAction?.options?.likes,
+                    '!bg-secondary/10': !!eventActionState?.options?.likes,
                   })}
-                  color={eventAction?.options?.likes ? 'secondary' : undefined}
+                  color={
+                    eventActionState?.options?.likes ? 'secondary' : undefined
+                  }
                   onClick={handleClickAction(EventActionType.View, {
                     likes: true,
                   })}
@@ -193,9 +197,11 @@ export const ShortTextNotePane = ({
                 </Button>
                 <Button
                   className={classNames({
-                    '!bg-secondary/10': !!eventAction?.options?.zaps,
+                    '!bg-secondary/10': !!eventActionState?.options?.zaps,
                   })}
-                  color={eventAction?.options?.zaps ? 'secondary' : undefined}
+                  color={
+                    eventActionState?.options?.zaps ? 'secondary' : undefined
+                  }
                   onClick={handleClickAction(EventActionType.View, {
                     zaps: true,
                   })}
@@ -255,13 +261,7 @@ const EventActionModal = () => {
         return event && <ZapEventForm event={event} />
       case EventActionType.View:
         return (
-          event && (
-            <ShortTextNotePane
-              event={event}
-              viewportRef={viewportRef}
-              {...(eventAction?.options || {})}
-            />
-          )
+          event && <ShortTextNotePane event={event} viewportRef={viewportRef} />
         )
       default:
         return undefined

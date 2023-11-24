@@ -20,6 +20,8 @@ import ProfileChip from './ProfileChip'
 import classNames from 'classnames'
 import { ViewportList, ViewportListRef } from 'react-viewport-list'
 import { NostrPrefix, createNostrLink, tryParseNostrLink } from '@snort/system'
+import { useProfilesCache } from '@/hooks/useUserProfile'
+import Fuse from 'fuse.js'
 
 const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
   function NostrTextField({ onChange, onKeyDown, inputRef, ...props }, ref) {
@@ -77,22 +79,21 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
       },
       [currentCaretPosition, handleClosePopover, replaceMentionValue],
     )
-    const profiles = useMemo(() => {
-      return Array.from(
-        (ndk.cacheAdapter as any).profiles?.lookupTable,
-        ([hexpubkey, value]) => ({ ...value.internalValue, hexpubkey }),
-      )
-    }, [ndk.cacheAdapter])
+    const profiles = useProfilesCache()
+    const fuse = useMemo(
+      () => new Fuse(profiles, { keys: ['name', 'displayName', 'nip05'] }),
+      [profiles],
+    )
+
     const filteredProfiles = useMemo(() => {
-      const _searchText = searchText.toLowerCase()
-      return profiles
-        .filter(({ name, displayName, nip05 }) =>
-          `${name || ''}${displayName || ''}${nip05 || ''}`
-            .toLowerCase()
-            .includes(_searchText),
-        )
-        .slice(0, 10)
-    }, [profiles, searchText])
+      return searchText
+        ? fuse
+            .search(searchText)
+            .slice(0, 10)
+            .map((item) => item.item)
+        : profiles.slice(0, 10)
+    }, [fuse, searchText, profiles])
+
     const handleChange: ChangeEventHandler<
       HTMLInputElement | HTMLTextAreaElement
     > = useCallback(
@@ -220,7 +221,10 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
           disableAutoFocus
           disableEnforceFocus
         >
-          <Box ref={viewportRef} className="max-w-md max-h-80 overflow-y-auto">
+          <Box
+            ref={viewportRef}
+            className="min-w-[200px] max-w-md max-h-80 overflow-y-auto"
+          >
             {filteredProfiles.length ? (
               <ViewportList
                 ref={viewportListRef}

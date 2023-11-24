@@ -447,7 +447,7 @@ const connectToUserRelays = async (user: NDKUser) => {
             const timeout = setTimeout(() => {
               relay.removeAllListeners()
               reject('timeout')
-            }, 5000)
+            }, 3000)
             relay.once('connect', () => {
               clearTimeout(timeout)
               resolve(relay)
@@ -462,7 +462,7 @@ const connectToUserRelays = async (user: NDKUser) => {
               const timeout = setTimeout(() => {
                 relay.removeAllListeners()
                 reject('timeout')
-              }, 5000)
+              }, 3000)
               relay.once('connect', () => {
                 clearTimeout(timeout)
                 resolve(relay)

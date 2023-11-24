@@ -9,6 +9,16 @@ import NDK, {
 import { nip19 } from 'nostr-tools'
 import { nanoid } from 'nanoid'
 
+export const useProfilesCache = () => {
+  const ndk = useNDK()
+  return useMemo(() => {
+    return Array.from(
+      (ndk.cacheAdapter as any).profiles?.lookupTable,
+      ([hexpubkey, value]) => ({ ...value.internalValue, hexpubkey }),
+    )
+  }, [ndk.cacheAdapter])
+}
+
 const verifyCache: Record<string, boolean> = {}
 export const useUserProfile = (hexpubkey?: string) => {
   const ndk = useNDK()
