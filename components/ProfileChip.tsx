@@ -4,11 +4,11 @@ import {
   EventActionType,
   ProfileActionType,
 } from '@/contexts/AppContext'
-import { Avatar, AvatarProps, Box, Typography } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import { ReactNode, useCallback, useContext, useMemo } from 'react'
-import ProfileValidBadge from './ProfileValidBadge'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import classNames from 'classnames'
+import ProfileAvatar from './ProfileAvatar'
 
 export interface ProfileChipProps {
   className?: string
@@ -57,25 +57,12 @@ const ProfileChip = ({
 
   return (
     <Box
-      className={classNames(
-        className,
-        'relative min-w-[40px] flex items-center',
-        {
-          'cursor-pointer hover:underline': clickable,
-        },
-      )}
+      className={classNames(className, 'relative flex items-center', {
+        'cursor-pointer hover:underline': clickable,
+      })}
       onClick={clickable && userLeft ? handleClickProfile : undefined}
     >
-      <Box className="relative">
-        <Avatar
-          className="min-w-[40px] border-2"
-          src={userLeft?.profile?.image}
-        />
-        <ProfileValidBadge
-          className="absolute top-0 right-0 w-4 h-4"
-          user={userLeft}
-        />
-      </Box>
+      <ProfileAvatar hexpubkey={userLeft?.hexpubkey} />
       {showName && (
         <Box className="flex flex-col pl-2 overflow-hidden">
           <Box className="flex">

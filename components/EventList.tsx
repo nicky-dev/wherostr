@@ -244,11 +244,7 @@ const EventList: FC<EventListProps> = ({
         }}
       >
         {pubkeys.map((key) => (
-          <ProfileAvatar
-            sx={{ width: 24, height: 24 }}
-            key={key}
-            hexpubkey={key}
-          />
+          <ProfileAvatar key={key} hexpubkey={key} avatarSize={24} />
         ))}
       </AvatarGroup>
     )

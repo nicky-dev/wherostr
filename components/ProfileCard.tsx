@@ -26,6 +26,7 @@ import {
   ExpandMoreOutlined,
 } from '@mui/icons-material'
 import copy from 'copy-to-clipboard'
+import ProfileAvatar from './ProfileAvatar'
 
 export const ProfileCard = ({
   className,
@@ -72,9 +73,11 @@ export const ProfileCard = ({
               clickable,
           })}
         >
-          <Avatar
-            className="border-2 !w-36 !h-36 -mt-[72px]"
-            src={user?.profile?.image}
+          <ProfileAvatar
+            className="-mt-[72px]"
+            hexpubkey={user?.hexpubkey}
+            avatarSize={144}
+            showValidBadge={false}
           />
           <Box className="flex flex-col pt-3 pl-2 max-w-xs overflow-hidden">
             <Box className="flex items-center">
@@ -204,9 +207,11 @@ export const ProfileCardFull = ({
                 clickable,
             })}
           >
-            <Avatar
-              className="border-2 !w-36 !h-36 -mt-[72px]"
-              src={user?.profile?.image}
+            <ProfileAvatar
+              className="-mt-[72px]"
+              hexpubkey={user?.hexpubkey}
+              avatarSize={144}
+              showValidBadge={false}
             />
             <Box className="flex flex-col pt-3 sm:pl-2 max-w-xs overflow-hidden">
               <Box className="flex items-center">
