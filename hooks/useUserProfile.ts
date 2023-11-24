@@ -7,6 +7,7 @@ import NDK, {
   NDKUserProfile,
 } from '@nostr-dev-kit/ndk'
 import { nip19 } from 'nostr-tools'
+import { nanoid } from 'nanoid'
 
 const verifyCache: Record<string, boolean> = {}
 export const useUserProfile = (hexpubkey?: string) => {
@@ -131,14 +132,15 @@ export const fetchProfile = async (
     const profile = await Promise.race<NDKUserProfile | null>([
       user.fetchProfile({
         cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
+        subId: nanoid(8),
       }),
       new Promise<null>((_, reject) => {
         setTimeout(() => reject('Timeout'), 5000)
       }),
     ])
-    attemps += 1
     return profile
   } catch (err) {
+    attemps += 1
     return new Promise<NDKUserProfile | null>((resolve) => {
       setTimeout(() => {
         fetchProfile(pubkey, ndk, attemps).then((d) => resolve(d))
