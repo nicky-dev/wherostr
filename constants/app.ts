@@ -1,3 +1,5 @@
+import { NDKKind } from '@nostr-dev-kit/ndk'
+
 export enum ErrorCode {
   ProfileNotFound = 'ERROR_PROFILE_NOT_FOUND',
   EventNotFound = 'ERROR_EVENT_NOT_FOUND',
@@ -20,3 +22,5 @@ export const amountFormat = '0,0.[0]a'
 
 export const defaultPubkey =
   'npub16elg3wf8nffkymylw9kfwecc45j9c30lufrrzx2zf5vmxjlcgkkq3xc6d7'
+
+export const textKinds = [NDKKind.Text, NDKKind.Article, 1311]

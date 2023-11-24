@@ -37,6 +37,7 @@ import { LngLatBounds } from 'maplibre-gl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import NoteMenu from './NoteMenu'
 import classNames from 'classnames'
+import { textKinds } from '@/constants/app'
 
 const ShortTextNoteCard = ({
   className,
@@ -251,7 +252,7 @@ const ShortTextNoteCard = ({
               'w-[60px]': indent,
             })}
           />
-          {event.kind === NDKKind.Text || event.kind === NDKKind.Article ? (
+          {event.kind && textKinds.includes(event.kind) ? (
             <CardContent className="flex-1 !pl-0 !pr-3 !pt-3 !pb-0 overflow-hidden">
               <Box
                 className={classNames({

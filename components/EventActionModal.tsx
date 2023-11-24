@@ -29,6 +29,7 @@ import classNames from 'classnames'
 import EventList from './EventList'
 import { DAY, unixNow } from '@/utils/time'
 import { useSubscribe } from '@/hooks/useSubscribe'
+import { textKinds } from '@/constants/app'
 
 export const ShortTextNotePane = ({
   event,
@@ -46,7 +47,7 @@ export const ShortTextNotePane = ({
 
   const relatedEventsfilter = useMemo<NDKFilter | undefined>(
     () =>
-      event.kind === NDKKind.Text || event.kind === NDKKind.Article
+      event.kind && textKinds.includes(event.kind)
         ? {
             kinds: [
               NDKKind.Repost,
@@ -132,7 +133,7 @@ export const ShortTextNotePane = ({
         viewNoteButton={false}
         relatedEvents={relatedEvents}
       />
-      {event.kind === NDKKind.Text || event.kind === NDKKind.Article ? (
+      {event.kind && textKinds.includes(event.kind) ? (
         <>
           <Paper className="sticky top-[59px] z-10">
             <Box>
@@ -285,6 +286,8 @@ const EventActionModal = () => {
           return 'Note'
         } else if (event?.kind === NDKKind.Article) {
           return 'Article'
+        } else if (event?.kind === 1311) {
+          return 'Chat'
         }
       default:
         return undefined
