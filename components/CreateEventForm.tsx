@@ -271,11 +271,23 @@ export const CreateEventForm = ({
             powEvent.sig = await ndk.signer.sign(powEvent as NostrEvent)
           }
           const pool = ndk.pool || ndk.outboxPool
-          await Promise.allSettled(
+          const results = await Promise.allSettled(
             pool.connectedRelays().map((relay) => {
               return relay.connectivity.relay.publish(powEvent as NostrEvent)
             }),
           )
+          const errors: any[] = []
+          let hasSuccess = false
+          results.forEach((d) => {
+            if (d.status === 'fulfilled') {
+              hasSuccess = true
+            } else if (d.status === 'rejected') {
+              errors.push(d.reason)
+            }
+          })
+          if (!hasSuccess && !!errors.length) {
+            throw errors[0]
+          }
         } else {
           await new NDKEvent(ndk, publishEvent as NostrEvent).publish()
         }
