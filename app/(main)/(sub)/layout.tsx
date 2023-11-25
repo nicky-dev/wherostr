@@ -9,7 +9,7 @@ import UserBar from '@/components/UserBar'
 import { useUser } from '@/hooks/useAccount'
 import { useAction } from '@/hooks/useApp'
 import { Sensors } from '@mui/icons-material'
-import { Box, Toolbar } from '@mui/material'
+import { Box, NoSsr, Toolbar } from '@mui/material'
 import { usePathname } from 'next/navigation'
 
 export default function RootLayout({
@@ -37,7 +37,7 @@ export default function RootLayout({
           <UserBar />
         )}
       </Toolbar>
-      {children}
+      <NoSsr>{children}</NoSsr>
       {!!eventAction && (
         <Box className="fixed inset-0 backdrop-blur z-50 flex items-center justify-center overflow-hidden p-2">
           <Box className="h-full w-full md:max-w-2xl max-h-full overflow-hidden">
