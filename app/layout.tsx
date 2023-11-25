@@ -5,8 +5,9 @@ import { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/react'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://wherostr.social'),
   title: 'Wherostr',
-  description: 'Where are Nostr people ?',
+  description: 'Where are Nostriches ?',
   appleWebApp: {
     capable: true,
     title: 'Wherostr',
