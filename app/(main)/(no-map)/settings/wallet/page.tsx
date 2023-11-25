@@ -18,12 +18,16 @@ export default function Page() {
         : undefined,
     [],
   )
+  const hostname = useMemo(
+    () => (typeof location !== 'undefined' ? location.hostname : undefined),
+    [],
+  )
   const appName = useMemo(() => {
-    if (!ua) return
+    if (!hostname || !ua) return
     const os = ua.getOS()
     const browser = ua.getBrowser()
-    return `Wherostr - ${os.name} - ${browser.name}`
-  }, [ua])
+    return `Wherostr(${hostname}) - ${os.name} - ${browser.name}`
+  }, [hostname, ua])
   return (
     <Box p={2}>
       <Typography variant="h5" fontWeight="bold">
