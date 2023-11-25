@@ -1,9 +1,14 @@
 'use client'
 
-import { Box, Divider, Typography } from '@mui/material'
-import { Button as BitcoinConnect } from '@getalby/bitcoin-connect-react'
+import { Box, Divider, NoSsr, Typography } from '@mui/material'
 import { useMemo } from 'react'
 import UAParser from 'ua-parser-js'
+import dynamic from 'next/dynamic'
+
+const BitcoinConnect = dynamic(
+  () => import('@getalby/bitcoin-connect-react').then(({ Button }) => Button),
+  { ssr: false },
+)
 
 export default function Page() {
   const ua = useMemo(
@@ -25,7 +30,7 @@ export default function Page() {
         Nostr Wallet Connect
       </Typography>
       <Divider className="!my-4" />
-      {!!appName && <BitcoinConnect appName={appName} />}
+      <NoSsr>{!!appName && <BitcoinConnect appName={appName} />}</NoSsr>
     </Box>
   )
 }

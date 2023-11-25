@@ -28,26 +28,28 @@ import bboxPolygon from '@turf/bbox-polygon'
 import buffer from '@turf/buffer'
 import Geohash from 'latlon-geohash'
 import { LngLat, LngLatBounds, Marker } from 'maplibre-gl'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Filter from './Filter'
 
 const markers: Record<string, Marker> = {}
-export default function Feed() {
+export default function Feed({
+  q,
+  pathname,
+}: {
+  q?: string
+  pathname?: string
+}) {
   const ndk = useNDK()
   const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
   const map = useMap()
   const { user, signing } = useAccount()
   const { setEventAction } = useAction()
   const [follows] = useFollowing()
   const [mapLoaded, setMapLoaded] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
-  const showMap = searchParams.get('map') === '1'
-  const q = useMemo(() => searchParams.get('q') || '', [searchParams])
-  const queryRef = useRef(searchParams.get('q'))
-  queryRef.current = searchParams.get('q')
+  const queryRef = useRef(q)
+  queryRef.current = q
   const pathRef = useRef(pathname)
   pathRef.current = pathname
 
@@ -186,7 +188,7 @@ export default function Feed() {
   ) => {
     const { event } = ev?.features?.[0].properties || {}
     if (!event) return
-    router.replace(`${pathRef.current}?q=${queryRef.current || ''}`, {
+    router.replace(pathRef.current || '/', {
       scroll: false,
     })
     setEventAction({
@@ -302,14 +304,7 @@ export default function Feed() {
                     icon={<Tag />}
                     key={d}
                     label={d}
-                    onDelete={() =>
-                      router.replace(
-                        `${pathname}?q=${query.tags
-                          ?.filter((tag) => tag !== d)
-                          .map((d) => `t:${d}`)
-                          .join(';')}&map=${showMap ? '1' : ''}`,
-                      )
-                    }
+                    onDelete={() => router.push('/')}
                   />
                 ))}
                 {query.bhash ? (
@@ -323,7 +318,7 @@ export default function Feed() {
                         units: 'kilometers',
                       })
                       const [x1, y1, x2, y2] = bbox(polygon)
-                      router.replace(`${pathname}?q=${q}&map=1`, {
+                      router.replace(`${pathname}?map=1`, {
                         scroll: false,
                       })
                       setTimeout(() => {
@@ -333,7 +328,7 @@ export default function Feed() {
                         })
                       }, 300)
                     }}
-                    onDelete={() => router.replace(`${pathname}?q=`)}
+                    onDelete={() => router.push('/')}
                   />
                 ) : undefined}
                 {query.geohash ? (
@@ -345,7 +340,7 @@ export default function Feed() {
                       if (!query.lnglat) return
                       const [lng, lat] = query.lnglat
                       const lnglat = new LngLat(lng, lat)
-                      router.replace(`${pathname}?q=${q}&map=1`, {
+                      router.replace(`${pathname}?map=1`, {
                         scroll: false,
                       })
                       setTimeout(() => {
@@ -355,7 +350,7 @@ export default function Feed() {
                         })
                       }, 300)
                     }}
-                    onDelete={() => router.replace(`${pathname}?q=`)}
+                    onDelete={() => router.push('/')}
                   />
                 ) : undefined}
                 {query.naddrDesc ? (
@@ -369,11 +364,7 @@ export default function Feed() {
                         <CircularProgress size={16} color="inherit" />
                       )
                     }
-                    onDelete={
-                      !loadingList
-                        ? () => router.replace(`${pathname}?q=`)
-                        : undefined
-                    }
+                    onDelete={!loadingList ? () => router.push('/') : undefined}
                   />
                 ) : undefined}
               </Box>

@@ -7,8 +7,12 @@ import Typography from '@mui/material/Typography'
 import { debounce } from '@mui/material/utils'
 import { OSMSearchResult, search } from '@/services/osm'
 import Geohash from 'latlon-geohash'
-import { CircularProgress, Divider } from '@mui/material'
+import { Box, CircularProgress, Divider } from '@mui/material'
 import { Search } from '@mui/icons-material'
+import { useProfilesCache } from '@/hooks/useUserProfile'
+import Fuse from 'fuse.js'
+import ProfileChip from './ProfileChip'
+import { NostrPrefix, createNostrLink } from '@snort/system'
 
 interface MainTextMatchedSubstrings {
   offset: number
@@ -25,6 +29,10 @@ interface SearchBoxProps {
   value?: string
 }
 
+interface SearchResultType extends Partial<OSMSearchResult> {
+  hexpubkey?: string
+}
+
 const SearchBox: React.FC<
   Omit<TextFieldProps, 'onChange'> & SearchBoxProps
 > = ({ placeholder, onChange, value, onBlur, autoFocus, ...props }) => {
@@ -32,7 +40,7 @@ const SearchBox: React.FC<
   const [inputText, setInputText] = React.useState('')
   const [inputValue, setInputValue] = React.useState('')
   const [options, setOptions] = React.useState<
-    readonly Partial<OSMSearchResult>[]
+    readonly Partial<SearchResultType>[]
   >([])
 
   const fetch = React.useMemo(
@@ -40,13 +48,22 @@ const SearchBox: React.FC<
       debounce(
         (
           request: { input: string },
-          callback: (results?: readonly Partial<OSMSearchResult>[]) => void,
+          callback: (results?: readonly Partial<SearchResultType>[]) => void,
         ) => {
           search(request.input).then(callback)
         },
         400,
       ),
     [],
+  )
+
+  const profiles = useProfilesCache()
+  const fuse = React.useMemo(
+    () =>
+      new Fuse(profiles, {
+        keys: ['name', 'displayName', 'username', 'nip05'],
+      }),
+    [profiles],
   )
 
   React.useEffect(() => {
@@ -57,13 +74,49 @@ const SearchBox: React.FC<
       return undefined
     }
 
+    if (inputValue.startsWith('@')) {
+      setOptions([])
+      const text = inputValue.slice(1)
+      const options: SearchResultType[] = text
+        ? fuse
+            .search(text)
+            .slice(0, 10)
+            .map((item) => {
+              const name = createNostrLink(
+                NostrPrefix.PublicKey,
+                item.item.hexpubkey,
+              ).encode()
+              return {
+                place_id: -2,
+                name: '/p/' + name,
+                display_name: item.item.displayName,
+                hexpubkey: item.item.hexpubkey,
+              }
+            })
+        : profiles.slice(0, 10).map((item) => {
+            const name = createNostrLink(
+              NostrPrefix.PublicKey,
+              item.hexpubkey,
+            ).encode()
+            return {
+              place_id: -2,
+              name: '/p/' + name,
+              display_name: item.displayName,
+              hexpubkey: item.hexpubkey,
+            }
+          })
+      setOptions(options)
+      return
+    }
     const searchHashTagOptions = {
       place_id: -1,
-      name: inputValue
-        .split(' ')
-        .filter((d) => !!d.trim())
-        .map((d) => `t:${d.trim().toLowerCase()}`)
-        .join(';'),
+      name:
+        '/t/' +
+        inputValue
+          .split(' ')
+          .filter((d) => !!d.trim())
+          .map((d) => `${d.trim().toLowerCase()}`)
+          .join(','),
       display_name: `Search notes: ${inputValue
         .split(' ')
         .filter((d) => !!d.trim())
@@ -73,11 +126,13 @@ const SearchBox: React.FC<
 
     const searchPeopleOptions = {
       place_id: -2,
-      name: inputValue
-        .split(' ')
-        .filter((d) => !!d.trim())
-        .map((d) => `p:${d.trim()}`)
-        .join(';'),
+      name:
+        '/p/' +
+        inputValue
+          .split(' ')
+          .filter((d) => !!d.trim())
+          .map((d) => `${d.trim()}`)
+          .join(','),
       display_name: `Search people: ${inputValue.trim()}`,
     }
 
@@ -106,25 +161,25 @@ const SearchBox: React.FC<
       active = false
       setLoading(false)
     }
-  }, [inputValue, fetch])
+  }, [inputValue, fetch, fuse, profiles])
 
   const handleSelectValue = React.useCallback(
     (event: any, newValue: Partial<OSMSearchResult> | null) => {
       setInputText('')
-      if (newValue?.place_id === -1) {
+      if (newValue?.place_id === -1 || newValue?.place_id === -2) {
         onChange?.(newValue.name)
       } else if (newValue?.boundingbox) {
         const [y1, y2, x1, x2] = newValue.boundingbox.map((b: string) =>
           Number(b),
         )
-        const bbhash = `b:${Geohash.encode(y1, x1, 10)},${Geohash.encode(
+        const bbhash = `/b/${Geohash.encode(y1, x1, 10)},${Geohash.encode(
           y2,
           x2,
           10,
         )}`
         onChange?.(bbhash)
       } else if (newValue?.lat && newValue?.lon) {
-        const ghash = `g:${Geohash.encode(
+        const ghash = `/g/${Geohash.encode(
           Number(newValue?.lat),
           Number(newValue?.lon),
           10,
@@ -139,22 +194,15 @@ const SearchBox: React.FC<
     <Autocomplete
       id="autocomplete-search"
       fullWidth
-      getOptionLabel={(option) =>
-        typeof option === 'string' ? option : option.display_name!
-      }
+      getOptionLabel={(option) => {
+        return typeof option === 'string' ? option : option.display_name!
+      }}
       options={options}
       disablePortal
       inputValue={inputText}
       noOptionsText={placeholder}
       selectOnFocus
       handleHomeEndKeys={false}
-      onKeyDown={(evt) => {
-        if (evt.key === 'Enter') {
-          evt.defaultPrevented = true
-          handleSelectValue(evt, options[0])
-        }
-      }}
-      autoComplete={false}
       popupIcon={<Search />}
       forcePopupIcon
       slotProps={{
@@ -163,6 +211,19 @@ const SearchBox: React.FC<
         },
       }}
       onChange={handleSelectValue}
+      onInputChange={(_, value) => {
+        setInputValue(value)
+        setInputText(value)
+      }}
+      onKeyDown={(evt) => {
+        if (evt.key === 'Enter') {
+          evt.defaultPrevented = true
+          handleSelectValue(evt, options[0])
+        }
+      }}
+      filterOptions={
+        inputText.startsWith('@') ? (options) => options : undefined
+      }
       renderInput={(params) => (
         <TextField
           className="!my-0"
@@ -178,11 +239,6 @@ const SearchBox: React.FC<
           }}
           onBlur={onBlur}
           autoFocus={autoFocus}
-          onChange={(e) => {
-            const newValue = e.target.value
-            setInputValue(newValue)
-            setInputText(newValue)
-          }}
         />
       )}
       // loading={loading}
@@ -197,6 +253,14 @@ const SearchBox: React.FC<
         //     match.offset + match.length,
         //   ]),
         // )
+
+        if ('hexpubkey' in option) {
+          return (
+            <li {...props} key={option.hexpubkey}>
+              <ProfileChip className="p-2" hexpubkey={option.hexpubkey} />
+            </li>
+          )
+        }
 
         if (option.place_id === -1) {
           return (

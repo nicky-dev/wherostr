@@ -44,12 +44,16 @@ const NavigationBar: FC<{ className?: string }> = ({ className }) => {
   )
 }
 
-const MainPane: FC<PropsWithChildren> = ({ children }) => {
+const MainPane: FC<
+  PropsWithChildren & { className?: string; fullWidth?: boolean }
+> = ({ className, fullWidth, children }) => {
   return (
     <Paper
-      className={
-        'relative w-full md:w-[640px] flex flex-col min-h-full will-change-transform'
-      }
+      className={classNames(
+        'relative w-full flex flex-col min-h-full will-change-transform',
+        { 'md:w-[640px]': !fullWidth },
+        className,
+      )}
       square
     >
       <Paper className="!sticky top-0 z-10">

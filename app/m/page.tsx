@@ -5,5 +5,5 @@ import { redirect, useSearchParams } from 'next/navigation'
 export default function Page() {
   const query = useSearchParams()
   const q = query.get('q')
-  redirect('/?q=g:' + q?.slice(0, -2) || q || '', RedirectType.replace)
+  redirect('/g/' + q?.slice(0, -2) || q || '', RedirectType.replace)
 }

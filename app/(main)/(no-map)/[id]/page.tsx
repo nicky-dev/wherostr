@@ -34,41 +34,17 @@ export default function Page() {
 
   const component = useMemo(() => {
     if (naddrDesc?.type === 'naddr') {
-      return (
-        <LiveEventLayout>
-          <NostrAddressComponent data={naddrDesc.data} />
-        </LiveEventLayout>
-      )
+      return <NostrAddressComponent data={naddrDesc.data} />
     } else if (naddrDesc?.type === 'note') {
-      return (
-        <CommonEventLayout>
-          <NostrNoteComponent data={naddrDesc.data} />
-        </CommonEventLayout>
-      )
+      return <NostrNoteComponent data={naddrDesc.data} />
     } else if (naddrDesc?.type === 'npub') {
-      return (
-        <CommonEventLayout>
-          <NostrPubkeyComponent data={naddrDesc.data} />
-        </CommonEventLayout>
-      )
+      return <NostrPubkeyComponent data={naddrDesc.data} />
     } else if (naddrDesc?.type === 'nprofile') {
-      return (
-        <CommonEventLayout>
-          <NostrPubkeyComponent data={naddrDesc.data.pubkey} />
-        </CommonEventLayout>
-      )
+      return <NostrPubkeyComponent data={naddrDesc.data.pubkey} />
     } else if (naddrDesc?.type === 'nevent') {
-      return (
-        <CommonEventLayout>
-          <NostrEventComponent data={naddrDesc.data} />
-        </CommonEventLayout>
-      )
+      return <NostrEventComponent data={naddrDesc.data} />
     } else {
-      return (
-        <CommonEventLayout>
-          <Typography variant="h6">Invalid Nostr Address</Typography>
-        </CommonEventLayout>
-      )
+      return <Typography variant="h6">Invalid Nostr Address</Typography>
     }
   }, [naddrDesc])
 

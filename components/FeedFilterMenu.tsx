@@ -155,12 +155,12 @@ export default function FeedFilterMenu({
           })}
         {!disableList &&
           followLists.map((d) => {
-            const q =
+            const path =
               d.type === 'tag'
-                ? `t:${d.value}`
+                ? `/t/${d.value}`
                 : d.type === 'list'
-                ? `e:${d.value}`
-                : `b:${d.value}`
+                ? `/l/${d.value}`
+                : `/b/${d.value}`
 
             const icon =
               d.type === 'tag' ? (
@@ -175,7 +175,7 @@ export default function FeedFilterMenu({
                 key={d.id}
                 onClick={() => handleMenuClick(d.id)}
                 LinkComponent={Link}
-                href={`${pathname}?q=${q}`}
+                href={`/search${path}`}
               >
                 <ListItemIcon>{icon}</ListItemIcon>
                 <ListItemText primary={d.name} />

@@ -68,7 +68,7 @@ const LiveActivity = ({
   )
 
   return (
-    <Box className="grid gap-2 lg:gap-6 flex-1 overflow-hidden grid-cols-1 lg:grid-cols-[auto_440px]">
+    <Box className="grid gap-2 lg:gap-4 lg:p-4 flex-1 overflow-hidden grid-cols-1 lg:grid-cols-[auto_440px] bg-[inherit]">
       <Box className="flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-0 gap-2">
         <Paper
           component={LiveVideoPlayer}

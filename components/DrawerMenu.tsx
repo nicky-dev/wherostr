@@ -19,7 +19,6 @@ import {
   ListItemText,
   Toolbar,
 } from '@mui/material'
-import ProfileChip, { ProfileChipProps } from './ProfileChip'
 import { useAccount } from '@/hooks/useAccount'
 import Link from 'next/link'
 import { ProfileCard } from './ProfileCard'
@@ -28,12 +27,7 @@ import { ProfileActionType } from '@/contexts/AppContext'
 import { usePathname, useRouter } from 'next/navigation'
 import { defaultPubkey } from '@/constants/app'
 
-export interface MenuButtonProps {
-  slotProps?: {
-    profileChip?: ProfileChipProps
-  }
-}
-const DrawerMenu: FC<MenuButtonProps> = ({ slotProps }) => {
+const DrawerMenu: FC = () => {
   const router = useRouter()
   const pathname = usePathname()
   const { setProfileAction } = useAction()
@@ -52,12 +46,6 @@ const DrawerMenu: FC<MenuButtonProps> = ({ slotProps }) => {
 
   return (
     <Fragment>
-      {/* <ProfileChip
-        {...slotProps?.profileChip}
-        hexpubkey={defaultPubkey}
-        showName={slotProps?.profileChip?.showName ?? false}
-        onClick={toggleDrawer}
-      /> */}
       <IconButton onClick={toggleDrawer}>
         <Menu />
       </IconButton>

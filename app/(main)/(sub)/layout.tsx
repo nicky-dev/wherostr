@@ -9,7 +9,7 @@ import UserBar from '@/components/UserBar'
 import { useUser } from '@/hooks/useAccount'
 import { useAction } from '@/hooks/useApp'
 import { Sensors } from '@mui/icons-material'
-import { Box, NoSsr, Toolbar } from '@mui/material'
+import { Box, Toolbar } from '@mui/material'
 import { usePathname } from 'next/navigation'
 
 export default function RootLayout({

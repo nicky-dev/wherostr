@@ -112,7 +112,7 @@ export default function Page() {
   )
 
   return (
-    <Box px={2} flex={1} overflow="visible">
+    <Box p={2} flex={1} overflow="visible" className="bg-[inherit]">
       <Typography variant="h4">Live</Typography>
       <Divider />
       <ViewportList

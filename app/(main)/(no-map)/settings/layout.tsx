@@ -16,7 +16,7 @@ import { usePathname } from 'next/navigation'
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   return (
-    <Box className="flex flex-col md:flex-row mx-4 justify-center items-start">
+    <Box className="flex flex-col flex-1 md:flex-row p-4 md:justify-center items-start bg-[inherit]">
       <List
         disablePadding
         subheader={

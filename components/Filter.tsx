@@ -7,16 +7,21 @@ import classNames from 'classnames'
 import { NDKUser } from '@nostr-dev-kit/ndk'
 
 export interface FilterProps extends BaseTextFieldProps {
+  q?: string
   className?: string
   user?: NDKUser
   InputProps?: TextFieldProps['InputProps']
 }
 
-const Filter: FC<FilterProps> = ({ className, user, InputProps, ...props }) => {
+const Filter: FC<FilterProps> = ({
+  q = '',
+  className,
+  user,
+  InputProps,
+  ...props
+}) => {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const querySearch = searchParams.get('q') || ''
 
   return (
     <Paper
@@ -32,13 +37,13 @@ const Filter: FC<FilterProps> = ({ className, user, InputProps, ...props }) => {
         margin="dense"
         onChange={(value?: string) => {
           const showMap =
-            value?.startsWith('g:') || value?.startsWith('b:') ? 1 : ''
-          router.push(`${pathname}?q=${value}&map=${showMap}`)
+            value?.startsWith('/g/') || value?.startsWith('/b/') ? 1 : ''
+          router.push(`/search/${value}?map=${showMap}`)
           ;(document.activeElement as HTMLElement)?.blur?.()
         }}
         onBlur={InputProps?.onBlur}
         autoFocus={InputProps?.autoFocus}
-        value={querySearch}
+        value={q}
       />
     </Paper>
   )

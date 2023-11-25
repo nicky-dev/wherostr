@@ -1,7 +1,6 @@
 'use client'
 import { AppContextProvider } from '@/contexts/AppContext'
 import { AccountContextProvider } from '@/contexts/AccountContext'
-import { NoSsr } from '@mui/material'
 
 export default function RootLayout({
   children,
