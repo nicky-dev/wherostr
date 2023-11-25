@@ -37,7 +37,7 @@ export default function RootLayout({
           <UserBar />
         )}
       </Toolbar>
-      <NoSsr>{children}</NoSsr>
+      {children}
       {!!eventAction && (
         <Box className="fixed inset-0 backdrop-blur z-50 flex items-center justify-center overflow-hidden p-2">
           <Box className="h-full w-full md:max-w-2xl max-h-full overflow-hidden">

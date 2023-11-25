@@ -74,8 +74,10 @@ export default function Page() {
     return items
   }, [liveEvent, muteList])
 
-  const ref = useRef<HTMLElement>(window.document.body)
-  ref.current = window.document.body
+  const ref = useRef<HTMLElement | null>(
+    typeof window !== 'undefined' ? window.document.body : null,
+  )
+  ref.current = typeof window !== 'undefined' ? window.document.body : null
 
   const colsNum = useMemo(() => {
     if (xlUp) {
