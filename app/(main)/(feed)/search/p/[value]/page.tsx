@@ -12,6 +12,7 @@ import { ProfileCardFull } from '@/components/ProfileCard'
 import EventList from '@/components/EventList'
 import ProfileValidBadge from '@/components/ProfileValidBadge'
 import { ArrowBackOutlined } from '@mui/icons-material'
+import { useEventMarkers } from '@/hooks/useEventMakers'
 
 export default function Page() {
   const router = useRouter()
@@ -52,6 +53,8 @@ export default function Page() {
       user?.npub.substring(0, 12),
     [user],
   )
+
+  useEventMarkers(events)
 
   return (
     <>

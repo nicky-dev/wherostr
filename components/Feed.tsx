@@ -2,17 +2,12 @@
 import EventList from '@/components/EventList'
 import FeedFilterMenu from '@/components/FeedFilterMenu'
 import { FollowHashtagButton } from '@/components/FollowHashtagButton'
-import { svgPin } from '@/constants/app'
-import { EventActionType } from '@/contexts/AppContext'
 import { useAccount, useFollowing } from '@/hooks/useAccount'
-import { useAction } from '@/hooks/useApp'
 import { useEvent } from '@/hooks/useEvent'
 import { useMap } from '@/hooks/useMap'
-import { useNDK } from '@/hooks/useNostr'
 import { useSubscribe } from '@/hooks/useSubscribe'
-import { fetchProfile, profilePin } from '@/hooks/useUserProfile'
 import { extractQuery } from '@/utils/extractQuery'
-import { WEEK, unixNow } from '@/utils/time'
+import { DAY, unixNow } from '@/utils/time'
 import { CropFree, List, LocationOn, Search, Tag } from '@mui/icons-material'
 import {
   Box,
@@ -27,12 +22,12 @@ import bbox from '@turf/bbox'
 import bboxPolygon from '@turf/bbox-polygon'
 import buffer from '@turf/buffer'
 import Geohash from 'latlon-geohash'
-import { LngLat, LngLatBounds, Marker } from 'maplibre-gl'
+import { LngLat, LngLatBounds } from 'maplibre-gl'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Filter from './Filter'
+import { useEventMarkers } from '@/hooks/useEventMakers'
 
-const markers: Record<string, Marker> = {}
 export default function Feed({
   q,
   pathname = '/',
@@ -40,11 +35,9 @@ export default function Feed({
   q?: string
   pathname?: string
 }) {
-  const ndk = useNDK()
   const router = useRouter()
   const map = useMap()
   const { user, signing } = useAccount()
-  const { setEventAction } = useAction()
   const [follows] = useFollowing()
   const [mapLoaded, setMapLoaded] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
@@ -106,6 +99,7 @@ export default function Feed({
     return {
       kinds: [NDKKind.Text, NDKKind.Repost],
       '#g': geohashFilter,
+      since: unixNow() - DAY,
     }
   }, [signing, query?.bbox, query?.geohash])
 
@@ -134,7 +128,7 @@ export default function Feed({
     return {
       ...(tags ? tags : authors),
       kinds: [NDKKind.Text, NDKKind.Repost],
-      since: unixNow() - WEEK,
+      since: unixNow() - DAY,
       limit: 50,
     } as NDKFilter
   }, [signing, geohashFilter, tags, authors, loadingList])
@@ -157,48 +151,24 @@ export default function Feed({
     return data
   }, [bounds, filter, data])
 
-  const features = useMemo(() => {
-    return events
-      .map((event) => {
-        const geohashes = event.getMatchingTags('g')
-        if (!geohashes.length) return
-        geohashes.sort((a, b) => b[1].length - a[1].length)
-        if (!geohashes[0]) return
-        const { lat, lon } = Geohash.decode(geohashes[0][1])
-        if (!lat || !lon) return
-        const nostrEvent = event.rawEvent()
-        const geojson = {
-          type: 'Feature',
-          geometry: { type: 'Point', coordinates: [lon, lat] },
-          id: event.id,
-          properties: {
-            ...nostrEvent,
-            event,
-          },
-        }
-        return geojson
-      })
-      .filter((event) => !!event)
-  }, [events])
-
-  const clickHandler = (
-    ev: maplibregl.MapMouseEvent & {
-      features?: maplibregl.MapGeoJSONFeature[] | undefined
-    } & Object,
-  ) => {
-    const { event } = ev?.features?.[0].properties || {}
-    if (!event) return
-    router.replace(pathRef.current || '/', {
-      scroll: false,
-    })
-    setEventAction({
-      type: EventActionType.View,
-      event,
-      options: {
-        comments: true,
-      },
-    })
-  }
+  // const clickHandler = (
+  //   ev: maplibregl.MapMouseEvent & {
+  //     features?: maplibregl.MapGeoJSONFeature[] | undefined
+  //   } & Object,
+  // ) => {
+  //   const { event } = ev?.features?.[0].properties || {}
+  //   if (!event) return
+  //   router.replace(pathRef.current || '/', {
+  //     scroll: false,
+  //   })
+  //   setEventAction({
+  //     type: EventActionType.View,
+  //     event,
+  //     options: {
+  //       comments: true,
+  //     },
+  //   })
+  // }
 
   useEffect(() => {
     if (!map) return
@@ -206,10 +176,10 @@ export default function Feed({
       setMapLoaded(true)
     }
     map.on('style.load', handler)
-    map.on('click', 'nostr-event', clickHandler)
+    // map.on('click', 'nostr-event', clickHandler)
     return () => {
       map.off('style.load', handler)
-      map.off('click', clickHandler)
+      // map.off('click', clickHandler)
     }
   }, [map])
 
@@ -222,68 +192,7 @@ export default function Feed({
     } catch (err) {}
   }, [map, mapLoaded, bounds])
 
-  const generatePin = useCallback(
-    async (pubkey: string) => {
-      // const div = document.createElement('div')
-      try {
-        const profile = await fetchProfile(pubkey, ndk)
-        if (profile?.image && !map?.hasImage(pubkey)) {
-          return profilePin
-            .replaceAll('{URL}', profile.image)
-            .replaceAll('{ID}', pubkey)
-        }
-      } catch (err) {
-        return svgPin
-      }
-    },
-    [ndk, map],
-  )
-
-  useEffect(() => {
-    if (!map || !mapLoaded) return
-    Object.keys(markers).forEach((key) => markers[key].remove())
-    const tasks = Promise.allSettled(
-      features
-        .slice()
-        .sort((a, b) => a!.properties.created_at - b!.properties.created_at)
-        .map(async (feat) => {
-          if (!feat) return
-          if (markers[feat.id]) {
-            markers[feat.id].remove()
-            return markers[feat.id]
-          }
-          if (!feat?.properties.pubkey) return
-          const [lng, lat] = feat.geometry.coordinates
-          let marker = new Marker({
-            anchor: 'bottom',
-            className: 'cursor-pointer',
-          })
-            .setLngLat([lng, lat])
-            .addTo(map)
-          marker.getElement().onclick = () =>
-            clickHandler({ features: [feat as any] } as any)
-          const pin = await generatePin(feat?.properties.pubkey)
-          if (pin) {
-            marker.getElement().innerHTML = pin
-            marker.addClassName('cursor-pointer')
-            marker.setOffset([-2, 4])
-          }
-          marker.getElement().onclick = () =>
-            clickHandler({ features: [feat as any] } as any)
-          markers[feat.id] = marker
-          return marker
-        }),
-    )
-    tasks.then((newMarkers) => {
-      Object.keys(markers).forEach((key) => markers[key].remove())
-      newMarkers.forEach((newMarker) => {
-        if (newMarker.status === 'fulfilled' && newMarker.value) {
-          newMarker.value.remove()
-          newMarker.value.addTo(map)
-        }
-      })
-    })
-  }, [generatePin, map, mapLoaded, features])
+  useEventMarkers(events)
 
   return (
     <>

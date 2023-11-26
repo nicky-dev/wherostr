@@ -1,36 +1,33 @@
 'use client'
 
-import DrawerMenu from '@/components/DrawerMenu'
 import EventActionModal from '@/components/EventActionModal'
 import FeedFilterMenu from '@/components/FeedFilterMenu'
 import MainPane from '@/components/MainPane'
 import { MapView } from '@/components/MapView'
 import ProfileActionModal from '@/components/ProfileActionModal'
-import ProfileChip from '@/components/ProfileChip'
-import UserBar from '@/components/UserBar'
 import { MapContextProvider } from '@/contexts/MapContext'
 import { useUser } from '@/hooks/useAccount'
 import { useAction } from '@/hooks/useApp'
-import { Box, Toolbar } from '@mui/material'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { Box } from '@mui/material'
+import { usePathname } from 'next/navigation'
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const query = useSearchParams()
+  const pathname = usePathname()
   const user = useUser()
   const { eventAction, profileAction } = useAction()
-  const q = query.get('q') || ''
+  const [, base, q] = pathname.split('/')
 
   return (
     <MapContextProvider>
       <MainPane fullWidth>
-        <Box className="absolute top-2 left-1/2 -translate-x-1/2">
+        <Box className="absolute z-10 top-2 left-1/2 -translate-x-1/2">
           <FeedFilterMenu
             q={q}
-            pathname="/map/"
+            pathname={`/${base}/`}
             variant="contained"
             user={user}
             disableConversation
