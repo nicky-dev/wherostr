@@ -98,8 +98,8 @@ export default function Feed({
     }
     return {
       kinds: [NDKKind.Text, NDKKind.Repost],
+      until: unixNow() - DAY,
       '#g': geohashFilter,
-      since: unixNow() - DAY,
     }
   }, [signing, query?.bbox, query?.geohash])
 

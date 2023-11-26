@@ -8,12 +8,14 @@ import { Marker } from 'maplibre-gl'
 import Geohash from 'latlon-geohash'
 import { useAction } from './useApp'
 import { mapClickHandler } from '@/components/MapController'
+import { useRouter } from 'next/navigation'
 
 const markers: Record<string, Marker> = {}
 export const useEventMarkers = (events: NDKEvent[]) => {
   const ndk = useNDK()
   const map = useMap()
   const { setEventAction } = useAction()
+  const router = useRouter()
 
   const features = useMemo(() => {
     return events
@@ -75,7 +77,7 @@ export const useEventMarkers = (events: NDKEvent[]) => {
             .setLngLat([lng, lat])
             .addTo(map)
           marker.getElement().onclick = () =>
-            mapClickHandler({ setEventAction }, feat.event)
+            mapClickHandler({ setEventAction, router }, feat.event)
           const pin = await generatePin(feat?.properties.pubkey)
           if (pin) {
             marker.getElement().innerHTML = pin
@@ -97,7 +99,7 @@ export const useEventMarkers = (events: NDKEvent[]) => {
         }
       })
     })
-  }, [generatePin, setEventAction, map, features])
+  }, [generatePin, setEventAction, router, map, features])
 
   return features
 }

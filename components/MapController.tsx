@@ -7,6 +7,7 @@ import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
 import { useMap } from '@/hooks/useMap'
 import { DAY, unixNow } from '@/utils/time'
 import { useEventMarkers } from '@/hooks/useEventMakers'
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context'
 
 const fullExtentGeohash = '0123456789bcdefghjkmnpqrstuvwxyz'.split('')
 export const MapController = ({
@@ -69,9 +70,14 @@ export const MapController = ({
 export const mapClickHandler = (
   {
     setEventAction,
-  }: { setEventAction: (eventAction?: EventActionOptions | undefined) => void },
+    router,
+  }: {
+    setEventAction: (eventAction?: EventActionOptions | undefined) => void
+    router: AppRouterInstance
+  },
   event: NDKEvent,
 ) => {
+  router.push(location.pathname)
   setEventAction({
     type: EventActionType.View,
     event,
