@@ -118,7 +118,6 @@ const EventList: FC<EventListProps> = ({
       const key = item.deduplicationKey()
       if (renderEventItem) {
         return renderEventItem(item, {
-          key,
           relatedEvents:
             item.kind === NDKKind.Text || item.kind === NDKKind.Article
               ? getRelatedEvents(item)

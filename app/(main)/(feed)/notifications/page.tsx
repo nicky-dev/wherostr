@@ -3,7 +3,7 @@ import { Paper, Typography } from '@mui/material'
 import { useMemo, useRef } from 'react'
 import { useAccount } from '@/hooks/useAccount'
 import { useSubscribe } from '@/hooks/useSubscribe'
-import { WEEK, unixNow } from '@/utils/time'
+import { DAY, unixNow } from '@/utils/time'
 import { Notifications } from '@mui/icons-material'
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import EventList from '@/components/EventList'
@@ -30,7 +30,7 @@ export default function Page() {
       kinds: [NDKKind.Text, NDKKind.Reaction, NDKKind.Zap, NDKKind.Repost],
       limit: 50,
       '#p': [user.pubkey],
-      until: unixNow() + WEEK,
+      until: unixNow() + DAY,
     }
   }, [signing, user?.pubkey])
   const [data, fetchMore, newItems, showNewItems] = useSubscribe(filter)
