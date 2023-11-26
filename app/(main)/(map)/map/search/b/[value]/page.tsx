@@ -1,12 +1,11 @@
 'use client'
 
-import Feed from '@/components/Feed'
-import { useParams, usePathname } from 'next/navigation'
+import { MapController } from '@/components/MapController'
+import { useParams } from 'next/navigation'
 import { useMemo } from 'react'
 
 export default function Page() {
   const { value } = useParams()
-  const pathname = usePathname()
 
   const q = useMemo(
     () => (typeof value === 'string' ? decodeURIComponent(value) : ''),
@@ -14,5 +13,5 @@ export default function Page() {
   )
   if (!q) return
 
-  return <Feed q={`b:${q}`} pathname={pathname} />
+  return <MapController q={`b:${q}`} />
 }

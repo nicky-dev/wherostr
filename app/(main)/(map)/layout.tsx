@@ -26,7 +26,6 @@ export default function RootLayout({
   const feedType = useFeedType(type)
   const query = useMemo(() => extractQuery(q), [q])
 
-  console.log('query', query)
   return (
     <MapContextProvider>
       <MainPane fullWidth>

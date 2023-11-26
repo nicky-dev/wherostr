@@ -18,17 +18,9 @@ import bbox from '@turf/bbox'
 import { nip19 } from 'nostr-tools'
 
 const fullExtentGeohash = '0123456789bcdefghjkmnpqrstuvwxyz'.split('')
-export const MapController = ({
-  q,
-  pathname = '/',
-}: {
-  q?: string
-  pathname?: string
-}) => {
+export const MapController = ({ q }: { q?: string }) => {
   const [follows] = useFollowing()
   const { user, signing } = useAccount()
-  const pathRef = useRef(pathname)
-  pathRef.current = pathname
 
   const feedType = useFeedType(q)
   const query = useMemo(() => extractQuery(q), [q])

@@ -1,11 +1,9 @@
 'use client'
 
-import Feed from '@/components/Feed'
-import { useParams, usePathname } from 'next/navigation'
+import { MapController } from '@/components/MapController'
+import { useParams } from 'next/navigation'
 
 export default function Page() {
   const { value } = useParams()
-  const pathname = usePathname()
-
-  return <Feed q={`e:${value}`} pathname={pathname} />
+  return <MapController q={`e:${value}`} />
 }
