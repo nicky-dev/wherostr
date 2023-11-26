@@ -71,7 +71,6 @@ const NotificationItem = ({
   relatedEvents?: NDKEvent[]
 }) => {
   const pathname = usePathname()
-  const query = useSearchParams()
   const router = useRouter()
   const { map } = useContext(MapContext)
 
@@ -233,8 +232,7 @@ const NotificationItem = ({
                         maxZoom: 16,
                       })
                     }, 300)
-                    const q = query.get('q') || ''
-                    router.replace(`${pathname}?q=${q}&map=1`, {
+                    router.push(`${pathname}?map=1`, {
                       scroll: false,
                     })
                   }}

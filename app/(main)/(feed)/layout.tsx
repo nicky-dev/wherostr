@@ -49,9 +49,9 @@ export default function RootLayout({
             <Box className="absolute top-2 left-2">
               <Fab
                 size="small"
-                onClick={() =>
-                  router.replace(`${pathname}?q=${q}`, { scroll: false })
-                }
+                onClick={() => {
+                  router.push(pathname, { scroll: false })
+                }}
               >
                 <ChevronLeftOutlined />
               </Fab>

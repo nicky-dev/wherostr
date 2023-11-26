@@ -229,8 +229,7 @@ const ShortTextNoteCard = ({
                       maxZoom: 16,
                     })
                   }, 300)
-                  const q = query.get('q') || ''
-                  router.replace(`${pathname}?q=${q}&map=1`, { scroll: false })
+                  router.push(`${pathname}?map=1`, { scroll: false })
                 }}
               >
                 <TravelExploreOutlined className="text-contrast-secondary" />

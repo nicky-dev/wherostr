@@ -35,7 +35,7 @@ import Filter from './Filter'
 const markers: Record<string, Marker> = {}
 export default function Feed({
   q,
-  pathname,
+  pathname = '/',
 }: {
   q?: string
   pathname?: string
@@ -295,7 +295,12 @@ export default function Feed({
           <Box className="absolute inset-0 flex items-center">
             {!query ? (
               <Box className="flex flex-1 justify-center">
-                <FeedFilterMenu user={user} variant="contained" />
+                <FeedFilterMenu
+                  user={user}
+                  variant="contained"
+                  q={q}
+                  pathname={pathname}
+                />
               </Box>
             ) : (
               <Box mx="auto">

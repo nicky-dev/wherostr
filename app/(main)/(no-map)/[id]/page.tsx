@@ -9,7 +9,6 @@ import { NostrNoteComponent } from '@/components/NostsNoteComponent'
 import { NostrPubkeyComponent } from '@/components/NostrPubkeyComponent'
 import { NostrEventComponent } from '@/components/NostrEventComponent'
 import { RedirectType } from 'next/dist/client/components/redirect'
-import { CommonEventLayout, LiveEventLayout } from '@/components/PageLayout'
 
 export default function Page() {
   const { id } = useParams()

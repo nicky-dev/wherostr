@@ -241,23 +241,15 @@ const SearchBox: React.FC<
           autoFocus={autoFocus}
         />
       )}
-      // loading={loading}
-      // loadingText={<LinearProgress />}
       renderOption={(props, option) => {
-        // const matches = option.display_name.main_text_matched_substrings || []
-
-        // const parts = parse(
-        //   option.structured_formatting.main_text,
-        //   matches.map((match: any) => [
-        //     match.offset,
-        //     match.offset + match.length,
-        //   ]),
-        // )
-
         if ('hexpubkey' in option) {
           return (
             <li {...props} key={option.hexpubkey}>
-              <ProfileChip className="p-2" hexpubkey={option.hexpubkey} />
+              <ProfileChip
+                className="p-2"
+                hexpubkey={option.hexpubkey}
+                clickable={false}
+              />
             </li>
           )
         }

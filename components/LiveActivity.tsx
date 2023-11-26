@@ -68,7 +68,7 @@ const LiveActivity = ({
   )
 
   return (
-    <Box className="grid gap-2 lg:gap-4 lg:p-4 flex-1 overflow-hidden grid-cols-1 lg:grid-cols-[auto_440px] bg-[inherit]">
+    <Box className="grid gap-2 lg:gap-4 lg:p-4 flex-1 overflow-visible grid-cols-1 lg:grid-cols-[auto_440px] bg-[inherit]">
       <Box className="flex flex-col overflow-y-auto [&::-webkit-scrollbar]:w-0 gap-2">
         <Paper
           component={LiveVideoPlayer}
@@ -96,15 +96,6 @@ const LiveActivity = ({
             <Box className="flex items-center gap-2">
               <ProfileChip hexpubkey={author?.hexpubkey} showNip5={false} />
               <Box className="flex-1 md:flex-auto" component="span" />
-              <ResponsiveButton
-                color="inherit"
-                variant="outlined"
-                size="small"
-                startIcon={<Share />}
-                onClick={handleClickAction(EventActionType.Quote)}
-              >
-                Share
-              </ResponsiveButton>
               {liveItem.pubkey &&
                 !follows.find((d) => d.hexpubkey === liveItem.pubkey) && (
                   <ResponsiveButton
@@ -127,6 +118,15 @@ const LiveActivity = ({
                     Follow
                   </ResponsiveButton>
                 )}
+              <ResponsiveButton
+                color="inherit"
+                variant="outlined"
+                size="small"
+                startIcon={<Share />}
+                onClick={handleClickAction(EventActionType.Quote)}
+              >
+                Share
+              </ResponsiveButton>
               <ResponsiveButton
                 color="primary"
                 variant="contained"

@@ -1,10 +1,12 @@
+import { useAccount } from '@/hooks/useAccount'
 import { Box, Fade, FadeProps, LinearProgress, Paper } from '@mui/material'
 import { FC } from 'react'
 
 interface SplashScreenProps extends Omit<FadeProps, 'children'> {}
 const SplashScreen: FC<SplashScreenProps> = (props) => {
+  const { signing = true } = useAccount()
   return (
-    <Fade {...props}>
+    <Fade in={signing} {...props}>
       <Paper className="fixed inset-0 z-50 flex justify-center items-center flex-col">
         {/* <Box className="relative w-[128px] h-[128px] rounded-full">
           <Image

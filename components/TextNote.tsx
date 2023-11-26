@@ -281,7 +281,7 @@ const renderChunk = (
     case 'hashtag':
       return (
         <NextLink
-          href={`/?q=t:${content.toLowerCase()}`}
+          href={`/search/t/${content.toLowerCase()}`}
           onClick={() => clearActions()}
         >
           <Link underline="hover" color="secondary" component="span">

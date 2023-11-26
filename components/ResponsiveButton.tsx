@@ -7,26 +7,13 @@ const ResponsiveButton: FC<LoadingButtonProps> = (props) => {
   const { startIcon, children, className, ...other } = props
   return (
     <>
-      <Hidden mdDown>
-        <LoadingButton
-          {...other}
-          startIcon={startIcon}
-          className={classNames(className, 'min-w-[auto]')}
-        >
-          {children}
-        </LoadingButton>
-      </Hidden>
-      <Hidden mdUp>
-        <Tooltip title={children} disableInteractive>
-          <LoadingButton
-            {...other}
-            size="small"
-            className={classNames(className, 'min-w-[auto]')}
-          >
-            {startIcon}
-          </LoadingButton>
-        </Tooltip>
-      </Hidden>
+      <LoadingButton
+        {...other}
+        startIcon={startIcon}
+        className={classNames(className, 'min-w-[auto]')}
+      >
+        {children}
+      </LoadingButton>
     </>
   )
 }

@@ -169,9 +169,9 @@ const DrawerMenu: FC = () => {
                 onClick={async () => {
                   await signOut()
                   if (!pathname.startsWith('/settings')) {
-                    router.replace(`${pathname}?q=global&map=`)
+                    router.replace(`${pathname}/global`)
                   } else {
-                    router.replace(`/?q=global&map=`)
+                    router.replace(`/global`)
                   }
                   closeDrawer()
                 }}

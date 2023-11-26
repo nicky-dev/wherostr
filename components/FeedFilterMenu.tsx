@@ -9,7 +9,6 @@ import {
 } from '@mui/material'
 import { NDKUser } from '@nostr-dev-kit/ndk'
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
 import {
   ArrowDropDownOutlined,
   CropFree,
@@ -22,6 +21,8 @@ import {
 import { useFollowList } from '@/hooks/useAccount'
 
 interface FeedFilterMenuProps extends ButtonProps {
+  q?: string
+  pathname?: string
   user?: NDKUser
   disableList?: boolean
   disableConversation?: boolean
@@ -44,7 +45,7 @@ const options: MenuItemProps[] = [
     label: 'Following',
     icon: <GroupOutlined />,
     href: (pathname) => {
-      return `${pathname}?q=following`
+      return `${pathname}following`
     },
     hide(user) {
       return !user
@@ -55,7 +56,7 @@ const options: MenuItemProps[] = [
     label: 'Conversation',
     icon: <ForumOutlined />,
     href: (pathname) => {
-      return `${pathname}?q=conversation`
+      return `${pathname}conversation`
     },
     hide(user) {
       return !user
@@ -66,20 +67,20 @@ const options: MenuItemProps[] = [
     label: 'Global',
     icon: <PublicOutlined />,
     href: (pathname) => {
-      return `${pathname}?q=global`
+      return `${pathname}global`
     },
   },
 ]
 
 export default function FeedFilterMenu({
+  q,
+  pathname = '/',
   user,
   disableList,
   disableConversation,
   ...props
 }: FeedFilterMenuProps) {
   const [followLists] = useFollowList()
-  const pathname = usePathname()
-  const query = useSearchParams()
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -92,7 +93,6 @@ export default function FeedFilterMenu({
     handleClose()
   }
 
-  const q = React.useMemo(() => query.get('q')?.toString(), [query])
   const selectedMenu = React.useMemo(
     () =>
       options.find((item) => {

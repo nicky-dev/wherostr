@@ -13,6 +13,12 @@ export default function Page() {
     redirect('/search/t/' + q.slice(2), RedirectType.replace)
   } else if (q.startsWith('b')) {
     redirect('/search/b/' + q.slice(2), RedirectType.replace)
+  } else if (q === 'following') {
+    redirect('/following', RedirectType.replace)
+  } else if (q === 'global') {
+    redirect('/global', RedirectType.replace)
+  } else if (q === 'conversation') {
+    redirect('/conversation', RedirectType.replace)
   }
   return <Feed q={q} />
 }

@@ -31,7 +31,7 @@ const Filter: FC<FilterProps> = ({
       )}
     >
       <SearchBox
-        placeholder="Search by hashtag or place"
+        placeholder={`Search notes by hashtag or place, or search for people using '@<name>'`}
         name="search"
         size="small"
         margin="dense"
