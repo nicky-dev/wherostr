@@ -6,7 +6,7 @@ import { nip19 } from 'nostr-tools'
 import { unixNow } from '@/utils/time'
 import { NDKKind } from '@nostr-dev-kit/ndk'
 import { useSubscribe } from '@/hooks/useSubscribe'
-import { useUserProfile } from '@/hooks/useUserProfile'
+import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
 import { Box, Divider, IconButton, Paper, Typography } from '@mui/material'
 import { ProfileCardFull } from '@/components/ProfileCard'
 import EventList from '@/components/EventList'
@@ -45,14 +45,7 @@ export default function Page() {
   const [events, fetchMore] = useSubscribe(filter)
 
   const user = useUserProfile(hexpubkey)
-  const displayName = useMemo(
-    () =>
-      user?.profile?.displayName ||
-      user?.profile?.name ||
-      user?.profile?.username ||
-      user?.npub.substring(0, 12),
-    [user],
-  )
+  const displayName = useUserDisplayName(user)
 
   useEventMarkers(events)
 

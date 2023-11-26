@@ -21,6 +21,7 @@ import Filter from './Filter'
 import { nip19 } from 'nostr-tools'
 import ProfileChip from './ProfileChip'
 import ProfileAvatar from './ProfileAvatar'
+import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
 
 interface FeedToolbarProps {
   feedType: FeedType
@@ -53,6 +54,9 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
     if (result.type !== 'npub') return
     return result.data
   }, [query?.npub])
+
+  const userProfile = useUserProfile(hexpubkey)
+  const displayName = useUserDisplayName(userProfile)
 
   return (
     <Paper
@@ -140,7 +144,7 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
                   avatar={
                     <ProfileAvatar hexpubkey={hexpubkey} avatarSize={24} />
                   }
-                  label={query.npub}
+                  label={displayName}
                   onDelete={() => router.push(pathname)}
                 />
               ) : undefined}

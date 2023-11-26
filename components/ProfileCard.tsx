@@ -1,4 +1,4 @@
-import { useUserProfile } from '@/hooks/useUserProfile'
+import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
 import {
   Avatar,
   Box,
@@ -40,14 +40,7 @@ export const ProfileCard = ({
   onClick?: (user?: NDKUser) => void
 }) => {
   const user = useUserProfile(hexpubkey)
-  const displayName = useMemo(
-    () =>
-      user?.profile?.displayName ||
-      user?.profile?.name ||
-      user?.profile?.username ||
-      user?.npub.substring(0, 12),
-    [user],
-  )
+  const displayName = useUserDisplayName(user)
 
   const clickable = useMemo(() => !!onClick, [onClick])
 
@@ -129,14 +122,7 @@ export const ProfileCardFull = ({
   const [loading, setLoading] = useState(false)
   const user = useUserProfile(hexpubkey)
   const [follows, follow, unfollow] = useFollowing()
-  const displayName = useMemo(
-    () =>
-      user?.profile?.displayName ||
-      user?.profile?.name ||
-      user?.profile?.username ||
-      user?.npub.substring(0, 12),
-    [user],
-  )
+  const displayName = useUserDisplayName(user)
   const itsYou = useMemo(
     () => account?.hexpubkey === hexpubkey,
     [account?.hexpubkey, hexpubkey],

@@ -9,7 +9,7 @@ import { useSubscribe } from '@/hooks/useSubscribe'
 import { unixNow } from '@/utils/time'
 import { ProfileCardFull } from './ProfileCard'
 import ProfileValidBadge from './ProfileValidBadge'
-import { useUserProfile } from '@/hooks/useUserProfile'
+import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
 
 const ProfileActionModal = () => {
   const { profileAction, backToPreviosModalAction, clearActions } =
@@ -35,14 +35,8 @@ const ProfileActionModal = () => {
 
   const [events, fetchMore] = useSubscribe(filter)
   const ref = useRef<HTMLDivElement>(null)
-  const displayName = useMemo(
-    () =>
-      user?.profile?.displayName ||
-      user?.profile?.name ||
-      user?.profile?.username ||
-      user?.npub.substring(0, 12),
-    [user],
-  )
+  const displayName = useUserDisplayName(user)
+
   return (
     <Box className="relative max-h-full flex rounded-2xl overflow-hidden p-0.5 bg-gradient-primary">
       <Paper className="relative w-full overflow-y-auto !rounded-2xl" ref={ref}>

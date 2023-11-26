@@ -29,7 +29,7 @@ import {
 import { useEventCache } from '@/hooks/useCache'
 import { Variant } from '@mui/material/styles/createTypography'
 import { PhotoProvider, PhotoView } from 'react-photo-view'
-import { useUserProfile } from '@/hooks/useUserProfile'
+import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
 import ReactPlayer from 'react-player/lazy'
 import { EmbedEventAddress } from './EmbedEventAddress'
 import classNames from 'classnames'
@@ -41,14 +41,7 @@ const nsfwTags = ['nsfw']
 export const UserMentionLink = ({ id }: { id: string }) => {
   const { setProfileAction } = useContext(AppContext)
   const user = useUserProfile(id)
-  const displayName = useMemo(
-    () =>
-      user?.profile?.displayName ||
-      user?.profile?.name ||
-      user?.profile?.username ||
-      user?.npub?.substring?.(0, 12),
-    [user],
-  )
+  const displayName = useUserDisplayName(user)
   const handleClickProfile = useCallback(() => {
     if (!user?.hexpubkey) return
     setProfileAction({

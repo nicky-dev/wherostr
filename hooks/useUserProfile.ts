@@ -79,6 +79,16 @@ export const useUserProfile = (hexpubkey?: string) => {
   return user
 }
 
+export const useUserDisplayName = (user?: NDKUser) => {
+  return useMemo(
+    () =>
+      user?.profile?.displayName ||
+      user?.profile?.name ||
+      user?.profile?.username ||
+      user?.npub.substring(0, 12),
+    [user],
+  )
+}
 export const profilePin = `<?xml version="1.0" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">

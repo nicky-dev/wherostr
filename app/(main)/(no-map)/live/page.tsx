@@ -17,7 +17,7 @@ import ReactTimeago from 'react-timeago'
 import { nip19 } from 'nostr-tools'
 import Link from 'next/link'
 import { WEEK, unixNow } from '@/utils/time'
-import { useUserProfile } from '@/hooks/useUserProfile'
+import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
 import { useStreamRelaySet } from '@/hooks/useNostr'
 import StatusBadge from '@/components/StatusBadge'
 import { ViewportList } from 'react-viewport-list'
@@ -162,6 +162,7 @@ const CardEvent: FC<{
     [ev.kind, ev.pubkey, id],
   )
   const user = useUserProfile(pubkey)
+  const displayName = useUserDisplayName(user)
   return (
     <Card>
       <CardMedia
@@ -200,12 +201,7 @@ const CardEvent: FC<{
         title={title}
         subheader={
           <Box component="span" display="flex" flexDirection="column">
-            <Typography variant="caption">
-              {user?.profile?.displayName ||
-                user?.profile?.name ||
-                user?.profile?.username ||
-                user?.npub?.substring(0, 12)}
-            </Typography>
+            <Typography variant="caption">{displayName}</Typography>
             <Typography variant="caption">
               {!isLive && 'Streamed '}
               <ReactTimeago date={new Date((isLive ? starts : ends) * 1000)} />

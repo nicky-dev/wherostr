@@ -1,6 +1,6 @@
 import { Box, Divider, IconButton, Paper, Typography } from '@mui/material'
 import { FC, useMemo, useRef } from 'react'
-import { useUserProfile } from '@/hooks/useUserProfile'
+import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
 import { ProfileCardFull } from './ProfileCard'
 import { NDKKind } from '@nostr-dev-kit/ndk'
 import { unixNow } from '@/utils/time'
@@ -31,14 +31,7 @@ export const NostrPubkeyComponent: FC<NostrPubkeyComponentProps> = ({
   const [events, fetchMore] = useSubscribe(filter)
 
   const user = useUserProfile(data)
-  const displayName = useMemo(
-    () =>
-      user?.profile?.displayName ||
-      user?.profile?.name ||
-      user?.profile?.username ||
-      user?.npub.substring(0, 12),
-    [user],
-  )
+  const displayName = useUserDisplayName(user)
 
   return (
     <>
