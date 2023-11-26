@@ -257,7 +257,7 @@ const SearchBox: React.FC<
         if (option.place_id === -1) {
           return (
             <React.Fragment key={option.place_id}>
-              <li {...props}>
+              <li {...props} key={option.place_id}>
                 <Grid container alignItems="center">
                   {/* <Grid item sx={{ display: 'flex', width: 44 }}>
                     <Note sx={{ color: 'text.secondary' }} />
@@ -283,7 +283,7 @@ const SearchBox: React.FC<
                   size={16}
                   sx={{ display: 'block', mx: 'auto' }}
                 />
-              ) : options.length === 1 ? (
+              ) : options.length <= 1 ? (
                 <Typography
                   variant="subtitle2"
                   color="text.secondary"
@@ -297,19 +297,14 @@ const SearchBox: React.FC<
           )
         }
 
+        const key =
+          option.place_id?.toString() + (option.name ? option.name : '')
         return (
-          <li {...props} key={option.place_id}>
+          <li {...props} key={key}>
             <Grid container alignItems="center">
-              {option.place_id === -2 ? (
-                <div />
-              ) : (
-                // <Grid item sx={{ display: 'flex', width: 44 }}>
-                //   <People sx={{ color: 'text.secondary' }} />
-                // </Grid>
-                <Grid item sx={{ display: 'flex', width: 44 }}>
-                  <LocationOnIcon sx={{ color: 'text.secondary' }} />
-                </Grid>
-              )}
+              <Grid item sx={{ display: 'flex', width: 44 }}>
+                <LocationOnIcon sx={{ color: 'text.secondary' }} />
+              </Grid>
               <Grid
                 item
                 sx={{ width: 'calc(100% - 44px)', wordWrap: 'break-word' }}

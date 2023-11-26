@@ -1,5 +1,4 @@
 'use client'
-import '@getalby/bitcoin-connect-react'
 import ProfileChip from '@/components/ProfileChip'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import {
@@ -10,7 +9,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { useCallback, useContext, useMemo, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { ElectricBolt } from '@mui/icons-material'
 import { AppContext } from '@/contexts/AppContext'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
@@ -28,6 +27,10 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
   const { register, handleSubmit, setValue, watch } = useForm()
   const [loading, setLoading] = useState(false)
   const _amountValue = watch('amount')
+
+  useEffect(() => {
+    import('@getalby/bitcoin-connect-react')
+  }, [])
 
   const maxWeight = useMemo(
     () =>

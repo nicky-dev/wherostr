@@ -1,15 +1,17 @@
 'use client'
 
 import EventActionModal from '@/components/EventActionModal'
-import FeedFilterMenu from '@/components/FeedFilterMenu'
+import { FeedToolbar } from '@/components/FeedToolbar'
 import MainPane from '@/components/MainPane'
 import { MapView } from '@/components/MapView'
 import ProfileActionModal from '@/components/ProfileActionModal'
 import { MapContextProvider } from '@/contexts/MapContext'
-import { useUser } from '@/hooks/useAccount'
 import { useAction } from '@/hooks/useApp'
+import { useFeedType } from '@/hooks/useFeedType'
+import { extractQuery } from '@/utils/extractQuery'
 import { Box } from '@mui/material'
 import { usePathname } from 'next/navigation'
+import { useMemo } from 'react'
 
 export default function RootLayout({
   children,
@@ -17,24 +19,24 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const user = useUser()
   const { eventAction, profileAction } = useAction()
-  const [, base, q] = pathname.split('/')
+  const [, base, type, searchType, searchValue] = pathname.split('/')
+  const q =
+    searchType && searchValue ? `${searchType}:${searchValue}` : undefined
+  const feedType = useFeedType(type)
+  const query = useMemo(() => extractQuery(q), [q])
 
+  console.log('query', query)
   return (
     <MapContextProvider>
       <MainPane fullWidth>
-        <Box className="absolute z-10 top-2 left-1/2 -translate-x-1/2">
-          <FeedFilterMenu
-            q={q}
-            pathname={`/${base}/`}
-            variant="contained"
-            user={user}
-            disableConversation
-            disableList
-          />
-        </Box>
-        <MapView className="fixed inset-0 top-[56px]" />
+        <MapView className="fixed inset-0 top-[112px]" />
+        <FeedToolbar
+          feedType={feedType}
+          pathname={`/map/`}
+          query={query}
+          filterMenuProps={{ disableConversation: true }}
+        />
         {children}
       </MainPane>
       {!!eventAction && (

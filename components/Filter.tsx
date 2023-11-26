@@ -7,6 +7,7 @@ import classNames from 'classnames'
 import { NDKUser } from '@nostr-dev-kit/ndk'
 
 export interface FilterProps extends BaseTextFieldProps {
+  pathname?: string
   q?: string
   className?: string
   user?: NDKUser
@@ -14,6 +15,7 @@ export interface FilterProps extends BaseTextFieldProps {
 }
 
 const Filter: FC<FilterProps> = ({
+  pathname = '/',
   q = '',
   className,
   user,
@@ -21,7 +23,6 @@ const Filter: FC<FilterProps> = ({
   ...props
 }) => {
   const router = useRouter()
-  const pathname = usePathname()
 
   return (
     <Paper
@@ -38,7 +39,7 @@ const Filter: FC<FilterProps> = ({
         onChange={(value?: string) => {
           const showMap =
             value?.startsWith('/g/') || value?.startsWith('/b/') ? 1 : ''
-          router.push(`/search/${value}?map=${showMap}`)
+          router.push(`${pathname}search/${value}?map=${showMap}`)
           ;(document.activeElement as HTMLElement)?.blur?.()
         }}
         onBlur={InputProps?.onBlur}

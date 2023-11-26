@@ -76,17 +76,17 @@ export const useEventMarkers = (events: NDKEvent[]) => {
           })
             .setLngLat([lng, lat])
             .addTo(map)
+          markers[feat.id] = marker
           marker.getElement().onclick = () =>
             mapClickHandler({ setEventAction, router }, feat.event)
-          const pin = await generatePin(feat?.properties.pubkey)
-          if (pin) {
-            marker.getElement().innerHTML = pin
-            marker.addClassName('cursor-pointer')
-            marker.setOffset([-2, 4])
-          }
-          //   marker.getElement().onclick = () =>
-          //     clickHandler(feat.event, pathRef.current)
-          markers[feat.id] = marker
+          try {
+            const pin = await generatePin(feat?.properties.pubkey)
+            if (pin) {
+              marker.getElement().innerHTML = pin
+              marker.addClassName('cursor-pointer')
+              marker.setOffset([-2, 4])
+            }
+          } catch {}
           return marker
         }),
     )

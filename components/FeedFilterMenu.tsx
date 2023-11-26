@@ -20,8 +20,9 @@ import {
 } from '@mui/icons-material'
 import { useFollowList } from '@/hooks/useAccount'
 
-interface FeedFilterMenuProps extends ButtonProps {
-  q?: string
+export type FeedType = 'following' | 'global' | 'conversation' | undefined
+export interface FeedFilterMenuProps extends ButtonProps {
+  feedType?: FeedType
   pathname?: string
   user?: NDKUser
   disableList?: boolean
@@ -73,7 +74,7 @@ const options: MenuItemProps[] = [
 ]
 
 export default function FeedFilterMenu({
-  q,
+  feedType,
   pathname = '/',
   user,
   disableList,
@@ -96,11 +97,9 @@ export default function FeedFilterMenu({
   const selectedMenu = React.useMemo(
     () =>
       options.find((item) => {
-        if (!q && user && item.id === 'following') return true
-        if (!q && !user && item.id === 'global') return true
-        if (q === item.id) return true
+        if (item.id === feedType) return true
       }),
-    [q, user],
+    [feedType],
   )
 
   return (
@@ -175,7 +174,7 @@ export default function FeedFilterMenu({
                 key={d.id}
                 onClick={() => handleMenuClick(d.id)}
                 LinkComponent={Link}
-                href={`/search${path}`}
+                href={`${pathname}search${path}`}
               >
                 <ListItemIcon>{icon}</ListItemIcon>
                 <ListItemText primary={d.name} />

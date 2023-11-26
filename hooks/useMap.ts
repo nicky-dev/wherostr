@@ -6,3 +6,8 @@ export const useMap = () => {
   const { map } = useContext(MapContext)
   return useMemo(() => map, [map])
 }
+
+export const useMapLoaded = () => {
+  const { mapLoaded } = useContext(MapContext)
+  return mapLoaded
+}

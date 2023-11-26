@@ -1,32 +1,23 @@
 'use client'
 import EventList from '@/components/EventList'
-import FeedFilterMenu from '@/components/FeedFilterMenu'
 import { FollowHashtagButton } from '@/components/FollowHashtagButton'
 import { useAccount, useFollowing } from '@/hooks/useAccount'
 import { useEvent } from '@/hooks/useEvent'
-import { useMap } from '@/hooks/useMap'
+import { useMap, useMapLoaded } from '@/hooks/useMap'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { extractQuery } from '@/utils/extractQuery'
 import { DAY, unixNow } from '@/utils/time'
-import { CropFree, List, LocationOn, Search, Tag } from '@mui/icons-material'
-import {
-  Box,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Paper,
-  Typography,
-} from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import { NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
 import bbox from '@turf/bbox'
 import bboxPolygon from '@turf/bbox-polygon'
 import buffer from '@turf/buffer'
 import Geohash from 'latlon-geohash'
 import { LngLat, LngLatBounds } from 'maplibre-gl'
-import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import Filter from './Filter'
+import { useEffect, useMemo, useRef } from 'react'
 import { useEventMarkers } from '@/hooks/useEventMakers'
+import { FeedToolbar } from './FeedToolbar'
+import { useFeedType } from '@/hooks/useFeedType'
 
 export default function Feed({
   q,
@@ -35,40 +26,27 @@ export default function Feed({
   q?: string
   pathname?: string
 }) {
-  const router = useRouter()
   const map = useMap()
+  const mapLoaded = useMapLoaded()
   const { user, signing } = useAccount()
   const [follows] = useFollowing()
-  const [mapLoaded, setMapLoaded] = useState(false)
-  const [showSearch, setShowSearch] = useState(false)
-  const queryRef = useRef(q)
-  queryRef.current = q
   const pathRef = useRef(pathname)
   pathRef.current = pathname
 
-  const handleClickShowSearch = useCallback(() => setShowSearch(true), [])
-  const handleBlurSearchBox = useCallback(() => setShowSearch(false), [])
+  const scrollRef = useRef<HTMLElement>(
+    typeof window !== 'undefined' ? window.document.body : null,
+  )
 
-  const feedType = useMemo(() => {
-    if (user) {
-      if (!q || q === 'following' || q === 'conversation') {
-        return 'following'
-      }
-    }
-    return 'global'
-  }, [user, q])
-
-  const showComments = useMemo(() => q === 'conversation', [q])
+  const feedType = useFeedType(q)
   const query = useMemo(() => extractQuery(q), [q])
+
+  const showComments = useMemo(() => feedType === 'conversation', [feedType])
+
   const [listEvent] = useEvent(query?.naddrDesc ? query.naddr : undefined)
   const loadingList = useMemo(
     () => query?.naddrDesc && !listEvent,
     [query?.naddrDesc, listEvent],
   )
-  const scrollRef = useRef<HTMLElement>(
-    typeof window !== 'undefined' ? window.document.body : null,
-  )
-
   const bounds = useMemo(() => {
     if (query?.geohash) {
       const { lat, lon } = Geohash.decode(query?.geohash)
@@ -117,7 +95,11 @@ export default function Feed({
       const tags = listEvent.getMatchingTags('p')
       return { authors: tags.map(([, pubkey]) => pubkey) }
     }
-    if (user?.pubkey && follows && feedType === 'following') {
+    if (
+      user?.pubkey &&
+      follows &&
+      (feedType === 'following' || feedType === 'conversation')
+    ) {
       return { authors: follows.map((d) => d.hexpubkey).concat([user?.pubkey]) }
     }
   }, [user?.pubkey, follows, listEvent, feedType])
@@ -151,38 +133,6 @@ export default function Feed({
     return data
   }, [bounds, filter, data])
 
-  // const clickHandler = (
-  //   ev: maplibregl.MapMouseEvent & {
-  //     features?: maplibregl.MapGeoJSONFeature[] | undefined
-  //   } & Object,
-  // ) => {
-  //   const { event } = ev?.features?.[0].properties || {}
-  //   if (!event) return
-  //   router.replace(pathRef.current || '/', {
-  //     scroll: false,
-  //   })
-  //   setEventAction({
-  //     type: EventActionType.View,
-  //     event,
-  //     options: {
-  //       comments: true,
-  //     },
-  //   })
-  // }
-
-  useEffect(() => {
-    if (!map) return
-    const handler = (evt: maplibregl.MapLibreEvent) => {
-      setMapLoaded(true)
-    }
-    map.on('style.load', handler)
-    // map.on('click', 'nostr-event', clickHandler)
-    return () => {
-      map.off('style.load', handler)
-      // map.off('click', clickHandler)
-    }
-  }, [map])
-
   useEffect(() => {
     if (!map || !mapLoaded) return
     try {
@@ -196,113 +146,7 @@ export default function Feed({
 
   return (
     <>
-      <Paper
-        className="flex gap-2 items-center px-3 py-2 justify-end sticky top-[58px] z-10"
-        square
-      >
-        {!showSearch && (
-          <Box className="absolute inset-0 flex items-center">
-            {!query ? (
-              <Box className="flex flex-1 justify-center">
-                <FeedFilterMenu
-                  user={user}
-                  variant="contained"
-                  q={q}
-                  pathname={pathname}
-                />
-              </Box>
-            ) : (
-              <Box mx="auto">
-                {query.tags?.map((d) => (
-                  <Chip
-                    icon={<Tag />}
-                    key={d}
-                    label={d}
-                    onDelete={() => router.push('/')}
-                  />
-                ))}
-                {query.bhash ? (
-                  <Chip
-                    icon={<CropFree />}
-                    key={query.bhash?.join(', ')}
-                    label={query.bhash?.join(', ')}
-                    onClick={() => {
-                      if (!query.bbox) return
-                      const polygon = buffer(bboxPolygon(query.bbox), 5, {
-                        units: 'kilometers',
-                      })
-                      const [x1, y1, x2, y2] = bbox(polygon)
-                      router.replace(`${pathname}?map=1`, {
-                        scroll: false,
-                      })
-                      setTimeout(() => {
-                        map?.fitBounds([x1, y1, x2, y2], {
-                          duration: 1000,
-                          maxZoom: 16,
-                        })
-                      }, 300)
-                    }}
-                    onDelete={() => router.push('/')}
-                  />
-                ) : undefined}
-                {query.geohash ? (
-                  <Chip
-                    icon={<LocationOn />}
-                    key={query.geohash}
-                    label={query.geohash}
-                    onClick={() => {
-                      if (!query.lnglat) return
-                      const [lng, lat] = query.lnglat
-                      const lnglat = new LngLat(lng, lat)
-                      router.replace(`${pathname}?map=1`, {
-                        scroll: false,
-                      })
-                      setTimeout(() => {
-                        map?.fitBounds(LngLatBounds.fromLngLat(lnglat, 1000), {
-                          duration: 1000,
-                          maxZoom: 16,
-                        })
-                      }, 300)
-                    }}
-                    onDelete={() => router.push('/')}
-                  />
-                ) : undefined}
-                {query.naddrDesc ? (
-                  <Chip
-                    icon={<List />}
-                    clickable={false}
-                    label={
-                      !loadingList ? (
-                        listEvent?.tagValue('title')
-                      ) : (
-                        <CircularProgress size={16} color="inherit" />
-                      )
-                    }
-                    onDelete={!loadingList ? () => router.push('/') : undefined}
-                  />
-                ) : undefined}
-              </Box>
-            )}
-          </Box>
-        )}
-        {showSearch ? (
-          <Filter
-            className="flex-1"
-            user={user}
-            InputProps={{
-              onBlur: handleBlurSearchBox,
-              autoFocus: true,
-            }}
-          />
-        ) : (
-          <IconButton
-            className="absolute right-0 flex items-center"
-            onClick={handleClickShowSearch}
-          >
-            <Search />
-          </IconButton>
-        )}
-      </Paper>
+      <FeedToolbar feedType={feedType} query={query} pathname={pathname} />
       {!!query?.tags?.[0] && (
         <Box className="flex gap-2 items-center px-3 py-2 justify-between">
           <Typography variant="h6">#{query.tags[0]}</Typography>
