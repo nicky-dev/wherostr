@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useAccount, useFollowing } from '@/hooks/useAccount'
 import { EventActionOptions, EventActionType } from '@/contexts/AppContext'
 import { useSubscribe } from '@/hooks/useSubscribe'
@@ -16,9 +16,12 @@ import buffer from '@turf/buffer'
 import bboxPolygon from '@turf/bbox-polygon'
 import bbox from '@turf/bbox'
 import { nip19 } from 'nostr-tools'
+import { useMap, useMapLoaded } from '@/hooks/useMap'
 
 const fullExtentGeohash = '0123456789bcdefghjkmnpqrstuvwxyz'.split('')
 export const MapController = ({ q }: { q?: string }) => {
+  const map = useMap()
+  const mapLoaded = useMapLoaded()
   const [follows] = useFollowing()
   const { user, signing } = useAccount()
 
@@ -101,7 +104,51 @@ export const MapController = ({ q }: { q?: string }) => {
 
   const [data] = useSubscribe(filter, true)
 
-  useEventMarkers(data)
+  const events = useMemo(() => {
+    if (!filter) return []
+    if (!bounds.isEmpty()) {
+      return data.filter((d) => {
+        const geohashes = d.getMatchingTags('g')
+        if (!geohashes.length) return
+        geohashes.sort((a, b) => b[1].length - a[1].length)
+        if (!geohashes[0]) return
+        const { lat, lon } = Geohash.decode(geohashes[0][1])
+        if (!bounds.contains({ lat, lon })) return
+        return true
+      })
+    }
+    return data
+  }, [bounds, filter, data])
+
+  const features = useEventMarkers(events)
+
+  const eventBounds = useMemo(() => {
+    const bounds = new LngLatBounds()
+    features.forEach((feat) => {
+      const [lng, lat] = feat?.geometry.coordinates || []
+      bounds.extend(new LngLat(lng, lat))
+    })
+    return bounds
+  }, [features])
+
+  useEffect(() => {
+    if (!map || !mapLoaded) return
+    try {
+      if (!bounds.isEmpty()) {
+        map.fitBounds(bounds, {
+          duration: 1000,
+          maxZoom: 15,
+          padding: { top: 32, left: 32, bottom: 32, right: 32 },
+        })
+      } else if (!eventBounds.isEmpty()) {
+        map.fitBounds(eventBounds, {
+          duration: 1000,
+          maxZoom: 15,
+          padding: { top: 32, left: 32, bottom: 32, right: 32 },
+        })
+      }
+    } catch (err) {}
+  }, [map, mapLoaded, bounds, eventBounds])
 
   return null
 }

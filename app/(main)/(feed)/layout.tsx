@@ -25,7 +25,6 @@ export default function RootLayout({
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const hasMap = searchParams.get('map') === '1'
-  const q = searchParams.get('q') || ''
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
   const mdDown = useMediaQuery(theme.breakpoints.down('md'))
   const showOnlyMap = useMemo(() => mdDown && hasMap, [mdDown, hasMap])

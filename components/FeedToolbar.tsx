@@ -3,15 +3,8 @@ import { FC, useCallback, useMemo, useState } from 'react'
 import FeedFilterMenu, { FeedFilterMenuProps, FeedType } from './FeedFilterMenu'
 import { ExtractQueryResult } from '@/utils/extractQuery'
 import { useFollowList, useUser } from '@/hooks/useAccount'
-import {
-  CropFree,
-  List,
-  LocationOn,
-  Person,
-  Search,
-  Tag,
-} from '@mui/icons-material'
-import { useRouter } from 'next/navigation'
+import { CropFree, List, LocationOn, Search, Tag } from '@mui/icons-material'
+import { usePathname, useRouter } from 'next/navigation'
 import buffer from '@turf/buffer'
 import bboxPolygon from '@turf/bbox-polygon'
 import bbox from '@turf/bbox'
@@ -19,7 +12,6 @@ import { useMap } from '@/hooks/useMap'
 import { LngLat, LngLatBounds } from 'maplibre-gl'
 import Filter from './Filter'
 import { nip19 } from 'nostr-tools'
-import ProfileChip from './ProfileChip'
 import ProfileAvatar from './ProfileAvatar'
 import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
 
@@ -32,7 +24,7 @@ interface FeedToolbarProps {
 export const FeedToolbar: FC<FeedToolbarProps> = ({
   feedType,
   query,
-  pathname = '/',
+  pathname: basePath = '/',
   filterMenuProps,
 }) => {
   const user = useUser()
@@ -58,6 +50,12 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
   const userProfile = useUserProfile(hexpubkey)
   const displayName = useUserDisplayName(userProfile)
 
+  const pathname = usePathname()
+
+  const back = useMemo(
+    () => pathname.split('/').slice(0, -4).join('/') || '/',
+    [pathname],
+  )
   return (
     <Paper
       className="flex gap-2 items-center px-3 py-2 justify-end sticky top-[58px] z-10"
@@ -82,7 +80,7 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
                   icon={<Tag />}
                   key={d}
                   label={d}
-                  onDelete={() => router.push('/')}
+                  onDelete={() => router.push(back)}
                 />
               ))}
               {query?.bhash ? (
@@ -106,7 +104,7 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
                       })
                     }, 300)
                   }}
-                  onDelete={() => router.push('/')}
+                  onDelete={() => router.push(back)}
                 />
               ) : undefined}
               {query?.geohash ? (
@@ -128,7 +126,7 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
                       })
                     }, 300)
                   }}
-                  onDelete={() => router.push(pathname)}
+                  onDelete={() => router.push(back)}
                 />
               ) : undefined}
               {query?.naddr ? (
@@ -136,7 +134,7 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
                   icon={<List />}
                   clickable={false}
                   label={listTitle || 'Unknown'}
-                  onDelete={() => router.push(pathname)}
+                  onDelete={() => router.push(back)}
                 />
               ) : undefined}
               {hexpubkey ? (
@@ -145,7 +143,7 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
                     <ProfileAvatar hexpubkey={hexpubkey} avatarSize={24} />
                   }
                   label={displayName}
-                  onDelete={() => router.push(pathname)}
+                  onDelete={() => router.push(back)}
                 />
               ) : undefined}
             </Box>
@@ -155,7 +153,7 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
       {showSearch ? (
         <Filter
           className="flex-1"
-          pathname={pathname}
+          pathname={basePath}
           user={user}
           InputProps={{
             onBlur: handleBlurSearchBox,

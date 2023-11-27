@@ -32,7 +32,7 @@ export default function RootLayout({
         <MapView className="fixed inset-0 top-[112px]" />
         <FeedToolbar
           feedType={feedType}
-          pathname={`/map/`}
+          pathname={`/${base}/`}
           query={query}
           filterMenuProps={{ disableConversation: true }}
         />
