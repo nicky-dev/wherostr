@@ -1,28 +1,25 @@
 'use client'
 
-import { useParams, usePathname, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { useMemo, useRef } from 'react'
 import { nip19 } from 'nostr-tools'
 import { unixNow } from '@/utils/time'
 import { NDKKind } from '@nostr-dev-kit/ndk'
 import { useSubscribe } from '@/hooks/useSubscribe'
-import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
-import { Box, Divider, IconButton, Paper, Typography } from '@mui/material'
+import { Divider, Paper } from '@mui/material'
 import { ProfileCardFull } from '@/components/ProfileCard'
 import EventList from '@/components/EventList'
-import ProfileValidBadge from '@/components/ProfileValidBadge'
-import { ArrowBackOutlined } from '@mui/icons-material'
 import { useEventMarkers } from '@/hooks/useEventMakers'
+import { FeedToolbar } from '@/components/FeedToolbar'
 
 export default function Page() {
-  const router = useRouter()
   const { value } = useParams()
   const scrollRef = useRef<HTMLElement>(
     typeof window !== 'undefined' ? window.document.body : null,
   )
+  const query = useMemo(() => ({ npub: value.toString() }), [value])
   const hexpubkey = useMemo(() => {
-    if (typeof value !== 'string') return
-    const result = nip19.decode(value)
+    const result = nip19.decode(query.npub)
     if (result.type === 'nprofile') {
       return result.data.pubkey
     }
@@ -30,7 +27,7 @@ export default function Page() {
       return result.data
     }
     return
-  }, [value])
+  }, [query])
 
   const filter = useMemo(() => {
     if (!hexpubkey) return
@@ -44,29 +41,12 @@ export default function Page() {
 
   const [events, fetchMore] = useSubscribe(filter)
 
-  const user = useUserProfile(hexpubkey)
-  const displayName = useUserDisplayName(user)
-
   useEventMarkers(events)
 
   return (
     <>
       <Paper className="sticky top-0 z-10" square>
-        <Box className="flex items-center p-3 shadow gap-2">
-          <IconButton size="small" onClick={() => router.back()}>
-            <ArrowBackOutlined />
-          </IconButton>
-          <Box className="flex-1 flex items-center">
-            <Typography
-              className="overflow-hidden whitespace-nowrap text-ellipsis"
-              variant="h6"
-            >
-              {displayName}
-            </Typography>
-            <ProfileValidBadge className="ml-2" user={user} />
-          </Box>
-        </Box>
-        <Divider />
+        <FeedToolbar query={query} />
       </Paper>
       <ProfileCardFull hexpubkey={hexpubkey} />
       <Divider />

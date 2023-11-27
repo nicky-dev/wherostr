@@ -79,9 +79,9 @@ const SearchBox: React.FC<
       setOptions([])
       const result = nip19.decode(inputValue)
       if (result.type === 'npub' || result.type === 'nprofile') {
-        onChange?.(`/search/p/${inputValue}`)
+        onChange?.(`search/p/${inputValue}`)
       } else {
-        onChange?.(`/${inputValue}`)
+        onChange?.(`${inputValue}`)
       }
       return
     }
@@ -165,21 +165,21 @@ const SearchBox: React.FC<
     (event: any, newValue: Partial<OSMSearchResult> | null) => {
       setInputText('')
       if (newValue?.place_id === -1) {
-        onChange?.(`/search/t/${newValue.name}`)
+        onChange?.(`search/t/${newValue.name}`)
       } else if (newValue?.place_id === -2) {
-        onChange?.(`/search/p/${newValue.name}`)
+        onChange?.(`search/p/${newValue.name}`)
       } else if (newValue?.boundingbox) {
         const [y1, y2, x1, x2] = newValue.boundingbox.map((b: string) =>
           Number(b),
         )
-        const bbhash = `/search/b/${Geohash.encode(
-          y1,
-          x1,
+        const bbhash = `search/b/${Geohash.encode(y1, x1, 10)},${Geohash.encode(
+          y2,
+          x2,
           10,
-        )},${Geohash.encode(y2, x2, 10)}`
+        )}`
         onChange?.(bbhash)
       } else if (newValue?.lat && newValue?.lon) {
-        const ghash = `/search/g/${Geohash.encode(
+        const ghash = `search/g/${Geohash.encode(
           Number(newValue?.lat),
           Number(newValue?.lon),
           10,
@@ -197,10 +197,13 @@ const SearchBox: React.FC<
       getOptionLabel={(option) => {
         return typeof option === 'string' ? option : option.display_name!
       }}
+      openOnFocus
       options={options}
       disablePortal
       inputValue={inputText}
-      noOptionsText={placeholder}
+      noOptionsText={
+        'Search notes by hashtag, place, people with "@<name>", or npub/naddr/note1'
+      }
       selectOnFocus
       handleHomeEndKeys={false}
       popupIcon={<Search />}
@@ -232,7 +235,7 @@ const SearchBox: React.FC<
           margin="dense"
           size="small"
           fullWidth
-          placeholder={placeholder}
+          placeholder={`Search notes, people, npub/naddr/note1`}
           InputProps={{
             autoComplete: 'off',
             ...params.InputProps,

@@ -16,7 +16,7 @@ import ProfileAvatar from './ProfileAvatar'
 import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
 
 interface FeedToolbarProps {
-  feedType: FeedType
+  feedType?: FeedType
   query?: ExtractQueryResult
   pathname?: string
   filterMenuProps?: FeedFilterMenuProps
@@ -86,7 +86,7 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
                   user={user}
                   variant="contained"
                   feedType={feedType}
-                  pathname={pathname}
+                  pathname={basePath}
                 />
               </Box>
             ) : (

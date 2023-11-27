@@ -1,7 +1,7 @@
 'use client'
 import { BaseTextFieldProps, TextFieldProps, Paper } from '@mui/material'
 import { FC } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import SearchBox from './SearchBox'
 import classNames from 'classnames'
 import { NDKUser } from '@nostr-dev-kit/ndk'
@@ -32,14 +32,13 @@ const Filter: FC<FilterProps> = ({
       )}
     >
       <SearchBox
-        placeholder={`Search notes by hashtag or place, or search for people using '@<name>'`}
         name="search"
         size="small"
         margin="dense"
         onChange={(value?: string) => {
           const showMap =
             value?.startsWith('/g/') || value?.startsWith('/b/') ? 1 : ''
-          router.push(`${pathname}${value}?map=${showMap}`)
+          router.push(`${pathname}${value}${showMap ? '?map=1' : ''}`)
           ;(document.activeElement as HTMLElement)?.blur?.()
         }}
         onBlur={InputProps?.onBlur}
