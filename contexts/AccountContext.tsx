@@ -292,7 +292,9 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
         })
         return
       }
-    } catch (err) {}
+    } finally {
+      setSigning(false)
+    }
   }, [signIn])
 
   useEffect(() => {
