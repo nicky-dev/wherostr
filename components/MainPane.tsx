@@ -1,10 +1,6 @@
 import { FC, PropsWithChildren, ReactNode } from 'react'
 import { Box, IconButton, Paper, Typography } from '@mui/material'
-import {
-  // EmailOutlined,
-  HomeOutlined,
-  NotificationsOutlined,
-} from '@mui/icons-material'
+import { HomeOutlined, NotificationsOutlined } from '@mui/icons-material'
 import UserBar from './UserBar'
 import classNames from 'classnames'
 import { useUser } from '@/hooks/useAccount'
@@ -13,10 +9,11 @@ import ProfileChip from './ProfileChip'
 import Link from 'next/link'
 import Image from 'next/image'
 
-const NavigationBar: FC<PropsWithChildren & { className?: string }> = ({
-  className,
-  children,
-}) => {
+const NavigationBar: FC<{
+  className?: string
+  startTools?: ReactNode
+  endTools?: ReactNode
+}> = ({ className, startTools, endTools }) => {
   const user = useUser()
   return (
     <Box className={classNames('flex items-center gap-2 px-3 py-2', className)}>
@@ -26,20 +23,18 @@ const NavigationBar: FC<PropsWithChildren & { className?: string }> = ({
         Wherostr
       </Typography>
       <Box className="flex-1 flex gap-2 justify-end items-center">
-        {children}
+        {startTools}
         <IconButton LinkComponent={Link} href="/">
           <HomeOutlined />
         </IconButton>
+        {!!user?.hexpubkey && (
+          <IconButton LinkComponent={Link} href="/notifications">
+            <NotificationsOutlined />
+          </IconButton>
+        )}
+        {endTools}
         {user?.hexpubkey ? (
-          <>
-            <IconButton LinkComponent={Link} href="/notifications">
-              <NotificationsOutlined />
-            </IconButton>
-            {/* <IconButton>
-              <EmailOutlined />
-            </IconButton> */}
-            <ProfileChip showName={false} hexpubkey={user.hexpubkey} />
-          </>
+          <ProfileChip showName={false} hexpubkey={user.hexpubkey} />
         ) : (
           <UserBar />
         )}
@@ -52,9 +47,10 @@ const MainPane: FC<
   PropsWithChildren & {
     className?: string
     fullWidth?: boolean
-    toolbar?: ReactNode
+    startTools?: ReactNode
+    endTools?: ReactNode
   }
-> = ({ className, fullWidth, children, toolbar }) => {
+> = ({ className, fullWidth, children, startTools, endTools }) => {
   return (
     <Paper
       className={classNames(
@@ -65,7 +61,7 @@ const MainPane: FC<
       square
     >
       <Paper className="!sticky top-0 z-10">
-        <NavigationBar>{toolbar}</NavigationBar>
+        <NavigationBar startTools={startTools} endTools={endTools} />
         <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
       </Paper>
       {children}

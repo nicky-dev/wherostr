@@ -8,8 +8,12 @@ import ProfileActionModal from '@/components/ProfileActionModal'
 import { useParams, usePathname } from 'next/navigation'
 import { nip19 } from 'nostr-tools'
 import { useMemo } from 'react'
+import { StreamButton } from '@/components/StreamButton'
+import { Sensors } from '@mui/icons-material'
+import { useAccount } from '@/hooks/useAccount'
 
 export default function Page({ children }: { children: React.ReactNode }) {
+  const { readOnly } = useAccount()
   const { eventAction, profileAction } = useAction()
   const pathname = usePathname()
   const { id } = useParams()
@@ -37,7 +41,16 @@ export default function Page({ children }: { children: React.ReactNode }) {
 
   return (
     <Box className="relative mx:0 md:mx-auto overflow-visible h-full w-full">
-      <MainPane {...mainPaneProps}>{children}</MainPane>
+      <MainPane
+        {...mainPaneProps}
+        endTools={
+          !readOnly && pathname.startsWith('/live') ? (
+            <StreamButton label="Stream" icon={<Sensors />} />
+          ) : undefined
+        }
+      >
+        {children}
+      </MainPane>
       {eventAction ? (
         <Box
           className={classNames(
