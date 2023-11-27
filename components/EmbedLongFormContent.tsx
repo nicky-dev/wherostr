@@ -15,7 +15,7 @@ import { useMemo, useState } from 'react'
 import { useEvent } from '@/hooks/useEvent'
 import ReactTimeago from 'react-timeago'
 import ProfileChip from './ProfileChip'
-import { PlayCircleOutline } from '@mui/icons-material'
+import { ArrowDropDown, PlayCircleOutline } from '@mui/icons-material'
 export const EmbedLongFormContent = ({ naddr }: { naddr: string }) => {
   const [event, error, state] = useEvent(naddr)
   const pubkey = useMemo(() => event?.pubkey, [event])
@@ -71,8 +71,9 @@ export const EmbedLongFormContent = ({ naddr }: { naddr: string }) => {
                 sx={{ fontWeight: 'bold' }}
                 startIcon={<PlayCircleOutline />}
                 onClick={handleClick}
+                endIcon={<ArrowDropDown />}
               >
-                Read on...
+                Read on
               </Button>
               <Menu
                 MenuListProps={{
