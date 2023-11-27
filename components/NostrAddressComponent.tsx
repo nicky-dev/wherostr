@@ -1,11 +1,12 @@
-import { Box, LinearProgress, Typography } from '@mui/material'
+import { LinearProgress, Typography } from '@mui/material'
 import { FC, useMemo } from 'react'
 import LiveActivity from './LiveActivity'
-import { NDKFilter } from '@nostr-dev-kit/ndk'
+import { NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
 import { nip19 } from 'nostr-tools'
 import { useStreamRelaySet } from '@/hooks/useNostr'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { DAY, unixNow } from '@/utils/time'
+import { EmbedLongFormContent } from './EmbedLongFormContent'
 
 export interface NostrAddressComponentProps {
   data: nip19.AddressPointer
@@ -35,10 +36,13 @@ export const NostrAddressComponent: FC<NostrAddressComponentProps> = ({
   if (event?.kind === 30311) {
     return <LiveActivity naddr={naddr} event={event} />
   }
+  if (event?.kind === NDKKind.Article) {
+    return <EmbedLongFormContent naddr={naddr} />
+  }
 
   return (
     <Typography component="pre" variant="caption">
-      {JSON.stringify(event || {}, null, 4)}
+      {JSON.stringify(event.rawEvent() || {}, null, 4)}
     </Typography>
   )
 }
