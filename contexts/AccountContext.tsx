@@ -281,7 +281,6 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const initUser = useCallback(async () => {
     try {
       const session = getSession()
-      setSigning(true)
       if (session?.pubkey && session.type) {
         await new Promise((resolve) => {
           setTimeout(() => {
@@ -293,10 +292,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
         })
         return
       }
-    } catch (err) {
-    } finally {
-      setSigning(false)
-    }
+    } catch (err) {}
   }, [signIn])
 
   useEffect(() => {

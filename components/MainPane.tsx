@@ -1,4 +1,4 @@
-import { FC, PropsWithChildren } from 'react'
+import { FC, PropsWithChildren, ReactNode } from 'react'
 import { Box, IconButton, Paper, Typography } from '@mui/material'
 import {
   // EmailOutlined,
@@ -13,7 +13,10 @@ import ProfileChip from './ProfileChip'
 import Link from 'next/link'
 import Image from 'next/image'
 
-const NavigationBar: FC<{ className?: string }> = ({ className }) => {
+const NavigationBar: FC<PropsWithChildren & { className?: string }> = ({
+  className,
+  children,
+}) => {
   const user = useUser()
   return (
     <Box className={classNames('flex items-center gap-2 px-3 py-2', className)}>
@@ -23,6 +26,7 @@ const NavigationBar: FC<{ className?: string }> = ({ className }) => {
         Wherostr
       </Typography>
       <Box className="flex-1 flex gap-2 justify-end items-center">
+        {children}
         <IconButton LinkComponent={Link} href="/">
           <HomeOutlined />
         </IconButton>
@@ -45,8 +49,12 @@ const NavigationBar: FC<{ className?: string }> = ({ className }) => {
 }
 
 const MainPane: FC<
-  PropsWithChildren & { className?: string; fullWidth?: boolean }
-> = ({ className, fullWidth, children }) => {
+  PropsWithChildren & {
+    className?: string
+    fullWidth?: boolean
+    toolbar?: ReactNode
+  }
+> = ({ className, fullWidth, children, toolbar }) => {
   return (
     <Paper
       className={classNames(
@@ -57,7 +65,7 @@ const MainPane: FC<
       square
     >
       <Paper className="!sticky top-0 z-10">
-        <NavigationBar />
+        <NavigationBar>{toolbar}</NavigationBar>
         <Box className="w-full h-0.5 shrink-0 bg-gradient-primary" />
       </Paper>
       {children}

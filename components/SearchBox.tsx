@@ -7,12 +7,13 @@ import Typography from '@mui/material/Typography'
 import { debounce } from '@mui/material/utils'
 import { OSMSearchResult, search } from '@/services/osm'
 import Geohash from 'latlon-geohash'
-import { Box, CircularProgress, Divider } from '@mui/material'
+import { CircularProgress, Divider } from '@mui/material'
 import { Search } from '@mui/icons-material'
 import { useProfilesCache } from '@/hooks/useUserProfile'
 import Fuse from 'fuse.js'
 import ProfileChip from './ProfileChip'
 import { NostrPrefix, createNostrLink } from '@snort/system'
+import { nip19 } from 'nostr-tools'
 
 interface MainTextMatchedSubstrings {
   offset: number
@@ -74,6 +75,17 @@ const SearchBox: React.FC<
       return undefined
     }
 
+    if (nip19.BECH32_REGEX.test(inputValue)) {
+      setOptions([])
+      const result = nip19.decode(inputValue)
+      if (result.type === 'npub' || result.type === 'nprofile') {
+        onChange?.(`/search/p/${inputValue}`)
+      } else {
+        onChange?.(`/${inputValue}`)
+      }
+      return
+    }
+
     if (inputValue.startsWith('@')) {
       setOptions([])
       const text = inputValue.slice(1)
@@ -88,7 +100,7 @@ const SearchBox: React.FC<
               ).encode()
               return {
                 place_id: -2,
-                name: '/p/' + name,
+                name,
                 display_name: item.item.displayName,
                 hexpubkey: item.item.hexpubkey,
               }
@@ -100,7 +112,7 @@ const SearchBox: React.FC<
             ).encode()
             return {
               place_id: -2,
-              name: '/p/' + name,
+              name,
               display_name: item.displayName,
               hexpubkey: item.hexpubkey,
             }
@@ -110,30 +122,16 @@ const SearchBox: React.FC<
     }
     const searchHashTagOptions = {
       place_id: -1,
-      name:
-        '/t/' +
-        inputValue
-          .split(' ')
-          .filter((d) => !!d.trim())
-          .map((d) => `${d.trim().toLowerCase()}`)
-          .join(','),
+      name: inputValue
+        .split(' ')
+        .filter((d) => !!d.trim())
+        .map((d) => `${d.trim().toLowerCase()}`)
+        .join(','),
       display_name: `Search notes: ${inputValue
         .split(' ')
         .filter((d) => !!d.trim())
         .map((d) => `#${d.trim()}`)
         .join(', ')}`,
-    }
-
-    const searchPeopleOptions = {
-      place_id: -2,
-      name:
-        '/p/' +
-        inputValue
-          .split(' ')
-          .filter((d) => !!d.trim())
-          .map((d) => `${d.trim()}`)
-          .join(','),
-      display_name: `Search people: ${inputValue.trim()}`,
     }
 
     setOptions([searchHashTagOptions])
@@ -161,25 +159,27 @@ const SearchBox: React.FC<
       active = false
       setLoading(false)
     }
-  }, [inputValue, fetch, fuse, profiles])
+  }, [inputValue, fetch, fuse, profiles, onChange])
 
   const handleSelectValue = React.useCallback(
     (event: any, newValue: Partial<OSMSearchResult> | null) => {
       setInputText('')
-      if (newValue?.place_id === -1 || newValue?.place_id === -2) {
-        onChange?.(newValue.name)
+      if (newValue?.place_id === -1) {
+        onChange?.(`/search/t/${newValue.name}`)
+      } else if (newValue?.place_id === -2) {
+        onChange?.(`/search/p/${newValue.name}`)
       } else if (newValue?.boundingbox) {
         const [y1, y2, x1, x2] = newValue.boundingbox.map((b: string) =>
           Number(b),
         )
-        const bbhash = `/b/${Geohash.encode(y1, x1, 10)},${Geohash.encode(
-          y2,
-          x2,
+        const bbhash = `/search/b/${Geohash.encode(
+          y1,
+          x1,
           10,
-        )}`
+        )},${Geohash.encode(y2, x2, 10)}`
         onChange?.(bbhash)
       } else if (newValue?.lat && newValue?.lon) {
-        const ghash = `/g/${Geohash.encode(
+        const ghash = `/search/g/${Geohash.encode(
           Number(newValue?.lat),
           Number(newValue?.lon),
           10,

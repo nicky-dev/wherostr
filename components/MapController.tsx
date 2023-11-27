@@ -102,7 +102,7 @@ export const MapController = ({ q }: { q?: string }) => {
     } as NDKFilter
   }, [signing, g, tags, authors, loadingList])
 
-  const [data] = useSubscribe(filter, true)
+  const [data] = useSubscribe(filter)
 
   const events = useMemo(() => {
     if (!filter) return []
@@ -134,17 +134,24 @@ export const MapController = ({ q }: { q?: string }) => {
   useEffect(() => {
     if (!map || !mapLoaded) return
     try {
+      const padsize = 64
+      const padding = {
+        top: padsize,
+        left: padsize,
+        bottom: padsize,
+        right: padsize,
+      }
       if (!bounds.isEmpty()) {
         map.fitBounds(bounds, {
           duration: 1000,
           maxZoom: 15,
-          padding: { top: 32, left: 32, bottom: 32, right: 32 },
+          padding,
         })
       } else if (!eventBounds.isEmpty()) {
         map.fitBounds(eventBounds, {
           duration: 1000,
           maxZoom: 15,
-          padding: { top: 32, left: 32, bottom: 32, right: 32 },
+          padding,
         })
       }
     } catch (err) {}

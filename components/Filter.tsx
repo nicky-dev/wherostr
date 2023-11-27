@@ -39,7 +39,7 @@ const Filter: FC<FilterProps> = ({
         onChange={(value?: string) => {
           const showMap =
             value?.startsWith('/g/') || value?.startsWith('/b/') ? 1 : ''
-          router.push(`${pathname}search/${value}?map=${showMap}`)
+          router.push(`${pathname}${value}?map=${showMap}`)
           ;(document.activeElement as HTMLElement)?.blur?.()
         }}
         onBlur={InputProps?.onBlur}

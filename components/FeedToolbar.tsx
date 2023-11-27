@@ -43,8 +43,11 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
   const hexpubkey = useMemo(() => {
     if (!query?.npub) return
     const result = nip19.decode(query?.npub)
-    if (result.type !== 'npub') return
-    return result.data
+    if (result.type === 'npub') {
+      return result.data
+    } else if (result.type === 'nprofile') {
+      return result.data.pubkey
+    }
   }, [query?.npub])
 
   const userProfile = useUserProfile(hexpubkey)
@@ -61,95 +64,6 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
       className="flex gap-2 items-center px-3 py-2 justify-end sticky top-[58px] z-10"
       square
     >
-      {!showSearch && (
-        <Box className="absolute inset-0 flex items-center">
-          {!query ? (
-            <Box className="flex flex-1 justify-center">
-              <FeedFilterMenu
-                {...filterMenuProps}
-                user={user}
-                variant="contained"
-                feedType={feedType}
-                pathname={pathname}
-              />
-            </Box>
-          ) : (
-            <Box mx="auto">
-              {query?.tags?.map((d) => (
-                <Chip
-                  icon={<Tag />}
-                  key={d}
-                  label={d}
-                  onDelete={() => router.push(back)}
-                />
-              ))}
-              {query?.bhash ? (
-                <Chip
-                  icon={<CropFree />}
-                  key={query.bhash?.join(', ')}
-                  label={query.bhash?.join(', ')}
-                  onClick={() => {
-                    if (!query.bbox) return
-                    const polygon = buffer(bboxPolygon(query.bbox), 5, {
-                      units: 'kilometers',
-                    })
-                    const [x1, y1, x2, y2] = bbox(polygon)
-                    router.replace(`${pathname}?map=1`, {
-                      scroll: false,
-                    })
-                    setTimeout(() => {
-                      map?.fitBounds([x1, y1, x2, y2], {
-                        duration: 1000,
-                        maxZoom: 16,
-                      })
-                    }, 300)
-                  }}
-                  onDelete={() => router.push(back)}
-                />
-              ) : undefined}
-              {query?.geohash ? (
-                <Chip
-                  icon={<LocationOn />}
-                  key={query.geohash}
-                  label={query.geohash}
-                  onClick={() => {
-                    if (!query.lnglat) return
-                    const [lng, lat] = query.lnglat
-                    const lnglat = new LngLat(lng, lat)
-                    router.replace(`${pathname}?map=1`, {
-                      scroll: false,
-                    })
-                    setTimeout(() => {
-                      map?.fitBounds(LngLatBounds.fromLngLat(lnglat, 1000), {
-                        duration: 1000,
-                        maxZoom: 16,
-                      })
-                    }, 300)
-                  }}
-                  onDelete={() => router.push(back)}
-                />
-              ) : undefined}
-              {query?.naddr ? (
-                <Chip
-                  icon={<List />}
-                  clickable={false}
-                  label={listTitle || 'Unknown'}
-                  onDelete={() => router.push(back)}
-                />
-              ) : undefined}
-              {hexpubkey ? (
-                <Chip
-                  avatar={
-                    <ProfileAvatar hexpubkey={hexpubkey} avatarSize={24} />
-                  }
-                  label={displayName}
-                  onDelete={() => router.push(back)}
-                />
-              ) : undefined}
-            </Box>
-          )}
-        </Box>
-      )}
       {showSearch ? (
         <Filter
           className="flex-1"
@@ -161,12 +75,101 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
           }}
         />
       ) : (
-        <IconButton
-          className="absolute right-0 flex items-center"
-          onClick={handleClickShowSearch}
-        >
-          <Search />
-        </IconButton>
+        <>
+          <Box className="absolute inset-0 flex items-center">
+            {!query ? (
+              <Box className="flex flex-1 justify-center">
+                <FeedFilterMenu
+                  {...filterMenuProps}
+                  user={user}
+                  variant="contained"
+                  feedType={feedType}
+                  pathname={pathname}
+                />
+              </Box>
+            ) : (
+              <Box mx="auto">
+                {query?.tags?.map((d) => (
+                  <Chip
+                    icon={<Tag />}
+                    key={d}
+                    label={d}
+                    onDelete={() => router.push(back)}
+                  />
+                ))}
+                {query?.bhash ? (
+                  <Chip
+                    icon={<CropFree />}
+                    key={query.bhash?.join(', ')}
+                    label={query.bhash?.join(', ')}
+                    onClick={() => {
+                      if (!query.bbox) return
+                      const polygon = buffer(bboxPolygon(query.bbox), 5, {
+                        units: 'kilometers',
+                      })
+                      const [x1, y1, x2, y2] = bbox(polygon)
+                      router.replace(`${pathname}?map=1`, {
+                        scroll: false,
+                      })
+                      setTimeout(() => {
+                        map?.fitBounds([x1, y1, x2, y2], {
+                          duration: 1000,
+                          maxZoom: 16,
+                        })
+                      }, 500)
+                    }}
+                    onDelete={() => router.push(back)}
+                  />
+                ) : undefined}
+                {query?.geohash ? (
+                  <Chip
+                    icon={<LocationOn />}
+                    key={query.geohash}
+                    label={query.geohash}
+                    onClick={() => {
+                      if (!query.lnglat) return
+                      const [lng, lat] = query.lnglat
+                      const lnglat = new LngLat(lng, lat)
+                      router.replace(`${pathname}?map=1`, {
+                        scroll: false,
+                      })
+                      setTimeout(() => {
+                        map?.fitBounds(LngLatBounds.fromLngLat(lnglat, 1000), {
+                          duration: 1000,
+                          maxZoom: 16,
+                        })
+                      }, 500)
+                    }}
+                    onDelete={() => router.push(back)}
+                  />
+                ) : undefined}
+                {query?.naddr ? (
+                  <Chip
+                    icon={<List />}
+                    clickable={false}
+                    label={listTitle || 'Unknown'}
+                    onDelete={() => router.push(back)}
+                  />
+                ) : undefined}
+                {hexpubkey ? (
+                  <Chip
+                    avatar={
+                      <ProfileAvatar hexpubkey={hexpubkey} avatarSize={24} />
+                    }
+                    label={displayName}
+                    onDelete={() => router.push(back)}
+                  />
+                ) : undefined}
+              </Box>
+            )}
+          </Box>
+          <IconButton
+            className="absolute right-0 flex items-center"
+            onClick={handleClickShowSearch}
+          >
+            <Search />
+          </IconButton>
+        </>
       )}
     </Paper>
   )
