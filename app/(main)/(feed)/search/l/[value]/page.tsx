@@ -7,5 +7,5 @@ export default function Page() {
   const { value } = useParams()
   const pathname = usePathname()
 
-  return <Feed q={`e:${value}`} pathname={pathname} />
+  return <Feed q={`l:${value}`} pathname={pathname} />
 }

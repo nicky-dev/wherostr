@@ -37,8 +37,10 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
   const handleBlurSearchBox = useCallback(() => setShowSearch(false), [])
 
   const listTitle = useMemo(() => {
-    return followLists.find((v) => v.value === query?.naddr)?.name
-  }, [followLists, query?.naddr])
+    return followLists.find((v) => {
+      return v.id === query?.naddrDesc?.identifier
+    })?.name
+  }, [followLists, query])
 
   const hexpubkey = useMemo(() => {
     if (!query?.npub) return
@@ -143,7 +145,7 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
                     onDelete={() => router.push(back)}
                   />
                 ) : undefined}
-                {query?.naddr ? (
+                {query?.naddrDesc ? (
                   <Chip
                     icon={<List />}
                     clickable={false}

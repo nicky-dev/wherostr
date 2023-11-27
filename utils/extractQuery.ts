@@ -24,6 +24,13 @@ export const extractQuery = (q?: string): ExtractQueryResult | undefined => {
       } else if (tag === 'p') {
         if (!a) a = {}
         a.npub = value
+      } else if (tag === 'l') {
+        if (!a) a = {}
+        const desc = nip19.decode(value)
+        a.naddr = value
+        if (desc.type === 'naddr') {
+          a.naddrDesc = desc.data
+        }
       } else if (tag === 'e') {
         if (!a) a = {}
         const desc = nip19.decode(value)

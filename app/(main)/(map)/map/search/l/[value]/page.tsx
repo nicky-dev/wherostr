@@ -5,5 +5,5 @@ import { useParams } from 'next/navigation'
 
 export default function Page() {
   const { value } = useParams()
-  return <MapController q={`e:${value}`} />
+  return <MapController q={`l:${value}`} />
 }

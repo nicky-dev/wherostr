@@ -170,7 +170,7 @@ export const mapClickHandler = (
   },
   event: NDKEvent,
 ) => {
-  router.push(location.pathname)
+  router.push(location.pathname, { scroll: false })
   setEventAction({
     type: EventActionType.View,
     event,
