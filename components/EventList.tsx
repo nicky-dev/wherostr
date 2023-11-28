@@ -42,6 +42,7 @@ export interface EventListProps {
   className?: string
   events?: NDKEvent[]
   parentRef?: RefObject<HTMLElement> | null
+  scrollRef?: RefObject<ViewportListRef> | null
   onFetchMore?: SubscribeResult[1]
   newItems?: SubscribeResult[2]
   onShowNewItems?: SubscribeResult[3]
@@ -55,6 +56,7 @@ const EventList: FC<EventListProps> = ({
   className,
   events = [],
   parentRef = null,
+  scrollRef = null,
   newItems = [],
   onFetchMore,
   onShowNewItems,
@@ -64,7 +66,7 @@ const EventList: FC<EventListProps> = ({
   excludedMe = false,
 }) => {
   const noteRef = useRef<HTMLDivElement>(null)
-  const scrollRef = useRef<ViewportListRef>(null)
+  const _scrollRef = useRef<ViewportListRef>(null)
   const user = useUser()
   const [muteList] = useMuting()
   const [scrollEnd, setScrollEnd] = useState(false)
@@ -251,14 +253,14 @@ const EventList: FC<EventListProps> = ({
 
   const handleShowNewItems = useCallback(() => {
     onShowNewItems?.()
-    if (!scrollRef.current) return
-    scrollRef.current?.scrollToIndex({
+    if (!(scrollRef || _scrollRef).current) return
+    ;(scrollRef || _scrollRef).current?.scrollToIndex({
       index: 0,
       offset: -196,
       alignToTop: true,
       delay: 300,
     })
-  }, [onShowNewItems])
+  }, [onShowNewItems, scrollRef])
 
   return (
     <>
@@ -282,7 +284,7 @@ const EventList: FC<EventListProps> = ({
         </Slide>
         {(!!notes.length || !!onFetchMore) && (
           <ViewportList
-            ref={scrollRef}
+            ref={scrollRef || _scrollRef}
             viewportRef={parentRef || noteRef}
             items={notes}
             onViewportIndexesChange={onViewportIndexesChange}

@@ -57,9 +57,13 @@ const ProfileChip = ({
 
   return (
     <Box
-      className={classNames(className, 'relative flex items-center', {
-        'cursor-pointer hover:underline': clickable,
-      })}
+      className={classNames(
+        className,
+        'relative flex items-center overflow-x-hidden',
+        {
+          'cursor-pointer hover:underline': clickable,
+        },
+      )}
       onClick={clickable && userLeft ? handleClickProfile : undefined}
     >
       <ProfileAvatar hexpubkey={userLeft?.hexpubkey} />

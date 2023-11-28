@@ -26,9 +26,19 @@ import { isComment, isQuote } from '@/utils/event'
 const NoteActionBar = ({
   event,
   relatedEvents,
+  repost = true,
+  quote = true,
+  comment = true,
+  react = true,
+  zap = true,
 }: {
   event: NDKEvent
   relatedEvents?: NDKEvent[]
+  repost?: boolean
+  quote?: boolean
+  comment?: boolean
+  react?: boolean
+  zap?: boolean
 }) => {
   const ndk = useNDK()
   const user = useUser()
@@ -100,18 +110,31 @@ const NoteActionBar = ({
     )
     setReaction(reaction)
   }, [data])
-  const likeAmount = useMemo(() => numeral(liked).format(amountFormat), [liked])
-  const { repostAmount, quoteAmount, commentAmount, zapAmount } = useMemo(
-    () => ({
-      repostAmount: numeral(data?.reposts.length).format(amountFormat),
-      quoteAmount: numeral(data?.quotes.length).format(amountFormat),
-      commentAmount: numeral(data?.comments.length).format(amountFormat),
-      zapAmount: numeral(
-        data?.zaps.reduce((sum, { amount }) => sum + amount / 1000, 0),
-      ).format(amountFormat),
-    }),
-    [data],
+  const likeAmount = useMemo(
+    () => (liked ? numeral(liked).format(amountFormat) : undefined),
+    [liked],
   )
+  const { repostAmount, quoteAmount, commentAmount, zapAmount } =
+    useMemo(() => {
+      const zapSummary = data?.zaps.reduce(
+        (sum, { amount }) => sum + amount / 1000,
+        0,
+      )
+      return {
+        repostAmount: data?.reposts.length
+          ? numeral(data.reposts.length).format(amountFormat)
+          : undefined,
+        quoteAmount: data?.quotes.length
+          ? numeral(data.quotes.length).format(amountFormat)
+          : undefined,
+        commentAmount: data?.comments.length
+          ? numeral(data.comments.length).format(amountFormat)
+          : undefined,
+        zapAmount: zapSummary
+          ? numeral(zapSummary).format(amountFormat)
+          : undefined,
+      }
+    }, [data])
   const handleClickReact = useCallback(
     (reaction: '+' | '-') => async () => {
       const newEvent = new NDKEvent(ndk)
@@ -125,7 +148,6 @@ const NoteActionBar = ({
         liked: liked + (reaction === '+' ? 1 : 0),
         disliked: disliked + (reaction === '-' ? 1 : 0),
       })
-      // console.log('relaySet', relaySet)
       await newEvent.publish()
     },
     [event, ndk, liked, disliked],
@@ -144,77 +166,97 @@ const NoteActionBar = ({
   const author = useUserProfile(event.pubkey)
 
   return (
-    <Box className="text-contrast-secondary grid grid-flow-col grid-rows-1 grid-cols-5 gap-1">
-      <Tooltip title="Repost" disableInteractive>
-        <Button
-          color="inherit"
-          size="small"
-          onClick={handleClickAction(EventActionType.Repost)}
-          startIcon={<RepeatOutlined />}
-        >
-          <Typography className="!w-7 text-left" variant="caption">
-            {repostAmount}
-          </Typography>
-        </Button>
-      </Tooltip>
-      <Tooltip title="Quote" disableInteractive>
-        <Button
-          color="inherit"
-          size="small"
-          onClick={handleClickAction(EventActionType.Quote)}
-          startIcon={<FormatQuoteOutlined />}
-        >
-          <Typography className="!w-7 text-left" variant="caption">
-            {quoteAmount}
-          </Typography>
-        </Button>
-      </Tooltip>
-      <Tooltip title="Comment" disableInteractive>
-        <Button
-          color="inherit"
-          size="small"
-          onClick={handleClickAction(EventActionType.Comment)}
-          startIcon={<CommentOutlined />}
-        >
-          <Typography className="!w-7 text-left" variant="caption">
-            {commentAmount}
-          </Typography>
-        </Button>
-      </Tooltip>
-      <Tooltip title="Like" disableInteractive>
-        <Button
-          color="inherit"
-          size="small"
-          onClick={reacted === '+' ? undefined : handleClickReact('+')}
-          startIcon={
-            reacted === '+' ? (
-              <ThumbUp className="!text-secondary" />
-            ) : (
-              <ThumbUpOutlined />
-            )
-          }
-        >
-          <Typography className="!w-7 text-left" variant="caption">
-            {likeAmount}
-          </Typography>
-        </Button>
-      </Tooltip>
-      <Tooltip title="Zap" disableInteractive>
-        <Box>
+    <Box className="text-contrast-secondary grid grid-flow-col grid-rows-1 grid-cols-5 gap-1 opacity-70">
+      {repost && (
+        <Tooltip title="Repost" disableInteractive>
           <Button
-            className="w-full"
             color="inherit"
-            disabled={!author?.profile?.lud16 && !author?.profile?.lud06}
             size="small"
-            onClick={handleClickAction(EventActionType.Zap)}
-            startIcon={<ElectricBoltOutlined />}
+            onClick={handleClickAction(EventActionType.Repost)}
+            startIcon={<RepeatOutlined />}
           >
-            <Typography className="!w-7 text-left" variant="caption">
-              {zapAmount}
-            </Typography>
+            {!!repostAmount && (
+              <Typography className="!w-7 text-left" variant="caption">
+                {repostAmount}
+              </Typography>
+            )}
           </Button>
-        </Box>
-      </Tooltip>
+        </Tooltip>
+      )}
+      {quote && (
+        <Tooltip title="Quote" disableInteractive>
+          <Button
+            color="inherit"
+            size="small"
+            onClick={handleClickAction(EventActionType.Quote)}
+            startIcon={<FormatQuoteOutlined />}
+          >
+            {!!quoteAmount && (
+              <Typography className="!w-7 text-left" variant="caption">
+                {quoteAmount}
+              </Typography>
+            )}
+          </Button>
+        </Tooltip>
+      )}
+      {comment && (
+        <Tooltip title="Comment" disableInteractive>
+          <Button
+            color="inherit"
+            size="small"
+            onClick={handleClickAction(EventActionType.Comment)}
+            startIcon={<CommentOutlined />}
+          >
+            {!!commentAmount && (
+              <Typography className="!w-7 text-left" variant="caption">
+                {commentAmount}
+              </Typography>
+            )}
+          </Button>
+        </Tooltip>
+      )}
+      {react && (
+        <Tooltip title="Like" disableInteractive>
+          <Button
+            color="inherit"
+            size="small"
+            onClick={reacted === '+' ? undefined : handleClickReact('+')}
+            startIcon={
+              reacted === '+' ? (
+                <ThumbUp className="!text-secondary" />
+              ) : (
+                <ThumbUpOutlined />
+              )
+            }
+          >
+            {!!likeAmount && (
+              <Typography className="!w-7 text-left" variant="caption">
+                {likeAmount}
+              </Typography>
+            )}
+          </Button>
+        </Tooltip>
+      )}
+      {zap && (
+        <Tooltip title="Zap" disableInteractive>
+          <Box>
+            <Button
+              className="w-full"
+              color="inherit"
+              disabled={!author?.profile?.lud16 && !author?.profile?.lud06}
+              size="small"
+              onClick={handleClickAction(EventActionType.Zap)}
+              startIcon={<ElectricBoltOutlined />}
+            >
+              {!!zapAmount && (
+                <Typography className="!w-7 text-left" variant="caption">
+                  {zapAmount}
+                </Typography>
+              )}
+            </Button>
+          </Box>
+        </Tooltip>
+      )}
     </Box>
   )
 }

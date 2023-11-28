@@ -130,7 +130,7 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
                     showName={false}
                     clickable={false}
                   />
-                  <Avatar className="!absolute top-0 left-0 !bg-disabled-dark opacity-75">
+                  <Avatar className="!absolute top-0 left-0 !bg-disabled-dark opacity-70">
                     <Typography variant="body2" fontWeight="bold" color="white">
                       {d.amount
                         ? numeral(Math.floor(d.amount)).format(amountFormat)
