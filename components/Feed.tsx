@@ -76,7 +76,7 @@ export default function Feed({
     }
     return {
       kinds: [NDKKind.Text, NDKKind.Repost],
-      until: unixNow() - DAY,
+      until: unixNow() + DAY,
       '#g': geohashFilter,
     }
   }, [signing, query?.bbox, query?.geohash])

@@ -337,7 +337,7 @@ const TextNote = ({
       event.tagValue?.('content-warning') ||
       event
         .getMatchingTags?.('t')
-        .find(([, v]) => nsfwTags.includes(v.toLowerCase()))?.[1]
+        .find(([, v]) => nsfwTags.includes(v?.toLowerCase()))?.[1]
         ?.toUpperCase(),
     [event],
   )
