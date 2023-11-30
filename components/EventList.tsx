@@ -50,6 +50,7 @@ export interface EventListProps {
   depth?: number
   renderEventItem?: (event: NDKEvent, props: any) => JSX.Element | undefined
   excludedMe?: boolean
+  keepBottom?: boolean
 }
 
 const EventList: FC<EventListProps> = ({
@@ -64,6 +65,7 @@ const EventList: FC<EventListProps> = ({
   depth = 0,
   renderEventItem,
   excludedMe = false,
+  keepBottom = false,
 }) => {
   const noteRef = useRef<HTMLDivElement>(null)
   const _scrollRef = useRef<ViewportListRef>(null)
@@ -212,9 +214,23 @@ const EventList: FC<EventListProps> = ({
     }
   }, [totalEvent])
 
+  const [isAtBottom, setIsAtBottom] = useState(true)
+  useEffect(() => {
+    if (keepBottom && isAtBottom && (scrollRef || _scrollRef).current) {
+      ;(scrollRef || _scrollRef).current?.scrollToIndex({
+        index: notes.length - 1,
+        alignToTop: true,
+        prerender: 10,
+      })
+    }
+  }, [isAtBottom, keepBottom, notes, scrollRef])
+
   const onViewportIndexesChange = useCallback(
-    async ([current, next]: [number, number]) => {
-      const percent = ((next + 1) / totalEvent) * 100
+    async ([, endIndex]: [number, number]) => {
+      if (keepBottom) {
+        setIsAtBottom(endIndex === notes.length - 1)
+      }
+      const percent = ((endIndex + 1) / totalEvent) * 100
       setScrollEnd(percent === 100)
       if (fetching || !hasNext) return
       if (percent < 90) return
@@ -223,7 +239,7 @@ const EventList: FC<EventListProps> = ({
       setFetching(false)
       setHasNext(!!items?.length)
     },
-    [hasNext, fetching, totalEvent, onFetchMore],
+    [keepBottom, totalEvent, fetching, hasNext, onFetchMore, notes.length],
   )
 
   const pubkeys = useMemo(() => {

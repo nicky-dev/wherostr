@@ -417,37 +417,23 @@ const LiveChatBox = ({
     ),
     [],
   )
-  useEffect(() => {
-    if (scrollRef.current && events.length) {
-      const { index } = scrollRef.current.getScrollPosition()
-      if (index === 0) {
-        scrollRef.current.scrollToIndex({
-          index: events.length - 1,
-        })
-      }
-    }
-  }, [events])
   return (
-    <Box
-      ref={viewportRef}
-      className={classNames(
-        'w-full h-full overflow-y-auto overflow-x-hidden',
-        className,
-      )}
-    >
+    <Box className={classNames('w-full h-full', className)}>
       {decodedAddress?.type === 'naddr' &&
       decodedAddress?.data.kind === 30311 ? (
         <>
-          {/* <Typography className="py-2 px-3 text-center" variant="h6">
-            Live activity address
-          </Typography> */}
-          <EventList
-            className="px-2"
-            parentRef={viewportRef}
-            scrollRef={scrollRef}
-            events={events}
-            renderEventItem={renderEventItem}
-          />
+          <Box className="flex h-full items-end">
+            <Box ref={viewportRef} className="max-h-full w-full overflow-y-auto">
+              <EventList
+                className="px-2"
+                parentRef={viewportRef}
+                scrollRef={scrollRef}
+                events={events}
+                renderEventItem={renderEventItem}
+                keepBottom
+              />
+            </Box>
+          </Box>
         </>
       ) : (
         <Typography className="py-2 px-3 text-center" variant="h6">
