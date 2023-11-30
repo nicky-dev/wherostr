@@ -37,6 +37,7 @@ import numeral from 'numeral'
 import { amountFormat } from '@/constants/app'
 import { transformText } from '@snort/system'
 import { DAY, unixNow } from '@/utils/time'
+import TextNote from './TextNote'
 
 export interface EventListProps {
   className?: string
@@ -129,25 +130,18 @@ const EventList: FC<EventListProps> = ({
       if (item.kind === NDKKind.Repost && depth !== 0) {
         return <EventProfileCard key={key} hexpubkey={item.pubkey} />
       } else if (item.kind === NDKKind.Reaction) {
-        const { type, content } = transformText(item.content, item.tags)[0]
+        // const { type, content } = transformText(item.content, item.tags)[0]
         return (
           <EventProfileCard key={key} hexpubkey={item.pubkey}>
             <Box className="px-3 w-14 text-center">
-              {type === 'custom_emoji' ? (
-                <img
-                  className="inline-block max-h-[1.5em] max-w-[1.5em]"
-                  alt="emoji"
-                  src={content}
-                />
-              ) : content === '+' ? (
+              {item.content === '+' ? (
                 <ThumbUp color="secondary" />
               ) : (
-                <Typography
+                <TextNote
+                  event={item}
+                  textVariant="h6"
                   className="overflow-hidden whitespace-nowrap text-ellipsis text-contrast-primary"
-                  variant="h6"
-                >
-                  {content}
-                </Typography>
+                />
               )}
             </Box>
           </EventProfileCard>

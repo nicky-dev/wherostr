@@ -284,9 +284,9 @@ const renderChunk = (
       )
     case 'custom_emoji':
       return (
-        <Typography component="span" className="text-[1em]">
+        <Typography component="span" className="!text-[1em]">
           <img
-            className="block max-h-[1em] max-w-[1em]"
+            className="block max-h-[1em] max-w-[1em] m-auto"
             alt="emoji"
             src={content}
           />
