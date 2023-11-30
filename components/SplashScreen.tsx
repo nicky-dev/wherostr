@@ -17,7 +17,7 @@ const SplashScreen: FC<SplashScreenProps> = (props) => {
   return (
     <Fade in={signing} {...props}>
       <Paper className="fixed inset-0 z-50 flex justify-center items-center flex-col -mt-16">
-        <Box className="relative w-[128px] h-[128px] rounded-full opacity-70">
+        <Box className="relative w-[128px] h-[128px] rounded-full opacity-80">
           <Image fill={true} src={logo.src} alt="Logo" objectFit="contain" />
         </Box>
         <Typography className="tracking-widest !font-bold !text-4xl text-gradient bg-gradient-primary overflow-hidden text-ellipsis whitespace-nowrap">

@@ -284,11 +284,13 @@ const renderChunk = (
       )
     case 'custom_emoji':
       return (
-        <img
-          className="inline-block max-h-[1.5em] max-w-[1.5em]"
-          alt="emoji"
-          src={content}
-        />
+        <Typography component="span" className="text-[1em]">
+          <img
+            className="block max-h-[1em] max-w-[1em]"
+            alt="emoji"
+            src={content}
+          />
+        </Typography>
       )
     // case 'mention':
     //   return `mention: ${content}`
@@ -331,6 +333,16 @@ const TextNote = ({
         customEmojiRegExp.test(_[0].content)
       ) {
         _[0].type = 'custom_emoji'
+        const tagEmojis = event?.getMatchingTags?.('emoji')
+        const name = _[0].content.match(customEmojiRegExp)?.[1]
+        if (name) {
+          tagEmojis?.some(([, id, url]) => {
+            if (id === name) {
+              _[0].content = url
+              return true
+            }
+          })
+        }
       }
       return _
     } catch (err) {
@@ -405,4 +417,4 @@ const TextNote = ({
 
 export default TextNote
 
-const customEmojiRegExp = /(\:.*\:)/
+const customEmojiRegExp = /\:((\w|\d|-|_)+)\:/
