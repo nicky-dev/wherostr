@@ -148,12 +148,11 @@ const NoteActionBar = ({
       ]
       if (!reaction.isCustom) {
         newEvent.content = reaction.emoji!
-        setReacted(newEvent)
       } else {
         newEvent.content = `:${reaction.emoji}:`
         newEvent.tags.push(['emoji', reaction.emoji!, reaction.imageUrl!])
-        setReacted(newEvent)
       }
+      setReacted(newEvent)
       setReaction({
         liked: liked + (reaction.emoji !== '-' ? 1 : 0),
         disliked: disliked + (reaction.emoji === '-' ? 1 : 0),
@@ -177,12 +176,9 @@ const NoteActionBar = ({
 
   const [anchorEl, setAchorEl] = useState<Element>()
   const handleClose = () => setAchorEl(undefined)
-  const bind = useLongPress(
-    (evt) => {
-      setAchorEl(evt.nativeEvent.target as Element)
-    },
-    { captureEvent: !reacted },
-  )
+  const bind = useLongPress((evt) => {
+    setAchorEl(evt.nativeEvent.target as Element)
+  })
 
   return (
     <Box className="text-contrast-secondary grid grid-flow-col grid-rows-1 grid-cols-5 gap-1 opacity-70">
@@ -239,7 +235,7 @@ const NoteActionBar = ({
           <Button
             color="inherit"
             size="small"
-            {...bind()}
+            {...(!reacted ? bind() : undefined)}
             onClick={
               anchorEl || !!reacted?.content
                 ? undefined
