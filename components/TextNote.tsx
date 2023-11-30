@@ -11,7 +11,7 @@ import {
   Typography,
 } from '@mui/material'
 import { Fragment } from 'react'
-import { NDKEvent } from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import ShortTextNoteCard from '@/components/ShortTextNoteCard'
 import {
   FormatQuote,
@@ -325,6 +325,13 @@ const TextNote = ({
       if (_?.[0]?.content) {
         _[0].content = _[0]?.content?.slice?.(1) || ''
       }
+      if (
+        _[0].type === 'text' &&
+        event.kind === NDKKind.Reaction &&
+        customEmojiRegExp.test(_[0].content)
+      ) {
+        _[0].type = 'custom_emoji'
+      }
       return _
     } catch (err) {
       console.log(err)
@@ -397,3 +404,5 @@ const TextNote = ({
 }
 
 export default TextNote
+
+const customEmojiRegExp = /(\:.*\:)/

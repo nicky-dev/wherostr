@@ -27,6 +27,7 @@
     "cancelable-promise": "^4.3.1",
     "classnames": "^2.3.2",
     "copy-to-clipboard": "^3.3.3",
+    "emoji-picker-react": "^4.5.16",
     "eslint": "8.48.0",
     "eslint-config-next": "13.4.19",
     "fuse.js": "^7.0.0",
@@ -52,6 +53,7 @@
     "textarea-caret": "^3.1.0",
     "typescript": "5.2.2",
     "ua-parser-js": "^1.0.37",
+    "use-long-press": "^3.2.0",
     "uuid": "^9.0.1",
     "webln": "^0.3.2"
   },
