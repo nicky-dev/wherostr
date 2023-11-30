@@ -245,10 +245,7 @@ const NoteActionBar = ({
               reacted?.content === '+' ? (
                 <ThumbUp className="!text-secondary" />
               ) : reacted && reacted?.content !== '-' ? (
-                <TextNote
-                  event={reacted}
-                  className="text-contrast-primary w-[18px] h-[18px]"
-                />
+                <TextNote event={reacted} className="text-contrast-primary" />
               ) : (
                 <ThumbUpOutlined />
               )
