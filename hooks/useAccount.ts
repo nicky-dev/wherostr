@@ -3,6 +3,7 @@ import { AccountContext, AccountProps } from '@/contexts/AccountContext'
 import { NDKEvent, NDKKind, NDKUser } from '@nostr-dev-kit/ndk'
 import { useCallback, useContext, useMemo } from 'react'
 import { useNDK } from './useNostr'
+import usePromise from 'react-use-promise'
 
 export const useUser = () => {
   const { user } = useContext(AccountContext)
@@ -61,4 +62,34 @@ export const useMuting = () => {
   return useMemo<[AccountProps['muteList'], typeof mute]>(() => {
     return [muteList || [], mute]
   }, [muteList, mute])
+}
+
+export const useEmoji = (user?: NDKUser) => {
+  const ndk = useNDK()
+  const fetchEmojiList = useCallback(async () => {
+    if (!user?.pubkey) return
+    return ndk.fetchEvent({
+      kinds: [NDKKind.EmojiList],
+      authors: [user?.pubkey],
+    })
+  }, [ndk, user?.pubkey])
+
+  const fetchEmoji = useCallback(
+    async (ref: string) => {
+      return ndk.fetchEvent(ref)
+    },
+    [ndk],
+  )
+
+  return usePromise(async () => {
+    const emojiList = await fetchEmojiList()
+    if (!emojiList) return []
+    const tags = emojiList?.getMatchingTags('a')
+    const result = await Promise.allSettled(
+      tags ? tags?.map(([, ref]) => fetchEmoji(ref)) : [],
+    )
+    return result
+      .filter((d) => d.status === 'fulfilled')
+      .map((d) => (d.status === 'fulfilled' ? d.value : undefined))
+  }, [fetchEmojiList, fetchEmoji])
 }

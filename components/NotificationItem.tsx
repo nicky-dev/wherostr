@@ -348,23 +348,16 @@ const NotificationTypeIcon = ({
           </Box>
         )
       case NDKKind.Reaction:
-        const reactionContent = transformText(event.content, event.tags)[0]
-        return reactionContent?.type === 'custom_emoji' ? (
-          <img
-            className="inline-block max-h-[1.5em] max-w-[1.5em]"
-            alt="emoji"
-            src={reactionContent.content}
-          />
-        ) : reactionContent?.content === '+' ? (
+        return event.content === '+' ? (
           <ThumbUp color="secondary" />
         ) : (
-          <Typography
+          <TextNote
+            event={event}
+            textVariant="h6"
             className="overflow-hidden whitespace-nowrap text-ellipsis text-contrast-primary"
-            variant="h6"
-          >
-            {reactionContent?.content}
-          </Typography>
+          />
         )
+
       case NDKKind.Repost:
         return (
           <Typography variant="h6">
@@ -388,36 +381,4 @@ const NotificationTypeIcon = ({
   }, [event, type])
 
   return <Box className="w-10 text-center">{typeIcon}</Box>
-}
-
-function extractCustomEmoji(fragments: Fragment[], tags: Array<Array<string>>) {
-  return fragments
-    .map((f) => {
-      if (typeof f === 'string') {
-        if (f === ':heart-eyes:') console.log(f)
-        return f.split(/:(.*):/g).map((i) => {
-          if (f === ':heart-eyes:') console.log(i)
-          const t = tags.find((a) => a[0] === 'emoji' && a[1] === i)
-          if (t) {
-            return {
-              type: 'custom_emoji',
-              content: t[2],
-            } as ParsedFragment
-          } else {
-            return i
-          }
-        })
-      }
-      return f
-    })
-    .flat()
-    .filter((a) => a)
-    .map((a) => unwrap(a)) as Array<ParsedFragment>
-}
-
-export function unwrap<T>(v: T | undefined | null): T {
-  if (v === undefined || v === null) {
-    throw new Error('missing value')
-  }
-  return v
 }

@@ -22,6 +22,10 @@ import { useMuting, useUser } from '@/hooks/useAccount'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { amountFormat } from '@/constants/app'
 import { isComment, isQuote } from '@/utils/event'
+import { useLongPress } from 'use-long-press'
+import { EmojiPicker } from './EmojiPicker'
+import TextNote from './TextNote'
+import { EmojiClickData } from 'emoji-picker-react'
 
 const NoteActionBar = ({
   event,
@@ -44,7 +48,7 @@ const NoteActionBar = ({
   const user = useUser()
   const [muteList] = useMuting()
   const { setEventAction } = useContext(AppContext)
-  const [reacted, setReacted] = useState<'+' | '-' | undefined>()
+  const [reacted, setReacted] = useState<NDKEvent>()
   const [{ liked, disliked }, setReaction] = useState({
     liked: 0,
     disliked: 0,
@@ -77,7 +81,7 @@ const NoteActionBar = ({
           break
         case NDKKind.Reaction:
           if (item.pubkey === user?.hexpubkey) {
-            setReacted(item.content === '-' ? '-' : '+')
+            setReacted(item)
           }
           reacts.push(item)
           break
@@ -136,17 +140,22 @@ const NoteActionBar = ({
       }
     }, [data])
   const handleClickReact = useCallback(
-    (reaction: '+' | '-') => async () => {
+    async (reaction: Partial<EmojiClickData>) => {
       const newEvent = new NDKEvent(ndk)
       newEvent.kind = NDKKind.Reaction
-      newEvent.content = reaction
       newEvent.tags = [
         ['e', event.id, event.relay?.url || ''].filter((item) => !!item),
       ]
-      setReacted(reaction)
+      if (!reaction.isCustom) {
+        newEvent.content = reaction.emoji!
+      } else {
+        newEvent.content = `:${reaction.emoji}:`
+        newEvent.tags.push(['emoji', reaction.emoji!, reaction.imageUrl!])
+      }
+      setReacted(newEvent)
       setReaction({
-        liked: liked + (reaction === '+' ? 1 : 0),
-        disliked: disliked + (reaction === '-' ? 1 : 0),
+        liked: liked + (reaction.emoji !== '-' ? 1 : 0),
+        disliked: disliked + (reaction.emoji === '-' ? 1 : 0),
       })
       await newEvent.publish()
     },
@@ -164,6 +173,12 @@ const NoteActionBar = ({
   )
 
   const author = useUserProfile(event.pubkey)
+
+  const [anchorEl, setAchorEl] = useState<Element>()
+  const handleClose = () => setAchorEl(undefined)
+  const bind = useLongPress((evt) => {
+    setAchorEl(evt.nativeEvent.target as Element)
+  })
 
   return (
     <Box className="text-contrast-secondary grid grid-flow-col grid-rows-1 grid-cols-5 gap-1 opacity-70">
@@ -220,10 +235,20 @@ const NoteActionBar = ({
           <Button
             color="inherit"
             size="small"
-            onClick={reacted === '+' ? undefined : handleClickReact('+')}
+            {...(!reacted ? bind() : undefined)}
+            onClick={
+              anchorEl || !!reacted?.content
+                ? undefined
+                : () => handleClickReact({ emoji: '+' })
+            }
             startIcon={
-              reacted === '+' ? (
+              reacted?.content === '+' ? (
                 <ThumbUp className="!text-secondary" />
+              ) : reacted && reacted?.content !== '-' ? (
+                <TextNote
+                  event={reacted}
+                  className="text-contrast-primary w-[18px] h-[18px]"
+                />
               ) : (
                 <ThumbUpOutlined />
               )
@@ -234,6 +259,21 @@ const NoteActionBar = ({
                 {likeAmount}
               </Typography>
             )}
+            <EmojiPicker
+              open={!!anchorEl}
+              user={user}
+              anchorEl={anchorEl}
+              onClose={handleClose}
+              onEmojiClick={(data) => {
+                handleClose()
+                handleClickReact(data)
+                console.log('onEmojiClick:data', data)
+              }}
+              transformOrigin={{
+                horizontal: 'center',
+                vertical: 'bottom',
+              }}
+            />
           </Button>
         </Tooltip>
       )}

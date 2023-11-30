@@ -98,7 +98,7 @@ export const MapController = ({ q }: { q?: string }) => {
       ...(g ? { '#g': g } : undefined),
       ...(tags ? tags : authors),
       kinds: [NDKKind.Text],
-      until: unixNow() - DAY,
+      until: unixNow() + DAY,
     } as NDKFilter
   }, [signing, g, tags, authors, loadingList])
 
