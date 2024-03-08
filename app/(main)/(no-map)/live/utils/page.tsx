@@ -1,6 +1,5 @@
 'use client'
 import { useUser } from '@/hooks/useAccount'
-import { useEvent } from '@/hooks/useEvent'
 import { useNDK, useStreamRelaySet } from '@/hooks/useNostr'
 import { WEEK, unixNow } from '@/utils/time'
 import {
@@ -57,7 +56,7 @@ export default function Page() {
   const updateLiveStats = useCallback(
     async (ev: NDKEvent) => {
       try {
-        const imageUrl = getImageUrl(ev)
+        // const imageUrl = getImageUrl(ev)
         console.debug('updateLiveStats', 'status', ev.tagValue('status'))
         if (ev.tagValue('status') !== 'live') return
         const stats = await fetchStats(ev).catch((err) => console.error(err))
@@ -72,14 +71,14 @@ export default function Page() {
         ndkEvent.tags.push(['current_participants', currentPaticipants])
         ev.removeTag('current_participants')
         ev.tags.push(['current_participants', currentPaticipants])
-        if (imageUrl && imageUrl !== ev.tagValue('image')) {
-          // const time = unixNow()
-          console.debug('updateLiveStats', 'imageUrl', imageUrl)
-          ndkEvent.removeTag('image')
-          ndkEvent.tags.push(['image', imageUrl])
-          ev.removeTag('image')
-          ev.tags.push(['image', imageUrl])
-        }
+        // if (imageUrl && imageUrl !== ev.tagValue('image')) {
+        //   // const time = unixNow()
+        //   console.debug('updateLiveStats', 'imageUrl', imageUrl)
+        //   ndkEvent.removeTag('image')
+        //   ndkEvent.tags.push(['image', imageUrl])
+        //   ev.removeTag('image')
+        //   ev.tags.push(['image', imageUrl])
+        // }
         await ndkEvent.publish(relaySet)
       } catch (err) {}
     },
