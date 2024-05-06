@@ -64,7 +64,7 @@ const config: Config = {
     },
     extend: {
       backgroundImage: {
-        'gradient-primary': 'linear-gradient(45deg, #fc6a03 30%, #0395fc 90%)',
+        'gradient-primary': 'linear-gradient(45deg, #FCBD02 30%, #147970 90%)',
         'gradient-secondary': 'linear-gradient(45deg, #0395fc 30%, #fc6a03 90%)',
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':

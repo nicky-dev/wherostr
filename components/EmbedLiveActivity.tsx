@@ -88,7 +88,7 @@ export const EmbedLiveActivity = ({ naddr }: { naddr: string }) => {
                 LinkComponent={NextLink}
                 target="_blank"
                 href={`/${naddr}`}
-                color="primary"
+                color="secondary"
                 variant="contained"
                 sx={{ fontWeight: 'bold' }}
                 startIcon={<PlayCircleOutline />}

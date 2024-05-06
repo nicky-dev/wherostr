@@ -66,7 +66,7 @@ export const EmbedLongFormContent = ({ naddr }: { naddr: string }) => {
               <ProfileChip className="flex-1" hexpubkey={pubkey} />
               <Button
                 className="shrink-0"
-                color="primary"
+                color="secondary"
                 variant="contained"
                 sx={{ fontWeight: 'bold' }}
                 startIcon={<PlayCircleOutline />}

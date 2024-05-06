@@ -9,7 +9,7 @@ import {
 } from '@mui/material'
 import Image from 'next/image'
 import { FC } from 'react'
-import logo from '@/public/favicon.svg'
+import logo from '@/public/Wherostr- logo2_forDarkBG.png'
 
 interface SplashScreenProps extends Omit<FadeProps, 'children'> {}
 const SplashScreen: FC<SplashScreenProps> = (props) => {

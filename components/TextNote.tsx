@@ -266,7 +266,7 @@ const renderChunk = (
           target="_blank"
           component="a"
           underline="hover"
-          color="secondary"
+          color="primary"
         >
           {content}
         </Link>
@@ -277,7 +277,7 @@ const renderChunk = (
           href={`/search/t/${content.toLowerCase()}`}
           onClick={() => clearActions()}
         >
-          <Link underline="hover" color="secondary" component="span">
+          <Link underline="hover" color="primary" component="span">
             #{content}
           </Link>
         </NextLink>

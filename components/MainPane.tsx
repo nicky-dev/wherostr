@@ -18,7 +18,12 @@ const NavigationBar: FC<{
   return (
     <Box className={classNames('flex items-center gap-2 px-3 py-2', className)}>
       <DrawerMenu />
-      <Image src="/logo.svg" width={36} height={36} alt="wherostr" />
+      <Image
+        src="/Wherostr- logo2_forDarkBG.png"
+        alt="wherostr"
+        width={32}
+        height={32}
+      />
       <Typography className="!font-bold !text-2xl sm:!text-3xl text-gradient bg-gradient-primary overflow-hidden text-ellipsis whitespace-nowrap">
         Wherostr
       </Typography>
