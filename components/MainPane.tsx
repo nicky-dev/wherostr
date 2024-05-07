@@ -24,9 +24,9 @@ const NavigationBar: FC<{
         width={32}
         height={32}
       />
-      <Typography className="!font-bold !text-2xl sm:!text-3xl text-gradient bg-gradient-primary overflow-hidden text-ellipsis whitespace-nowrap">
-        Wherostr
-      </Typography>
+      <div className="h-6 w-36 relative mb-1">
+        <Image src="/logo-text.svg" alt="wherostr" fill />
+      </div>
       <Box className="flex-1 flex gap-2 justify-end items-center">
         {startTools}
         <IconButton LinkComponent={Link} href="/">
