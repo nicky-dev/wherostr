@@ -418,12 +418,15 @@ const LiveChatBox = ({
     [],
   )
   return (
-    <Box className={classNames('w-full h-full', className)}>
+    <Box className={classNames('w-full h-full relative', className)}>
       {decodedAddress?.type === 'naddr' &&
       decodedAddress?.data.kind === 30311 ? (
         <>
-          <Box className="flex h-full items-end">
-            <Box ref={viewportRef} className="max-h-full w-full overflow-y-auto">
+          <Box className="flex absolute inset-0 items-end">
+            <Box
+              ref={viewportRef}
+              className="max-h-full w-full overflow-y-auto"
+            >
               <EventList
                 className="px-2"
                 parentRef={viewportRef}

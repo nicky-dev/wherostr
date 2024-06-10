@@ -12,6 +12,7 @@ import { LiveActivityItem } from './LiveActivity'
 import { AccountContext } from '@/contexts/AccountContext'
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
+import LiveChatBox from './LiveChatBox'
 
 export function LiveChat({
   naddr,
@@ -27,14 +28,15 @@ export function LiveChat({
   const [busy, setBusy] = useState<boolean>(false)
 
   return (
-    <Box {...props} display="flex" flexDirection="column" minHeight={256}>
-      <iframe
+    <Box {...props} className="h-full min-h-[256px] flex-1 flex flex-col">
+      {/* <iframe
         style={{ backgroundColor: 'transparent' }}
         src={`https://zap.stream/chat/${naddr}`}
         width="100%"
         height="100%"
         allowTransparency={true}
-      />
+      /> */}
+      <LiveChatBox naddr={naddr} />
       <Divider />
       <Box
         className="flex items-center"

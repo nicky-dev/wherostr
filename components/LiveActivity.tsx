@@ -188,7 +188,7 @@ const LiveActivity = ({
             <Typography variant="h6" fontWeight="bold">
               Live Chat
             </Typography>
-            <Box flex={1} />
+            {/* <Box flex={1} />
             <Typography
               component="a"
               color="primary"
@@ -198,10 +198,10 @@ const LiveActivity = ({
               variant="caption"
             >
               zap.stream
-            </Typography>
+            </Typography> */}
           </Toolbar>
         </Hidden>
-        <LiveChat naddr={naddr} flex={1} event={liveItem} />
+        <LiveChat naddr={naddr} event={liveItem} />
       </Paper>
     </Box>
   )
