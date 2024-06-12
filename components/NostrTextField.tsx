@@ -28,7 +28,6 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
     const innerInputRef = useRef(null)
     const viewportListRef = useRef<ViewportListRef>(null)
     const viewportRef = useRef(null)
-    const ndk = useNDK()
     const [mentionPopoverAnchorEl, setMentionPopoverAnchorEl] =
       useState<HTMLElement | null>(null)
     const [mentionPopoverAnchorPosition, setMentionPopoverAnchorPosition] =
@@ -120,18 +119,21 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
             horizontal: position.left,
           })
           setMentionPopoverAnchorEl(event.currentTarget)
+          setCurrentCaretPosition(selectionEnd)
         } else if (mentionPopoverAnchorEl) {
           const leftText = value.substring(0, selectionEnd)
           const lastAtSignIndex = leftText.lastIndexOf('@')
-          const searchText = leftText.substring(lastAtSignIndex + 1)
+          const searchText = leftText.substring(lastAtSignIndex)
           if (/\s|\r|\n/.test(searchText) || selectionEnd === 0) {
             handleClosePopover()
           } else {
             const nostrLink = tryParseNostrLink(searchText)
             if (nostrLink?.type) {
+              console.log('selectionEnd', selectionEnd)
               replaceMentionValue(`nostr:${nostrLink.encode()}`, selectionEnd)
               handleClosePopover()
             } else {
+              console.log('selectionEnd', selectionEnd)
               setCurrentCaretPosition(selectionEnd)
               setSearchText(searchText)
             }
