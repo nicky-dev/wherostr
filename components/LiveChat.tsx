@@ -1,9 +1,11 @@
-import { Send } from '@mui/icons-material'
+import { Close, Send } from '@mui/icons-material'
 import {
   Box,
   BoxProps,
   Button,
   Divider,
+  IconButton,
+  Paper,
   TextField,
   Typography,
 } from '@mui/material'
@@ -13,6 +15,8 @@ import { AccountContext } from '@/contexts/AccountContext'
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { NostrContext } from '@/contexts/NostrContext'
 import LiveChatBox from './LiveChatBox'
+import NostrTextField from './NostrTextField'
+import ProfileAvatar from './ProfileAvatar'
 
 export function LiveChat({
   naddr,
@@ -26,6 +30,7 @@ export function LiveChat({
   const { user } = useContext(AccountContext)
   const [message, setMessage] = useState<string>()
   const [busy, setBusy] = useState<boolean>(false)
+  const [replyEvent, setReplyEvent] = useState<NDKEvent>()
 
   return (
     <Box {...props} className="h-full min-h-[256px] flex-1 flex flex-col">
@@ -36,7 +41,28 @@ export function LiveChat({
         height="100%"
         allowTransparency={true}
       /> */}
-      <LiveChatBox naddr={naddr} />
+      <LiveChatBox naddr={naddr} onReply={(event) => setReplyEvent(event)} />
+      {!!replyEvent ? (
+        <Paper square elevation={0} className="flex p-2">
+          <Box className="flex-auto flex gap-2 items-start opacity-60 overflow-hidden">
+            <ProfileAvatar hexpubkey={replyEvent.pubkey} avatarSize={32} />
+            <Typography
+              variant="body2"
+              className="flex-grow"
+              textOverflow="ellipsis"
+            >
+              {replyEvent.content}
+            </Typography>
+          </Box>
+          <IconButton
+            className="!min-w-[32px] !max-w-[32px] !min-h-[32px] !max-h-[32px]"
+            size="small"
+            onClick={() => setReplyEvent(undefined)}
+          >
+            <Close />
+          </IconButton>
+        </Paper>
+      ) : undefined}
       <Divider />
       <Box
         className="flex items-center"
@@ -44,12 +70,17 @@ export function LiveChat({
         component="form"
         onSubmit={async (evt) => {
           evt.preventDefault()
-          if (!message || !user?.hexpubkey) return
+          if (!message || !user?.pubkey) return
           const newEvent = new NDKEvent(ndk)
           newEvent.kind = 1311
           newEvent.content = message
-          newEvent.pubkey = user?.hexpubkey
-          newEvent.tags = [['a', `30311:${event?.author}:${event?.id}`]]
+          newEvent.pubkey = user?.pubkey
+          newEvent.tags = [
+            ['a', `30311:${event?.author}:${event?.id}`, '', 'root'],
+          ]
+          if (event!.id && replyEvent?.id) {
+            newEvent.tags.push(['e', event!.id, '', 'reply'])
+          }
           setMessage('')
           setBusy(true)
           await newEvent.publish()
@@ -58,7 +89,7 @@ export function LiveChat({
       >
         {user ? (
           <>
-            <TextField
+            <NostrTextField
               value={message}
               color="secondary"
               name="message"

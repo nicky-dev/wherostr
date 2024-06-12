@@ -26,9 +26,9 @@ import { useUserProfile } from '@/hooks/useUserProfile'
 import { amountFormat } from '@/constants/app'
 import numeral from 'numeral'
 import {
-  CommentOutlined,
   ElectricBolt,
   ElectricBoltOutlined,
+  ReplyOutlined,
   ThumbUp,
   ThumbUpOutlined,
 } from '@mui/icons-material'
@@ -44,23 +44,22 @@ const MessageActionBar = ({
   comment = true,
   react = true,
   zap = true,
+  onReply,
 }: {
   event: NDKEvent
   relatedEvents?: NDKEvent[]
   comment?: boolean
   react?: boolean
   zap?: boolean
+  onReply?: (event: NDKEvent) => void
 }) => {
   const ndk = useNDK()
   const { setEventAction } = useContext(AppContext)
   const user = useUser()
   const author = useUserProfile(event.pubkey)
   const [muteList] = useMuting()
-  const [reacted, setReacted] = useState<'+' | '-' | undefined>()
-  const [{ liked, disliked }, setReaction] = useState({
-    liked: 0,
-    disliked: 0,
-  })
+  const [reacted, setReacted] = useState(false)
+  const [zapped, setZapped] = useState(false)
   const data = useMemo(() => {
     const reacts: NDKEvent[] = []
     const zaps: (
@@ -70,7 +69,6 @@ const MessageActionBar = ({
         }
     )[] = []
     const comments: NDKEvent[] = []
-    setReacted(undefined)
     relatedEvents?.forEach((item) => {
       if (muteList.includes(item.pubkey)) return
       switch (item.kind) {
@@ -80,13 +78,17 @@ const MessageActionBar = ({
           }
           break
         case NDKKind.Reaction:
-          if (item.pubkey === user?.hexpubkey) {
-            setReacted(item.content === '-' ? '-' : '+')
+          if (item.pubkey === user?.pubkey) {
+            setReacted(true)
           }
           reacts.push(item)
           break
         case NDKKind.Zap:
-          zaps.push(zapInvoiceFromEvent(item) || { amount: 0 })
+          const zapInvoice = zapInvoiceFromEvent(item)
+          if (zapInvoice?.zappee === user?.pubkey) {
+            setZapped(true)
+          }
+          zaps.push(zapInvoice || { amount: 0 })
           break
       }
     })
@@ -95,56 +97,35 @@ const MessageActionBar = ({
       reacts,
       zaps,
     }
-  }, [event, muteList, relatedEvents, user?.hexpubkey])
-  useEffect(() => {
-    if (!data) return
-    const reaction = data.reacts.reduce(
-      (a, b) => {
-        if (b.content !== '-') {
-          a.liked += 1
-        } else {
-          a.disliked += 1
-        }
-        return a
-      },
-      { liked: 0, disliked: 0 },
-    )
-    setReaction(reaction)
-  }, [data])
+  }, [event, muteList, relatedEvents, user?.pubkey])
+
   const likeAmount = useMemo(
-    () => (liked ? numeral(liked).format(amountFormat) : undefined),
-    [liked],
+    () =>
+      data.reacts.length
+        ? numeral(data.reacts.length).format(amountFormat)
+        : undefined,
+    [data.reacts.length],
   )
-  const { commentAmount, zapAmount } = useMemo(() => {
+  const zapAmount = useMemo(() => {
     const zapSummary = data?.zaps.reduce(
       (sum, { amount }) => sum + amount / 1000,
       0,
     )
-    return {
-      commentAmount: data?.comments.length
-        ? numeral(data.comments.length).format(amountFormat)
-        : undefined,
-      zapAmount: zapSummary
-        ? numeral(zapSummary).format(amountFormat)
-        : undefined,
-    }
+    return zapSummary ? numeral(zapSummary).format(amountFormat) : undefined
   }, [data])
   const handleClickReact = useCallback(
-    (reaction: '+' | '-') => async () => {
+    (reaction: string) => async () => {
+      if (reacted) return
       const newEvent = new NDKEvent(ndk)
       newEvent.kind = NDKKind.Reaction
       newEvent.content = reaction
       newEvent.tags = [
-        ['e', event.id, event.relay?.url || ''].filter((item) => !!item),
+        ['e', event.id, '', '', event.pubkey].filter((item) => !!item),
       ]
-      setReacted(reaction)
-      setReaction({
-        liked: liked + (reaction === '+' ? 1 : 0),
-        disliked: disliked + (reaction === '-' ? 1 : 0),
-      })
+      setReacted(true)
       await newEvent.publish()
     },
-    [event, ndk, liked, disliked],
+    [event, ndk, reacted],
   )
   const handleClickAction = useCallback(
     (type: EventActionType, options?: any) => () => {
@@ -157,59 +138,78 @@ const MessageActionBar = ({
     [event, setEventAction],
   )
   return (
-    <Box className="text-contrast-secondary flex items-center gap-2 opacity-70">
-      {comment && (
-        <Tooltip title="Comment" disableInteractive>
-          <IconButton
+    <Box className="text-contrast-secondary flex items-center gap-2 opacity-70 h-6">
+      {/* {comment && (
+        <Tooltip title="Reply" disableInteractive>
+          <Button
             color="inherit"
             size="small"
-            onClick={handleClickAction(EventActionType.Comment)}
+            className="!min-w-0"
+            onClick={() => onReply?.(event)}
           >
-            <CommentOutlined fontSize="small" />
-            {!!commentAmount && (
-              <Typography className="!w-7 text-left" variant="caption">
-                {commentAmount}
-              </Typography>
-            )}
-          </IconButton>
+            <ReplyOutlined className="!text-sm" />
+          </Button>
         </Tooltip>
-      )}
+      )} */}
       {react && (
-        <Tooltip title="Like" disableInteractive>
-          <IconButton
+        <Tooltip title="React" disableInteractive>
+          <Button
             color="inherit"
             size="small"
-            onClick={reacted === '+' ? undefined : handleClickReact('+')}
+            className="!min-w-0"
+            onClick={handleClickReact('+')}
+            startIcon={
+              !!likeAmount ? (
+                reacted ? (
+                  <ThumbUp className="!text-secondary !text-sm" />
+                ) : (
+                  <ThumbUpOutlined className="!text-sm" />
+                )
+              ) : undefined
+            }
           >
-            {reacted === '+' ? (
-              <ThumbUp className="!text-secondary" fontSize="small" />
-            ) : (
-              <ThumbUpOutlined fontSize="small" />
-            )}
-            {!!likeAmount && (
-              <Typography className="!w-7 text-left" variant="caption">
-                {likeAmount}
-              </Typography>
-            )}
-          </IconButton>
+            {!likeAmount ? (
+              reacted ? (
+                <ThumbUp className="!text-secondary !text-sm" />
+              ) : (
+                <ThumbUpOutlined className="!text-sm" />
+              )
+            ) : undefined}
+            {!!likeAmount ? (
+              <Typography className="!text-xs">{likeAmount}</Typography>
+            ) : undefined}
+          </Button>
         </Tooltip>
       )}
       {zap && (author?.profile?.lud16 || author?.profile?.lud06) && (
         <Tooltip title="Zap" disableInteractive>
-          <Box>
-            <IconButton
-              color="inherit"
-              size="small"
-              onClick={handleClickAction(EventActionType.Zap)}
-            >
-              <ElectricBoltOutlined fontSize="small" />
-              {!!zapAmount && (
-                <Typography className="!w-7 text-left" variant="caption">
-                  {zapAmount}
-                </Typography>
-              )}
-            </IconButton>
-          </Box>
+          <Button
+            color="inherit"
+            size="small"
+            className="!min-w-0"
+            onClick={handleClickAction(EventActionType.Zap)}
+            startIcon={
+              !!zapAmount ? (
+                zapped ? (
+                  <ElectricBolt className="!text-primary !text-sm" />
+                ) : (
+                  <ElectricBoltOutlined className="!text-sm" />
+                )
+              ) : undefined
+            }
+          >
+            {!zapAmount ? (
+              zapped ? (
+                <ElectricBolt className="!text-primary !text-sm" />
+              ) : (
+                <ElectricBoltOutlined className="!text-sm" />
+              )
+            ) : undefined}
+
+            {!!zapAmount ? (
+              <Typography className="!text-xs">{zapAmount}</Typography>
+            ) : undefined}
+          </Button>
         </Tooltip>
       )}
     </Box>
@@ -220,10 +220,12 @@ const MessageItem = ({
   className,
   event,
   relatedEvents,
+  onReply,
 }: {
   className?: string
   event: NDKEvent
   relatedEvents?: NDKEvent[]
+  onReply?: (event: NDKEvent) => void
 }) => {
   const zapInvoice = zapInvoiceFromEvent(event)
   const zapAmount = useMemo(
@@ -336,6 +338,15 @@ const MessageItem = ({
                   )}
                 >
                   <TextNote event={event} textVariant="body2" />
+                  {action && (
+                    <Box className="mt-1">
+                      <MessageActionBar
+                        onReply={onReply}
+                        event={event}
+                        relatedEvents={relatedEvents}
+                      />
+                    </Box>
+                  )}
                 </Box>
               )
             )}
@@ -352,11 +363,6 @@ const MessageItem = ({
           </Box>
         </Box>
       </Box>
-      {/* {action && (
-        <Box className={classNames(itsYou ? 'flex justify-end' : 'ml-10')}>
-          <MessageActionBar event={event} relatedEvents={relatedEvents} />
-        </Box>
-      )} */}
     </Box>
   )
 }
@@ -364,9 +370,11 @@ const MessageItem = ({
 const LiveChatBox = ({
   className,
   naddr,
+  onReply,
 }: {
   className?: string
   naddr?: string
+  onReply?: (event: NDKEvent) => void
 }) => {
   const scrollRef = useRef<ViewportListRef>(null)
   const viewportRef = useRef(null)
@@ -395,8 +403,7 @@ const LiveChatBox = ({
     return {
       kinds: [NDKKind.Zap, 1311 as any],
       '#a': [`30311:${hexpubkey}:${identifier}`],
-      limit: 100,
-      until: unixNow() + DAY,
+      limit: 20,
     }
   }, [hexpubkey, identifier, signing])
   const options = useMemo(
@@ -407,16 +414,20 @@ const LiveChatBox = ({
   )
   const [events] = useSubscribe(filter, true, undefined, options)
   const renderEventItem = useCallback(
-    (item: NDKEvent, props: any) => (
-      <MessageItem
-        key={item.deduplicationKey()}
-        className="py-2"
-        event={item}
-        relatedEvents={props.relatedEvents}
-      />
-    ),
-    [],
+    (item: NDKEvent, props: any) => {
+      return (
+        <MessageItem
+          key={item.id}
+          className="py-2"
+          event={item}
+          relatedEvents={props.relatedEvents}
+          onReply={onReply}
+        />
+      )
+    },
+    [onReply],
   )
+
   return (
     <Box className={classNames('w-full h-full relative', className)}>
       {decodedAddress?.type === 'naddr' &&

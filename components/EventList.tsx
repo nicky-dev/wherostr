@@ -87,7 +87,10 @@ const EventList: FC<EventListProps> = ({
   const eventIds = useMemo(
     () =>
       notes
-        .filter(({ kind }) => kind === NDKKind.Text || kind === NDKKind.Article)
+        .filter(
+          ({ kind }) =>
+            kind === 1311 || kind === NDKKind.Text || kind === NDKKind.Article,
+        )
         .map(({ id }) => id),
     [notes],
   )
@@ -96,7 +99,6 @@ const EventList: FC<EventListProps> = ({
     return {
       kinds: [NDKKind.Repost, NDKKind.Text, NDKKind.Zap, NDKKind.Reaction],
       '#e': eventIds,
-      until: unixNow() + DAY,
     }
   }, [eventIds])
   const relatedEventsOptions = useMemo(
@@ -113,9 +115,9 @@ const EventList: FC<EventListProps> = ({
   )
   const getRelatedEvents = useCallback(
     (event: NDKEvent) =>
-      relatedEvents.filter((item) =>
-        item.getMatchingTags('e').some(([_1, id]) => id === event.id),
-      ),
+      relatedEvents.filter((item) => {
+        return item.getMatchingTags('e').some(([_1, id]) => id === event.id)
+      }),
     [relatedEvents],
   )
   const _renderEventItem = useCallback(
@@ -124,7 +126,9 @@ const EventList: FC<EventListProps> = ({
       if (renderEventItem) {
         return renderEventItem(item, {
           relatedEvents:
-            item.kind === NDKKind.Text || item.kind === NDKKind.Article
+            item.kind === 1311 ||
+            item.kind === NDKKind.Text ||
+            item.kind === NDKKind.Article
               ? getRelatedEvents(item)
               : [],
         })
@@ -180,7 +184,9 @@ const EventList: FC<EventListProps> = ({
             hideContent={depth > 0 && item.kind === NDKKind.Repost}
             limitedHeight
             relatedEvents={
-              item.kind === NDKKind.Text || item.kind === NDKKind.Article
+              item.kind === 1311 ||
+              item.kind === NDKKind.Text ||
+              item.kind === NDKKind.Article
                 ? getRelatedEvents(item)
                 : []
             }
