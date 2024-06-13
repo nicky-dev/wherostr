@@ -33,7 +33,7 @@ export const defaultRelays = [
 
 const dexieAdapter = new NDKCacheAdapterDexie({
   dbName: 'wherostr-cache',
-  expirationTime: 3600 * 24 * 7,
+  expirationTime: 3600 * 24 * 1,
   profileCacheSize: 200,
 })
 
@@ -112,6 +112,7 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const getEvent = useCallback(
     async (id: string) => {
+      if (!id) return null
       return ndk.fetchEvent(id, {
         cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,
         subId: nanoid(8),

@@ -18,6 +18,7 @@ import {
   NDKNip07Signer,
   NDKPrivateKeySigner,
   NDKRelay,
+  NDKRelayList,
   NDKRelayStatus,
   NDKSubscriptionCacheUsage,
   NDKUser,
@@ -426,7 +427,7 @@ const connectToUserRelays = async (user: NDKUser) => {
     return
   }
   const runUserFunctions = async (user: NDKUser) => {
-    const relayList = await user.relayList()
+    const relayList = await NDKRelayList.forUser(user.pubkey, ndk)
 
     if (!relayList) {
       console.debug('No relay list found for user', { npub: user.npub })

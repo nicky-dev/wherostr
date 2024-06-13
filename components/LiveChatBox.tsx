@@ -1,7 +1,14 @@
 'use client'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { DAY, unixNow } from '@/utils/time'
-import { Box, Button, IconButton, Tooltip, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  Divider,
+  IconButton,
+  Tooltip,
+  Typography,
+} from '@mui/material'
 import {
   NDKEvent,
   NDKFilter,
@@ -37,6 +44,8 @@ import EventList from './EventList'
 import { isComment } from '@/utils/event'
 import { useNDK } from '@/hooks/useNostr'
 import { AppContext, EventActionType } from '@/contexts/AppContext'
+import { useEvent } from '@/hooks/useEvent'
+import { useEventCache } from '@/hooks/useCache'
 
 const MessageActionBar = ({
   event,
@@ -68,15 +77,20 @@ const MessageActionBar = ({
           amount: number
         }
     )[] = []
-    const comments: NDKEvent[] = []
+    // const comments: NDKEvent[] = []
     relatedEvents?.forEach((item) => {
       if (muteList.includes(item.pubkey)) return
       switch (item.kind) {
-        case NDKKind.Text:
-          if (isComment(item, event, true)) {
-            comments.push(item)
-          }
-          break
+        // case 1311:
+        //   if (isComment(item, event, true)) {
+        //     comments.push(item)
+        //   }
+        //   break
+        // case NDKKind.Text:
+        //   if (isComment(item, event, true)) {
+        //     comments.push(item)
+        //   }
+        //   break
         case NDKKind.Reaction:
           if (item.pubkey === user?.pubkey) {
             setReacted(true)
@@ -93,7 +107,6 @@ const MessageActionBar = ({
       }
     })
     return {
-      comments,
       reacts,
       zaps,
     }
@@ -139,7 +152,7 @@ const MessageActionBar = ({
   )
   return (
     <Box className="text-contrast-secondary flex items-center gap-2 opacity-70 h-6">
-      {/* {comment && (
+      {comment && (
         <Tooltip title="Reply" disableInteractive>
           <Button
             color="inherit"
@@ -150,7 +163,7 @@ const MessageActionBar = ({
             <ReplyOutlined className="!text-sm" />
           </Button>
         </Tooltip>
-      )} */}
+      )}
       {react && (
         <Tooltip title="React" disableInteractive>
           <Button
@@ -220,11 +233,13 @@ const MessageItem = ({
   className,
   event,
   relatedEvents,
+  onReplySourceClick,
   onReply,
 }: {
   className?: string
   event: NDKEvent
   relatedEvents?: NDKEvent[]
+  onReplySourceClick?: (event: NDKEvent) => void
   onReply?: (event: NDKEvent) => void
 }) => {
   const zapInvoice = zapInvoiceFromEvent(event)
@@ -285,6 +300,13 @@ const MessageItem = ({
       minute: '2-digit',
     })
   }, [event])
+
+  const replyEventId = useMemo(
+    () => event.getMatchingTags('e', 'reply')?.[0]?.[1],
+    [event],
+  )
+  const [replyEvent] = useEventCache(replyEventId)
+
   return (
     <Box className={classNames('flex flex-col gap-1', className)}>
       <Box className="flex gap-2 justify-start items-start">
@@ -333,13 +355,34 @@ const MessageItem = ({
               !!event.content && (
                 <Box
                   className={classNames(
-                    'bg-contrast-primary/10 rounded-2xl px-3 py-2 inline-block overflow-hidden',
+                    'bg-contrast-primary/10 rounded-2xl py-2 inline-block overflow-hidden',
                     itsYou ? '!rounded-tr-none' : '!rounded-tl-none mt-1',
                   )}
                 >
-                  <TextNote event={event} textVariant="body2" />
+                  {!!replyEvent?.pubkey && (
+                    <>
+                      <Box
+                        className="flex px-3 pb-2 opacity-50 cursor-pointer hover:opacity-80"
+                        onClick={() => onReplySourceClick?.(replyEvent)}
+                      >
+                        <ProfileAvatar
+                          hexpubkey={replyEvent.pubkey}
+                          avatarSize={24}
+                          showValidBadge={false}
+                          className="mr-2"
+                        />
+                        <Typography variant="body2" noWrap>
+                          {replyEvent.content}
+                        </Typography>
+                      </Box>
+                      <Divider className="mb-2" />
+                    </>
+                  )}
+                  <Box className="px-3">
+                    <TextNote event={event} textVariant="body2" />
+                  </Box>
                   {action && (
-                    <Box className="mt-1">
+                    <Box className="mt-1 px-3">
                       <MessageActionBar
                         onReply={onReply}
                         event={event}
@@ -412,7 +455,21 @@ const LiveChatBox = ({
     }),
     [],
   )
+
   const [events] = useSubscribe(filter, true, undefined, options)
+
+  const handleReplySourceClick = useCallback(
+    (event: NDKEvent) => {
+      const index = events.findIndex((item) => event.id === item.id)
+      if (index === -1) return
+      scrollRef.current?.scrollToIndex({
+        alignToTop: false,
+        index,
+      })
+    },
+    [events],
+  )
+
   const renderEventItem = useCallback(
     (item: NDKEvent, props: any) => {
       return (
@@ -422,10 +479,11 @@ const LiveChatBox = ({
           event={item}
           relatedEvents={props.relatedEvents}
           onReply={onReply}
+          onReplySourceClick={handleReplySourceClick}
         />
       )
     },
-    [onReply],
+    [onReply, handleReplySourceClick],
   )
 
   return (

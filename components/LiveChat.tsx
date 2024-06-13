@@ -79,8 +79,10 @@ export function LiveChat({
             ['a', `30311:${event?.author}:${event?.id}`, '', 'root'],
           ]
           if (event!.id && replyEvent?.id) {
-            newEvent.tags.push(['e', event!.id, '', 'reply'])
+            newEvent.tags.push(['e', replyEvent?.id, '', 'reply'])
+            newEvent.tags.push(['p', replyEvent?.pubkey])
           }
+          setReplyEvent(undefined)
           setMessage('')
           setBusy(true)
           await newEvent.publish()
