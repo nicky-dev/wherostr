@@ -8,7 +8,7 @@ export const useUserCache = (hexpubkey: string) => {
   return usePromise(getUser(hexpubkey), [hexpubkey])
 }
 
-export const useEventCache = (id: string) => {
+export const useEventCache = (id?: string) => {
   const { getEvent } = useContext(NostrContext)
   return usePromise(getEvent(id), [id])
 }

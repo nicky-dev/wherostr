@@ -427,7 +427,7 @@ const connectToUserRelays = async (user: NDKUser) => {
     return
   }
   const runUserFunctions = async (user: NDKUser) => {
-    const relayList = await NDKRelayList.forUser(user.pubkey, ndk)
+    const relayList = await user.relayList()
 
     if (!relayList) {
       console.debug('No relay list found for user', { npub: user.npub })

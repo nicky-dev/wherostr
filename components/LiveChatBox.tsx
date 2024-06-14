@@ -301,10 +301,12 @@ const MessageItem = ({
     })
   }, [event])
 
-  const replyEventId = useMemo(
-    () => event.getMatchingTags('e', 'reply')?.[0]?.[1],
-    [event],
-  )
+  const replyEventId = useMemo(() => {
+    return event.getMatchingTags('e').find(([_1, id, _3, desc]) => {
+      return id === event.id && desc === 'reply'
+    })?.[1]
+  }, [event])
+
   const [replyEvent] = useEventCache(replyEventId)
 
   return (

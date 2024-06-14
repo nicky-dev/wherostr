@@ -20,7 +20,7 @@ import { nanoid } from 'nanoid'
 interface Nostr {
   ndk: NDK
   getUser: (key?: string, relayUrls?: string[]) => Promise<NDKUser | undefined>
-  getEvent: (id: string) => Promise<NDKEvent | null>
+  getEvent: (id?: string) => Promise<NDKEvent | null>
 }
 
 export const verifyCache: Record<string, boolean> = {}
@@ -111,7 +111,7 @@ export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
   )
 
   const getEvent = useCallback(
-    async (id: string) => {
+    async (id?: string) => {
       if (!id) return null
       return ndk.fetchEvent(id, {
         cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST,

@@ -15,7 +15,7 @@
     "@mui/icons-material": "^5.14.7",
     "@mui/lab": "^5.0.0-alpha.148",
     "@mui/material": "^5.14.7",
-    "@nostr-dev-kit/ndk": "^2.8.2",
+    "@nostr-dev-kit/ndk": "^2.0.6",
     "@nostr-dev-kit/ndk-cache-dexie": "^2.0.6",
     "@snort/system": "^1.0.21",
     "@turf/bbox": "^6.5.0",
