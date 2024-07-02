@@ -226,7 +226,7 @@ export default function Page() {
   )
 }
 
-const getAPIUrl = (ev: NDKEvent) => {
+const fetchViewersFromProvider = async (ev: NDKEvent) => {
   const streamingUrl = ev?.tagValue('streaming')
   if (!streamingUrl) return
   const url = new URL(streamingUrl)
@@ -234,11 +234,20 @@ const getAPIUrl = (ev: NDKEvent) => {
     return
   } else if (youtubeRegex.test(streamingUrl)) {
     return
+  } else if (streamingUrl.toLowerCase().includes('/liveapp/streams/')) {
+    const streamKey = streamingUrl?.match(/\/liveapp\/streams\/(.*)\.m3u8/)?.[0]
+    const apiUrl = `${url.protocol}//${url.host}/rest/v2/request?_path=LiveApp/rest/v2/broadcasts/${streamKey}/broadcast-statistics`
+    const result = await fetch(apiUrl)
+    const jsonResult = await result.json()
+    return jsonResult.totalHLSWatchersCount
   } else if (streamingUrl.endsWith('.m3u8')) {
     const streamKey = streamingUrl?.match(
       /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/,
     )?.[0]
-    return `${url.protocol}//${url.host}/api/v3/widget/process/restreamer-ui:ingest:${streamKey}`
+    const apiUrl = `${url.protocol}//${url.host}/api/v3/widget/process/restreamer-ui:ingest:${streamKey}`
+    const result = await fetch(apiUrl)
+    const jsonResult = await result.json()
+    return jsonResult.current_sessions
   }
 }
 
@@ -255,15 +264,11 @@ const getImageUrl = (ev: NDKEvent) => {
 }
 
 const fetchStats = async (ev: NDKEvent) => {
-  const apiUrl = getAPIUrl(ev)
-  console.debug('fetchStats', 'apiUrl', apiUrl)
-  if (!apiUrl) return
   try {
-    const result = await fetch(apiUrl)
-    const jsonResult = await result.json()
+    const viewers = await fetchViewersFromProvider(ev)
+    if (!viewers && viewers !== 0) return
     return {
-      viewers: jsonResult.current_sessions,
-      uptime: jsonResult.uptime,
+      viewers,
     }
   } catch (err) {
     console.log(err)
