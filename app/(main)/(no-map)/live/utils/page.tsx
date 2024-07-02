@@ -236,7 +236,7 @@ const fetchViewersFromProvider = async (ev: NDKEvent) => {
     return
   } else if (streamingUrl.toLowerCase().includes('/liveapp/streams/')) {
     const streamKey = streamingUrl?.match(/\/liveapp\/streams\/(.*)\.m3u8/i)?.[1]
-    const apiUrl = `${url.protocol}//${url.host}/rest/v2/request?_path=LiveApp/rest/v2/broadcasts/${streamKey}/broadcast-statistics`
+    const apiUrl = `${url.protocol}//${url.host}/LiveApp/rest/v2/broadcasts/${streamKey}/broadcast-statistics`
     const result = await fetch(apiUrl)
     const jsonResult = await result.json()
     return jsonResult.totalHLSWatchersCount
