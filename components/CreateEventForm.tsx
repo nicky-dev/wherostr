@@ -1,8 +1,7 @@
 import { EventActionType } from '@/contexts/AppContext'
 import { useAction } from '@/hooks/useApp'
 import { useMap } from '@/hooks/useMap'
-import { useNDK } from '@/hooks/useNostr'
-import { NDKEvent, NDKRelayStatus } from '@nostr-dev-kit/ndk'
+import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import {
@@ -57,9 +56,11 @@ import { LoadingButton } from '@mui/lab'
 import { reverse } from '@/services/osm'
 import usePromise from 'react-use-promise'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useUser } from '@/hooks/useAccount'
 import powWorker from '@/utils/powWorker'
 import NostrTextField from './NostrTextField'
+import { useAccountStore } from '@/contexts/AccountContext'
+import { useNDK } from '@/contexts/NostrContext'
+import { useSnackbar } from './SnackbarAlert'
 
 export const CreateEventForm = ({
   type,
@@ -70,12 +71,13 @@ export const CreateEventForm = ({
 }) => {
   const ndk = useNDK()
   const map = useMap()
-  const user = useUser()
+  const user = useAccountStore((state) => state.user)
   const theme = useTheme()
   const router = useRouter()
   const pathname = usePathname()
   const query = useSearchParams()
-  const { showSnackbar, backToPreviosModalAction } = useAction()
+  const { backToPreviosModalAction } = useAction()
+  const { showSnackbar } = useSnackbar()
   const [busy, setBusy] = useState(false)
   const [appendMapLink, setAppendMapLink] = useState(false)
   const [locating, setLocating] = useState(false)

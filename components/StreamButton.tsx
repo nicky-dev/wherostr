@@ -19,12 +19,13 @@ import { LoadingButton } from '@mui/lab'
 import { unixNow } from '@/utils/time'
 import ReactPlayer from 'react-player'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
-import { useNDK, useStreamRelaySet } from '@/hooks/useNostr'
 import { useAction } from '@/hooks/useApp'
-import { useUser } from '@/hooks/useAccount'
 import { nip19 } from 'nostr-tools'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
+import { useAccountStore } from '@/contexts/AccountContext'
+import { useNDK } from '@/contexts/NostrContext'
+import { useSnackbar } from './SnackbarAlert'
 
 export interface StreamButtonProps extends ButtonProps {
   label: string
@@ -43,9 +44,8 @@ export const StreamButton: FC<StreamButtonProps> = ({
 }) => {
   const router = useRouter()
   const ndk = useNDK()
-  const relaySet = useStreamRelaySet()
-  const user = useUser()
-  const { showSnackbar } = useAction()
+  const user = useAccountStore((state) => state.user)
+  const { showSnackbar } = useSnackbar()
   const liveItem = useLiveActivityItem(data)
   const values = useMemo(() => {
     return { ...liveItem, tags: liveItem?.tags?.map((d) => d[1]).join(',') }
@@ -120,7 +120,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
           const d = t.trim()
           event.tags.push(['t', d])
         })
-        await event.publish(relaySet)
+        await event.publish()
         setOpen(false)
         if (mode === 'add') {
           const addr = nip19.naddrEncode({
@@ -140,7 +140,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
         setLoading(false)
       }
     },
-    [mode, router, ndk, user, relaySet, showSnackbar],
+    [mode, router, ndk, user, showSnackbar],
   )
   const status = watch('status', 'live')
   const tagsText = watch('tags', '')

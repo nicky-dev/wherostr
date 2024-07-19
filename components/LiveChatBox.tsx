@@ -26,7 +26,6 @@ import {
   useState,
 } from 'react'
 import { nip19 } from 'nostr-tools'
-import { useAccount, useMuting, useUser } from '@/hooks/useAccount'
 import { ViewportListRef } from 'react-viewport-list'
 import ProfileAvatar from './ProfileAvatar'
 import { useUserProfile } from '@/hooks/useUserProfile'
@@ -41,11 +40,10 @@ import {
 } from '@mui/icons-material'
 import TextNote from './TextNote'
 import EventList from './EventList'
-import { isComment } from '@/utils/event'
-import { useNDK } from '@/hooks/useNostr'
-import { AppContext, EventActionType } from '@/contexts/AppContext'
-import { useEvent } from '@/hooks/useEvent'
+import { EventActionType, useAppStore } from '@/contexts/AppContext'
 import { useEventCache } from '@/hooks/useCache'
+import { useNDK } from '@/contexts/NostrContext'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 const MessageActionBar = ({
   event,
@@ -63,10 +61,10 @@ const MessageActionBar = ({
   onReply?: (event: NDKEvent) => void
 }) => {
   const ndk = useNDK()
-  const { setEventAction } = useContext(AppContext)
-  const user = useUser()
+  const setEventAction = useAppStore((state) => state.setEventAction)
+  const user = useAccountStore((state) => state.user)
+  const muteList = useAccountStore((state) => state.muteList)
   const author = useUserProfile(event.pubkey)
-  const [muteList] = useMuting()
   const [reacted, setReacted] = useState(false)
   const [zapped, setZapped] = useState(false)
   const data = useMemo(() => {
@@ -110,7 +108,7 @@ const MessageActionBar = ({
       reacts,
       zaps,
     }
-  }, [event, muteList, relatedEvents, user?.pubkey])
+  }, [muteList, relatedEvents, user?.pubkey])
 
   const likeAmount = useMemo(
     () =>
@@ -264,7 +262,7 @@ const MessageItem = ({
     [user],
   )
   const action = useMemo(() => event.kind === 1311, [event.kind])
-  const account = useUser()
+  const account = useAccountStore((state) => state.user)
   const itsYou = useMemo(
     () => account?.hexpubkey === hexpubkey,
     [account?.hexpubkey, hexpubkey],
@@ -423,7 +421,7 @@ const LiveChatBox = ({
 }) => {
   const scrollRef = useRef<ViewportListRef>(null)
   const viewportRef = useRef(null)
-  const { user, signing } = useAccount()
+  const signing = useAccountStore((state) => state.signing)
   const decodedAddress = useMemo(() => {
     try {
       return typeof naddr === 'string' ? nip19.decode(naddr) : undefined

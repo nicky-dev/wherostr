@@ -1,13 +1,13 @@
 'use client'
 import { Paper, Typography } from '@mui/material'
 import { useMemo, useRef } from 'react'
-import { useAccount } from '@/hooks/useAccount'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { DAY, unixNow } from '@/utils/time'
 import { Notifications } from '@mui/icons-material'
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import EventList from '@/components/EventList'
 import NotificationItem from '@/components/NotificationItem'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 const renderNotificationItem = (item: NDKEvent, props: any) => (
   <NotificationItem
@@ -19,7 +19,8 @@ const renderNotificationItem = (item: NDKEvent, props: any) => (
 )
 
 export default function Page() {
-  const { signing, user } = useAccount()
+  const signing = useAccountStore((state) => state.signing)
+  const user = useAccountStore((state) => state.user)
   const scrollRef = useRef<HTMLElement>(
     typeof window !== 'undefined' ? window.document.body : null,
   )

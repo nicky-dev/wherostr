@@ -1,8 +1,8 @@
 'use client'
 import {
-  AppContext,
   EventActionType,
   ProfileActionType,
+  useAppStore,
 } from '@/contexts/AppContext'
 import { Box, Typography } from '@mui/material'
 import { ReactNode, useCallback, useContext, useMemo } from 'react'
@@ -35,7 +35,7 @@ const ProfileChip = ({
     typeof hexpubkey === 'string' ? hexpubkey : hexpubkey?.[0],
   )
   // const userRight = useUserProfile(hexpubkey?.[1])
-  const { setProfileAction } = useContext(AppContext)
+  const setProfileAction = useAppStore((state) => state.setProfileAction)
   const displayName = useMemo(
     () =>
       userLeft?.profile?.displayName ||

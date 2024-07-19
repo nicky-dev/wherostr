@@ -9,14 +9,14 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { LiveActivityItem } from './LiveActivity'
-import { AccountContext } from '@/contexts/AccountContext'
-import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
-import { NostrContext } from '@/contexts/NostrContext'
+import { NDKEvent } from '@nostr-dev-kit/ndk'
 import LiveChatBox from './LiveChatBox'
 import NostrTextField from './NostrTextField'
 import ProfileAvatar from './ProfileAvatar'
+import { useNostrStore } from '@/contexts/NostrContext'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 export function LiveChat({
   naddr,
@@ -26,8 +26,8 @@ export function LiveChat({
   naddr?: string
   event?: LiveActivityItem
 }) {
-  const { ndk } = useContext(NostrContext)
-  const { user } = useContext(AccountContext)
+  const ndk = useNostrStore((state) => state.ndk)
+  const user = useAccountStore((state) => state.user)
   const [message, setMessage] = useState<string>()
   const [busy, setBusy] = useState<boolean>(false)
   const [replyEvent, setReplyEvent] = useState<NDKEvent>()

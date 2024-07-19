@@ -1,5 +1,5 @@
 'use client'
-import { useNDK } from './useNostr'
+import { useNDK } from '@/contexts/NostrContext'
 import {
   NDKEvent,
   NDKFilter,

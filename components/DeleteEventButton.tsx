@@ -1,7 +1,7 @@
 import { FC, useCallback, useState } from 'react'
 import { LoadingButton } from '@mui/lab'
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
-import { useNDK, useStreamRelaySet } from '@/hooks/useNostr'
+import { useNDK } from '@/contexts/NostrContext'
 
 export interface DeleteButtonProps {
   label?: string
@@ -14,7 +14,6 @@ export const DeleteButton: FC<DeleteButtonProps> = ({
   onDelete,
 }) => {
   const ndk = useNDK()
-  const relaySet = useStreamRelaySet()
   const [loading, setLoading] = useState(false)
 
   const handleDelete = useCallback(async () => {
@@ -26,12 +25,12 @@ export const DeleteButton: FC<DeleteButtonProps> = ({
       ev.kind = NDKKind.EventDeletion
       ev.content = 'Delete'
       ev.tag(event)
-      await ev.publish(relaySet)
+      await ev.publish()
       onDelete?.()
     } finally {
       setLoading(false)
     }
-  }, [ndk, relaySet, event, onDelete])
+  }, [ndk, event, onDelete])
 
   return (
     <LoadingButton

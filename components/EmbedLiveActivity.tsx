@@ -1,5 +1,4 @@
 import NextLink from 'next/link'
-import { useStreamRelaySet } from '@/hooks/useNostr'
 import {
   Box,
   Button,
@@ -16,8 +15,7 @@ import ReactTimeago from 'react-timeago'
 import ProfileChip from './ProfileChip'
 import { PlayCircleOutline } from '@mui/icons-material'
 export const EmbedLiveActivity = ({ naddr }: { naddr: string }) => {
-  const streamRelaySet = useStreamRelaySet()
-  const [event, error, state] = useEvent(naddr, streamRelaySet)
+  const [event, error, state] = useEvent(naddr)
   const pubkey = useMemo(() => event?.tagValue('p') || event?.pubkey, [event])
   const title = useMemo(() => event?.tagValue('title'), [event])
   const image = useMemo(() => event?.tagValue('image'), [event])

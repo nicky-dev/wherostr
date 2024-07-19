@@ -3,18 +3,18 @@ import { Box, IconButton, Paper, Typography } from '@mui/material'
 import { HomeOutlined, NotificationsOutlined } from '@mui/icons-material'
 import UserBar from './UserBar'
 import classNames from 'classnames'
-import { useUser } from '@/hooks/useAccount'
 import DrawerMenu from './DrawerMenu'
 import ProfileChip from './ProfileChip'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 const NavigationBar: FC<{
   className?: string
   startTools?: ReactNode
   endTools?: ReactNode
 }> = ({ className, startTools, endTools }) => {
-  const user = useUser()
+  const user = useAccountStore((state) => state.user)
   return (
     <Box className={classNames('flex items-center gap-2 px-3 py-2', className)}>
       <DrawerMenu />

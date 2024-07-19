@@ -19,12 +19,12 @@ import ResponsiveButton from './ResponsiveButton'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import StatusBadge from './StatusBadge'
 import { EventActionType } from '@/contexts/AppContext'
-import { useFollowing, useUser } from '@/hooks/useAccount'
 import { StreamButton } from './StreamButton'
 import { useAction } from '@/hooks/useApp'
 import { DeleteButton } from './DeleteEventButton'
 import { v4 as uuidv4 } from 'uuid'
 import TextNote from './TextNote'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 export interface LiveActivityItem {
   id: string
@@ -49,9 +49,10 @@ const LiveActivity = ({
   naddr: string
   event?: NDKEvent
 }) => {
-  const user = useUser()
   const { setEventAction } = useAction()
-  const [follows, follow] = useFollowing()
+  const user = useAccountStore((state) => state.user)
+  const follows = useAccountStore((state) => state.follows)
+  const follow = useAccountStore((state) => state.follow)
   const [loading, setLoading] = useState(false)
   const liveItem = useLiveActivityItem(event)
   const autoplay = useMemo(() => liveItem.status === 'live', [liveItem.status])

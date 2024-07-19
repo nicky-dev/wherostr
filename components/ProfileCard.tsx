@@ -13,7 +13,6 @@ import classNames from 'classnames'
 import { useCallback, useMemo, useState } from 'react'
 import ProfileValidBadge from './ProfileValidBadge'
 import TextNote from './TextNote'
-import { useFollowing, useUser } from '@/hooks/useAccount'
 import { LoadingButton } from '@mui/lab'
 import {
   // Bolt,
@@ -27,6 +26,7 @@ import {
 } from '@mui/icons-material'
 import copy from 'copy-to-clipboard'
 import ProfileAvatar from './ProfileAvatar'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 export const ProfileCard = ({
   className,
@@ -117,11 +117,13 @@ export const ProfileCardFull = ({
 }) => {
   const [followingMenuAnchorEl, setFollowingMenuAnchorEl] =
     useState<HTMLElement | null>(null)
-  const account = useUser()
+  const account = useAccountStore((state) => state.user)
+  const follows = useAccountStore((state) => state.follows)
+  const follow = useAccountStore((state) => state.follow)
+  const unfollow = useAccountStore((state) => state.unfollow)
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
   const user = useUserProfile(hexpubkey)
-  const [follows, follow, unfollow] = useFollowing()
   const displayName = useUserDisplayName(user)
   const itsYou = useMemo(
     () => account?.hexpubkey === hexpubkey,

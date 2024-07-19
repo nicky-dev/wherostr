@@ -37,15 +37,15 @@ import {
   ParsedFragment,
   transformText,
 } from '@snort/system'
-import { EventActionType, AppContext } from '@/contexts/AppContext'
+import { EventActionType, useAppStore } from '@/contexts/AppContext'
 import { extractLngLat } from '@/utils/extractLngLat'
-import { MapContext } from '@/contexts/MapContext'
 import { LngLatBounds } from 'maplibre-gl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import NoteMenu from './NoteMenu'
 import classNames from 'classnames'
 import { amountFormat } from '@/constants/app'
 import numeral from 'numeral'
+import { useMap } from '@/hooks/useMap'
 
 const NotificationItem = ({
   className,
@@ -72,7 +72,7 @@ const NotificationItem = ({
 }) => {
   const pathname = usePathname()
   const router = useRouter()
-  const { map } = useContext(MapContext)
+  const map = useMap()
 
   const contentRef = useRef(null)
   const [overLimitedHeight, setOverLimitedHeight] = useState<
@@ -117,7 +117,7 @@ const NotificationItem = ({
     }
   }, [event, depth])
 
-  const { setEventAction } = useContext(AppContext)
+  const setEventAction = useAppStore((state) => state.setEventAction)
   const lnglat = useMemo(() => extractLngLat(event), [event])
   const hexpubkey = useMemo(() => {
     if (event.kind === NDKKind.Zap) {

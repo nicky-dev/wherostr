@@ -18,7 +18,7 @@ import {
   PublicOutlined,
   Tag,
 } from '@mui/icons-material'
-import { useFollowList } from '@/hooks/useAccount'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 export type FeedType = 'following' | 'global' | 'conversation' | undefined
 export interface FeedFilterMenuProps extends ButtonProps {
@@ -81,7 +81,7 @@ export default function FeedFilterMenu({
   disableConversation,
   ...props
 }: FeedFilterMenuProps) {
-  const [followLists] = useFollowList()
+  const followLists = useAccountStore((state) => state.followLists)
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {

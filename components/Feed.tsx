@@ -1,7 +1,6 @@
 'use client'
 import EventList from '@/components/EventList'
 import { FollowHashtagButton } from '@/components/FollowHashtagButton'
-import { useAccount, useFollowing } from '@/hooks/useAccount'
 import { useEvent } from '@/hooks/useEvent'
 import { useMap, useMapLoaded } from '@/hooks/useMap'
 import { useSubscribe } from '@/hooks/useSubscribe'
@@ -18,6 +17,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useEventMarkers } from '@/hooks/useEventMakers'
 import { FeedToolbar } from './FeedToolbar'
 import { useFeedType } from '@/hooks/useFeedType'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 export default function Feed({
   q,
@@ -28,8 +28,9 @@ export default function Feed({
 }) {
   const map = useMap()
   const mapLoaded = useMapLoaded()
-  const { user, signing } = useAccount()
-  const [follows] = useFollowing()
+  const signing = useAccountStore((state) => state.signing)
+  const user = useAccountStore((state) => state.user)
+  const follows = useAccountStore((state) => state.follows)
   const pathRef = useRef(pathname)
   pathRef.current = pathname
 
@@ -63,6 +64,7 @@ export default function Feed({
       const polygon = buffer(bboxPolygon(query.bbox), 5, {
         units: 'kilometers',
       })
+      if (!polygon) return
       const bounds = bbox(polygon)
       const bboxhash1 = Geohash.encode(bounds[1], bounds[0], 1)
       const bboxhash2 = Geohash.encode(bounds[3], bounds[2], 1)

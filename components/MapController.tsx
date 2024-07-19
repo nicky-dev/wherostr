@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useMemo } from 'react'
-import { useAccount, useFollowing } from '@/hooks/useAccount'
 import { EventActionOptions, EventActionType } from '@/contexts/AppContext'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
@@ -17,13 +16,15 @@ import bboxPolygon from '@turf/bbox-polygon'
 import bbox from '@turf/bbox'
 import { nip19 } from 'nostr-tools'
 import { useMap, useMapLoaded } from '@/hooks/useMap'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 const fullExtentGeohash = '0123456789bcdefghjkmnpqrstuvwxyz'.split('')
 export const MapController = ({ q }: { q?: string }) => {
   const map = useMap()
   const mapLoaded = useMapLoaded()
-  const [follows] = useFollowing()
-  const { user, signing } = useAccount()
+  const follows = useAccountStore((state) => state.follows)
+  const user = useAccountStore((state) => state.user)
+  const signing = useAccountStore((state) => state.signing)
 
   const feedType = useFeedType(q)
   const query = useMemo(() => extractQuery(q), [q])
@@ -50,6 +51,7 @@ export const MapController = ({ q }: { q?: string }) => {
       const polygon = buffer(bboxPolygon(query.bbox), 5, {
         units: 'kilometers',
       })
+      if (!polygon) return
       const bounds = bbox(polygon)
       const bboxhash1 = Geohash.encode(bounds[1], bounds[0], 1)
       const bboxhash2 = Geohash.encode(bounds[3], bounds[2], 1)

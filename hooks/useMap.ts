@@ -1,13 +1,14 @@
 'use client'
 import { MapContext } from '@/contexts/MapContext'
-import { useContext, useMemo } from 'react'
+import { useContext } from 'react'
+import { useStore } from 'zustand'
 
 export const useMap = () => {
-  const { map } = useContext(MapContext)
-  return useMemo(() => map, [map])
+  const store = useContext(MapContext)
+  return useStore(store, (state) => state.map)
 }
 
 export const useMapLoaded = () => {
-  const { mapLoaded } = useContext(MapContext)
-  return mapLoaded
+  const store = useContext(MapContext)
+  return useStore(store, (state) => state.mapLoaded)
 }

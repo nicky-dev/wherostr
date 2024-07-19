@@ -18,11 +18,10 @@ import { nip19 } from 'nostr-tools'
 import Link from 'next/link'
 import { WEEK, unixNow } from '@/utils/time'
 import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
-import { useStreamRelaySet } from '@/hooks/useNostr'
 import StatusBadge from '@/components/StatusBadge'
 import { ViewportList } from 'react-viewport-list'
 import ProfileChip from '@/components/ProfileChip'
-import { useMuting } from '@/hooks/useAccount'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 export default function Page() {
   const theme = useTheme()
@@ -31,15 +30,14 @@ export default function Page() {
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
   const smUp = useMediaQuery(theme.breakpoints.up('sm'))
   const since = useMemo(() => unixNow() - WEEK, [])
-  const [muteList] = useMuting()
+  const muteList = useAccountStore((state) => state.muteList)
   const liveFilter = useMemo(() => {
     return {
       kinds: [30311 as NDKKind],
       since,
     } as NDKFilter
   }, [since])
-  const relaySet = useStreamRelaySet()
-  const [liveEvent] = useSubscribe(liveFilter, true, relaySet)
+  const [liveEvent] = useSubscribe(liveFilter, true)
 
   const liveItems = useMemo(() => {
     const items = liveEvent

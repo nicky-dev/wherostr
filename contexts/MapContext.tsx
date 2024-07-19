@@ -2,10 +2,12 @@
 import {
   createContext,
   PropsWithChildren,
+  useContext,
   useEffect,
   useMemo,
   useState,
 } from 'react'
+import { create, createStore, useStore } from 'zustand'
 
 export type MapType = maplibregl.Map
 export interface MapContextValue<T = MapType> {
@@ -14,53 +16,34 @@ export interface MapContextValue<T = MapType> {
 }
 
 export interface MapContextFunction<T = MapType> {
-  setMap?: (map?: T) => void
+  unsetMap: () => void
+  setMap: (map?: T) => void
+  setMapLoaded: (loaded: boolean) => void
 }
 
 export type MapContextProps<T = MapType> = MapContextValue<T> &
   MapContextFunction<T>
 
-const defaultValue: MapContextProps = {
-  map: undefined,
-  mapLoaded: false,
-  setMap: (map) => {},
-}
-
 export interface MapProviderProps<T = MapType>
   extends MapContextValue<T>,
     PropsWithChildren {}
 
-export const MapContext = createContext<MapContextProps>(defaultValue)
+export const mapStore = createStore<MapContextProps<MapType>>()((set) => ({
+  map: undefined,
+  mapLoaded: false,
+  unsetMap: () =>
+    set((state) => ({ ...state, mapLoaded: false, map: undefined })),
+  setMap: (map) => set((state) => ({ ...state, map })),
+  setMapLoaded: (loaded) => set((state) => ({ ...state, mapLoaded: loaded })),
+}))
 
-export function MapContextProvider({
-  children,
-  map: defaultMap,
-}: MapProviderProps) {
-  const [map, setMap] = useState<MapType | undefined>(defaultMap)
-  const [mapLoaded, setMapLoaded] = useState(map?.isStyleLoaded() || false)
+export const MapContext = createContext<typeof mapStore>(mapStore)
 
-  useEffect(() => {
-    if (!map) return
-    const handler = (evt: maplibregl.MapLibreEvent) => {
-      setMapLoaded(true)
-    }
-    if (!map.isStyleLoaded()) {
-      map.on('style.load', handler)
-    }
-    return () => {
-      map.off('style.load', handler)
-    }
-  }, [map])
+export function MapContextProvider({ children }: MapProviderProps) {
+  return <MapContext.Provider value={mapStore}>{children}</MapContext.Provider>
+}
 
-  const contextValue = useMemo<MapContextProps>(() => {
-    return {
-      map,
-      mapLoaded,
-      setMap,
-    }
-  }, [map, mapLoaded])
-
-  return (
-    <MapContext.Provider value={contextValue}>{children}</MapContext.Provider>
-  )
+export const useMapContext = () => {
+  const mapStore = useContext(MapContext)
+  return useStore(mapStore)
 }

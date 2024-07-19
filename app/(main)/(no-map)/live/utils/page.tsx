@@ -1,6 +1,4 @@
 'use client'
-import { useUser } from '@/hooks/useAccount'
-import { useNDK, useStreamRelaySet } from '@/hooks/useNostr'
 import { WEEK, unixNow } from '@/utils/time'
 import {
   Box,
@@ -22,6 +20,8 @@ import {
 } from 'react'
 import { nip19 } from 'nostr-tools'
 import { useSubscribe } from '@/hooks/useSubscribe'
+import { useAccountStore } from '@/contexts/AccountContext'
+import { useNDK } from '@/contexts/NostrContext'
 
 const twitchRegex = /(?:https:\/\/)?clips\.twitch\.tv\/(\S+)/i
 const youtubeRegex = /(?:https:\/\/)?clips\.youtube\.com\/(\S+)/i
@@ -29,7 +29,7 @@ const youtubeRegex = /(?:https:\/\/)?clips\.youtube\.com\/(\S+)/i
 let timeoutHandler: NodeJS.Timeout
 export default function Page() {
   const ndk = useNDK()
-  const user = useUser()
+  const user = useAccountStore((state) => state.user)
   const since = useMemo(() => unixNow() - WEEK, [])
   const filter = useMemo<NDKFilter | undefined>(() => {
     return {
@@ -38,8 +38,7 @@ export default function Page() {
       since,
     }
   }, [since, user])
-  const relaySet = useStreamRelaySet()
-  const [items] = useSubscribe(filter, true, relaySet)
+  const [items] = useSubscribe(filter, true)
   const ev = useRef(items[0])
   ev.current = items[0]
 
@@ -79,10 +78,10 @@ export default function Page() {
         //   ev.removeTag('image')
         //   ev.tags.push(['image', imageUrl])
         // }
-        await ndkEvent.publish(relaySet)
+        await ndkEvent.publish()
       } catch (err) {}
     },
-    [createEvent, relaySet],
+    [createEvent],
   )
 
   const triggerInterval = useCallback(async () => {
@@ -124,9 +123,9 @@ export default function Page() {
       ev.current.tags.push([name, value])
       ndkEvent.removeTag(name)
       ndkEvent.tags.push([name, value])
-      await ndkEvent.publish(relaySet)
+      await ndkEvent.publish()
     },
-    [createEvent, relaySet],
+    [createEvent],
   )
 
   const isLive = ev.current?.tagValue('status') === 'live'
@@ -235,7 +234,9 @@ const fetchViewersFromProvider = async (ev: NDKEvent) => {
   } else if (youtubeRegex.test(streamingUrl)) {
     return
   } else if (streamingUrl.toLowerCase().includes('/liveapp/streams/')) {
-    const streamKey = streamingUrl?.match(/\/liveapp\/streams\/(.*)\.m3u8/i)?.[1]
+    const streamKey = streamingUrl?.match(
+      /\/liveapp\/streams\/(.*)\.m3u8/i,
+    )?.[1]
     const apiUrl = `${url.protocol}//${url.host}/LiveApp/rest/v2/broadcasts/${streamKey}/broadcast-statistics`
     const result = await fetch(apiUrl)
     const jsonResult = await result.json()

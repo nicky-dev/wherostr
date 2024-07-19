@@ -1,4 +1,5 @@
 import { NDKKind } from '@nostr-dev-kit/ndk'
+import { UAParser } from 'ua-parser-js'
 
 export enum ErrorCode {
   ProfileNotFound = 'ERROR_PROFILE_NOT_FOUND',
@@ -24,3 +25,17 @@ export const defaultPubkey =
   'npub16elg3wf8nffkymylw9kfwecc45j9c30lufrrzx2zf5vmxjlcgkkq3xc6d7'
 
 export const textKinds = [NDKKind.Text, NDKKind.Article, 1311]
+
+export const appNameForAlby = (() => {
+  const ua =
+    typeof navigator !== 'undefined'
+      ? new UAParser(navigator.userAgent)
+      : undefined
+  const hostname =
+    typeof location !== 'undefined' ? location.hostname : undefined
+
+  if (!hostname || !ua) return
+  const os = ua.getOS()
+  const browser = ua.getBrowser()
+  return `Wherostr(${hostname}) - ${os.name} - ${browser.name}`
+})()

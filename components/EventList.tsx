@@ -31,13 +31,11 @@ import classNames from 'classnames'
 import { isComment } from '@/utils/event'
 import ProfileAvatar from './ProfileAvatar'
 import _ from 'lodash'
-import { useMuting, useUser } from '@/hooks/useAccount'
 import { EventProfileCard } from './EventProfileCard'
 import numeral from 'numeral'
 import { amountFormat } from '@/constants/app'
-import { transformText } from '@snort/system'
-import { DAY, unixNow } from '@/utils/time'
 import TextNote from './TextNote'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 export interface EventListProps {
   className?: string
@@ -70,8 +68,8 @@ const EventList: FC<EventListProps> = ({
 }) => {
   const noteRef = useRef<HTMLDivElement>(null)
   const _scrollRef = useRef<ViewportListRef>(null)
-  const user = useUser()
-  const [muteList] = useMuting()
+  const user = useAccountStore((state) => state.user)
+  const muteList = useAccountStore((state) => state.muteList)
   const [scrollEnd, setScrollEnd] = useState(false)
   const [fetching, setFetching] = useState(false)
   const [hasNext, setHasNext] = useState(true)

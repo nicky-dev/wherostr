@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
-import { useNDK } from './useNostr'
 import NDK, {
   NDKSubscriptionCacheUsage,
   NDKUser,
@@ -8,15 +7,25 @@ import NDK, {
 } from '@nostr-dev-kit/ndk'
 import { nip19 } from 'nostr-tools'
 import { nanoid } from 'nanoid'
+import { useNDK } from '@/contexts/NostrContext'
+import usePromise from 'react-use-promise'
 
 export const useProfilesCache = () => {
   const ndk = useNDK()
-  return useMemo(() => {
-    return Array.from(
-      (ndk.cacheAdapter as any).profiles?.lookupTable,
-      ([hexpubkey, value]) => ({ ...value.internalValue, hexpubkey }),
-    )
-  }, [ndk.cacheAdapter])
+  return usePromise(async () => {
+    return ndk.cacheAdapter
+      ?.getProfiles?.(() => true)
+      .then((val) => {
+        if (!val) return []
+        const keys = Array.from(val.keys())
+        return Array.from<NDKUserProfile>(val.values()).map((v, i) => {
+          return {
+            ...v,
+            hexpubkey: keys[i],
+          }
+        })
+      })
+  }, [])
 }
 
 const verifyCache: Record<string, boolean> = {}

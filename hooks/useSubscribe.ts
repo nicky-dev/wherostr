@@ -8,9 +8,9 @@ import {
   NDKSubscriptionOptions,
 } from '@nostr-dev-kit/ndk'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNDK } from './useNostr'
-import { useAccount } from './useAccount'
 import { nanoid } from 'nanoid'
+import { useAccountStore } from '@/contexts/AccountContext'
+import { useNDK } from '@/contexts/NostrContext'
 
 export type SubscribeResult = [
   NDKEvent[],
@@ -21,12 +21,12 @@ export type SubscribeResult = [
 
 const sortItems = (
   items: NDKEvent[] | Set<NDKEvent> | IterableIterator<NDKEvent>,
-  desc = true
+  desc = true,
 ) => {
-  const sorter = desc ? (a: NDKEvent, b: NDKEvent) => b.created_at! - a.created_at! : (a: NDKEvent, b: NDKEvent) => a.created_at! - b.created_at!
-  return Array.from(items)
-    .slice()
-    .sort(sorter)
+  const sorter = desc
+    ? (a: NDKEvent, b: NDKEvent) => b.created_at! - a.created_at!
+    : (a: NDKEvent, b: NDKEvent) => a.created_at! - b.created_at!
+  return Array.from(items).slice().sort(sorter)
 }
 
 export const useSubscribe = (
@@ -39,7 +39,7 @@ export const useSubscribe = (
   },
 ) => {
   const ndk = useNDK()
-  const { signing } = useAccount()
+  const signing = useAccountStore((state) => state.signing)
   const [sub, setSub] = useState<NDKSubscription>()
   const [items, setItems] = useState<NDKEvent[]>([])
   const [newItems, setNewItems] = useState<NDKEvent[]>([])
@@ -99,7 +99,7 @@ export const useSubscribe = (
       const { existingEvent, dedupKey, event } = collectEvent(item)
       // console.log('onEventDup:event', { event, existingEvent })
       evetns.set(dedupKey, event)
-      if (eos.current) {
+      if (eos.current === true) {
         if (!existingEvent) {
           setNewItems((prev) => sortItems([event, ...prev], sortDesc))
         } else {
@@ -118,9 +118,9 @@ export const useSubscribe = (
       //   dedupKey,
       // })
       evetns.set(dedupKey, event)
-      if (eos.current) {
-        if (!existingEvent || !sub.eventFirstSeen.has(existingEvent.tagId())) {
-          setNewItems((prev) => sortItems([event, ...prev], sortDesc))
+      if (eos.current === true) {
+        if (!items.find((_item) => _item.id === item.id)) {
+          setNewItems((prev) => [event, ...prev])
         } else {
           setItems(sortItems(evetns.values(), sortDesc))
         }

@@ -1,9 +1,9 @@
 import { FC, useEffect, useState } from 'react'
 import { Popover, PopoverProps } from '@mui/material'
-import { useEmoji } from '@/hooks/useAccount'
 import { NDKUser } from '@nostr-dev-kit/ndk'
 import Picker, { EmojiClickData, EmojiStyle, Theme } from 'emoji-picker-react'
 import { CustomEmoji } from 'emoji-picker-react/dist/config/customEmojiConfig'
+import { useEmoji } from '@/hooks/useEmoji'
 
 export interface EmojiPickerProps extends PopoverProps {
   user?: NDKUser

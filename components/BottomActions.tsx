@@ -1,4 +1,4 @@
-import { AppContext, EventActionType } from '@/contexts/AppContext'
+import { EventActionType, useAppStore } from '@/contexts/AppContext'
 import {
   Add,
   Draw,
@@ -13,7 +13,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useContext, useState } from 'react'
 
 const BottomActions = ({ className }: { className?: string }) => {
-  const { setEventAction } = useContext(AppContext)
+  const setEventAction = useAppStore((state) => state.setEventAction)
   const router = useRouter()
   const pathname = usePathname()
   const query = useSearchParams()

@@ -1,13 +1,13 @@
 'use client'
 import { EmojiPicker } from '@/components/EmojiPicker'
-import { useUser } from '@/hooks/useAccount'
+import { useAccountStore } from '@/contexts/AccountContext'
 import { ThumbUp } from '@mui/icons-material'
 import { Box, IconButton } from '@mui/material'
 import { useState } from 'react'
 import { LongPressEventType, useLongPress } from 'use-long-press'
 
 export default function Page() {
-  const user = useUser()
+  const user = useAccountStore((state) => state.user)
   const [anchorEl, setAchorEl] = useState<Element>()
   const handleClose = () => setAchorEl(undefined)
   const bind = useLongPress(

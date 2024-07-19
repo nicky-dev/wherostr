@@ -1,8 +1,8 @@
 import './globals.css'
 import { DefaultTheme } from '@/themes'
-import { NostrContextProvider } from '@/contexts/NostrContext'
 import { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/react'
+import { NostrContextProvider } from '@/contexts/NostrContext'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://wherostr.social'),
@@ -37,9 +37,9 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
       <body className="h-[100dvh] overflow-y-auto">
-        <DefaultTheme>
-          <NostrContextProvider>{children}</NostrContextProvider>
-        </DefaultTheme>
+        <NostrContextProvider>
+          <DefaultTheme>{children}</DefaultTheme>
+        </NostrContextProvider>
         <Analytics />
       </body>
     </html>

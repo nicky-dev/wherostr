@@ -1,14 +1,13 @@
 'use client'
-import { NostrContext } from '@/contexts/NostrContext'
-import { useContext } from 'react'
+import { useNostrStore } from '@/contexts/NostrContext'
 import usePromise from 'react-use-promise'
 
 export const useUserCache = (hexpubkey: string) => {
-  const { getUser } = useContext(NostrContext)
+  const { getUser } = useNostrStore()
   return usePromise(getUser(hexpubkey), [hexpubkey])
 }
 
 export const useEventCache = (id?: string) => {
-  const { getEvent } = useContext(NostrContext)
+  const { getEvent } = useNostrStore()
   return usePromise(getEvent(id), [id])
 }

@@ -12,9 +12,11 @@ import {
   useState,
 } from 'react'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
-import { NostrContext } from '@/contexts/NostrContext'
 import { ErrorCode } from '@/constants/app'
 import { Alert, AlertProps, Snackbar, SnackbarProps } from '@mui/material'
+import { create } from 'zustand'
+import { useNostrStore } from './NostrContext'
+import { useSnackbar } from '@/components/SnackbarAlert'
 
 export enum ProfileActionType {
   View = 0,
@@ -54,40 +56,175 @@ export interface AppSnackbarProps extends SnackbarProps {
   slotProps?: { alert?: AlertProps }
 }
 
-export interface AppContextProps {
+interface AppStore {
+  modalActionHistory: {
+    group: 'profile' | 'event'
+    action: EventAction | ProfileAction
+  }[]
+  setModalActionHistory: (
+    modalActionHistory: {
+      group: 'profile' | 'event'
+      action: EventAction | ProfileAction
+    }[],
+  ) => void
   profileAction?: ProfileAction
   setProfileAction: (profileAction?: ProfileActionOptions) => void
   eventAction?: EventAction
-  setEventAction: (eventAction?: EventActionOptions) => void
-  showSnackbar: (message: string, props?: AppSnackbarProps) => void
-  hideSnackbar: () => void
+  setEventAction: (eventAction?: EventAction | EventActionOptions) => void
   backToPreviosModalAction: (group: 'profile' | 'event') => void
   clearActions: () => void
 }
 
-export const AppContext = createContext<AppContextProps>({
-  setProfileAction: () => {},
-  setEventAction: () => {},
-  showSnackbar: () => {},
-  hideSnackbar: () => {},
-  backToPreviosModalAction: () => {},
-  clearActions: () => {},
-})
+export const useAppStore = create<AppStore>()((set, get) => ({
+  modalActionHistory: [],
+  setModalActionHistory: (modalActionHistory) => set({ modalActionHistory }),
+  profileAction: undefined,
+  setProfileAction: async (profileAction?: ProfileAction) => {
+    if (!profileAction) {
+      set((state) => ({ ...state, profileAction: undefined }))
+      return
+    }
+    try {
+      const modalActionHistory = get().modalActionHistory
+      set((state) => ({ ...state, profileAction, eventAction: undefined }))
+      if (profileAction.type === ProfileActionType.View) {
+        const _modalActionHistory = [...modalActionHistory]
+        const latestModalAction =
+          _modalActionHistory[_modalActionHistory.length - 1]
+        if (
+          latestModalAction?.group === 'profile' &&
+          latestModalAction.action.type === profileAction.type &&
+          latestModalAction.action.hexpubkey === profileAction.hexpubkey
+        ) {
+          _modalActionHistory.pop()
+        }
+        set((state) => ({
+          ...state,
+          modalActionHistory: [
+            ..._modalActionHistory,
+            {
+              group: 'profile',
+              action: profileAction,
+            },
+          ],
+        }))
+      }
+    } catch (error) {
+      console.log('error', error)
+    }
+  },
+  eventAction: undefined,
+  setEventAction: async (eventAction) => {
+    if (!eventAction) {
+      set((state) => ({ ...state, eventAction: undefined }))
+      return
+    }
+    try {
+      const { getEvent } = useNostrStore.getState()
+      let event = eventAction.event
+      if (typeof event === 'string') {
+        const _event = await getEvent(event)
+        if (!_event) {
+          throw new Error(ErrorCode.EventNotFound)
+        }
+        event = _event
+      }
+      set((state) => ({
+        ...state,
+        eventAction: {
+          ...eventAction,
+          event: event as NDKEvent,
+        },
+        profileAction: undefined,
+      }))
+      if (eventAction.type === EventActionType.View) {
+        const { modalActionHistory } = get()
+        const _modalActionHistory = [...modalActionHistory]
+        const latestModalAction =
+          _modalActionHistory[_modalActionHistory.length - 1]
+        if (
+          latestModalAction?.group === 'event' &&
+          latestModalAction.action.type === eventAction.type &&
+          (latestModalAction.action.event as NDKEvent)?.id ===
+            (eventAction.event as NDKEvent).id
+        ) {
+          _modalActionHistory.pop()
+        }
+        set((state) => ({
+          ...state,
+          modalActionHistory: [
+            ..._modalActionHistory,
+            {
+              group: 'event',
+              action: {
+                ...eventAction,
+                event: event as NDKEvent,
+              },
+            },
+          ],
+        }))
+      }
+    } catch (error) {
+      console.log('error', error)
+    }
+  },
+  backToPreviosModalAction: (group: 'profile' | 'event') => {
+    const { modalActionHistory, profileAction, eventAction } = get()
+    const _modalActionHistory = [...modalActionHistory]
+    switch (group) {
+      case 'profile':
+        if (profileAction?.type === ProfileActionType.View) {
+          _modalActionHistory.pop()
+        }
+        break
+      case 'event':
+        if (eventAction?.type === EventActionType.View) {
+          _modalActionHistory.pop()
+        }
+        break
+    }
+    if (_modalActionHistory.length) {
+      const nextState = {
+        modalActionHistory: _modalActionHistory,
+        profileAction: undefined,
+        eventAction: undefined,
+      }
+      const latestModalAction =
+        _modalActionHistory[_modalActionHistory.length - 1]
+      switch (latestModalAction.group) {
+        case 'profile':
+          nextState.profileAction = latestModalAction.action as any
+          break
+        case 'event':
+          nextState.eventAction = latestModalAction.action as any
+          break
+      }
+      set((state) => ({
+        ...state,
+        ...nextState,
+      }))
+    } else {
+      set((state) => ({
+        ...state,
+        profileAction: undefined,
+        eventAction: undefined,
+      }))
+    }
+  },
+  clearActions: () => {
+    set((state) => ({
+      ...state,
+      profileAction: undefined,
+      eventAction: undefined,
+    }))
+  },
+}))
 
 export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const { getEvent } = useContext(NostrContext)
-  const [profileAction, _setProfileAction] = useState<ProfileAction>()
-  const [eventAction, _setEventAction] = useState<EventAction>()
-  const [modalActionHistory, setModalActionHistory] = useState<
-    {
-      group: 'profile' | 'event'
-      action: EventAction | ProfileAction
-    }[]
-  >([])
-  const [{ slotProps, ...snackProps }, setSnackProps] =
-    useState<AppSnackbarProps>({
-      anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
-    })
+  const { profileAction, eventAction, setModalActionHistory } = useAppStore()
+
+  const {} = useSnackbar()
+
   useEffect(() => {
     if (!profileAction && !eventAction) {
       setModalActionHistory([])
@@ -96,176 +233,6 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
       document.body.style.overflowY = 'hidden'
     }
   }, [eventAction, profileAction])
-  const setProfileAction = useCallback(
-    async (profileAction?: ProfileActionOptions) => {
-      if (!profileAction) {
-        _setProfileAction(undefined)
-        return
-      }
-      try {
-        _setProfileAction(profileAction)
-        _setEventAction(undefined)
-        if (profileAction.type === ProfileActionType.View) {
-          const _modalActionHistory = [...modalActionHistory]
-          const latestModalAction =
-            _modalActionHistory[_modalActionHistory.length - 1]
-          if (
-            latestModalAction?.group === 'profile' &&
-            latestModalAction.action.type === profileAction.type &&
-            latestModalAction.action.hexpubkey === profileAction.hexpubkey
-          ) {
-            _modalActionHistory.pop()
-          }
-          setModalActionHistory([
-            ..._modalActionHistory,
-            {
-              group: 'profile',
-              action: profileAction,
-            },
-          ])
-        }
-      } catch (error) {
-        console.log('error', error)
-      }
-    },
-    [modalActionHistory],
-  )
-  const setEventAction = useCallback(
-    async (eventAction?: EventActionOptions) => {
-      if (!eventAction) {
-        _setEventAction(undefined)
-        return
-      }
-      try {
-        let event = eventAction.event
-        if (typeof event === 'string') {
-          const _event = await getEvent(event)
-          if (!_event) {
-            throw new Error(ErrorCode.EventNotFound)
-          }
-          event = _event
-        }
-        _setEventAction({
-          ...eventAction,
-          event,
-        })
-        _setProfileAction(undefined)
-        if (eventAction.type === EventActionType.View) {
-          const _modalActionHistory = [...modalActionHistory]
-          const latestModalAction =
-            _modalActionHistory[_modalActionHistory.length - 1]
-          if (
-            latestModalAction?.group === 'event' &&
-            latestModalAction.action.type === eventAction.type &&
-            latestModalAction.action.event?.id ===
-              (eventAction.event as NDKEvent).id
-          ) {
-            _modalActionHistory.pop()
-          }
-          setModalActionHistory([
-            ..._modalActionHistory,
-            {
-              group: 'event',
-              action: {
-                ...eventAction,
-                event,
-              },
-            },
-          ])
-        }
-      } catch (error) {
-        console.log('error', error)
-      }
-    },
-    [getEvent, modalActionHistory],
-  )
-
-  const handleClose = useCallback(
-    (event?: React.SyntheticEvent | Event, reason?: string) => {
-      if (reason === 'clickaway') {
-        return
-      }
-      setSnackProps((prev) => ({ ...prev, open: false }))
-    },
-    [],
-  )
-  const showSnackbar = useCallback(
-    (message: string, props?: Omit<AppSnackbarProps, 'message'>) => {
-      setSnackProps((prev) => ({
-        ...prev,
-        autoHideDuration: 5000,
-        ...props,
-        open: true,
-        message,
-      }))
-    },
-    [],
-  )
-  const hideSnackbar = useCallback(() => {
-    handleClose()
-  }, [handleClose])
-  const backToPreviosModalAction = useCallback(
-    (group: 'profile' | 'event') => {
-      const _modalActionHistory = [...modalActionHistory]
-      switch (group) {
-        case 'profile':
-          if (profileAction?.type === ProfileActionType.View) {
-            _modalActionHistory.pop()
-          }
-          break
-        case 'event':
-          if (eventAction?.type === EventActionType.View) {
-            _modalActionHistory.pop()
-          }
-          break
-      }
-      if (_modalActionHistory.length) {
-        setModalActionHistory(_modalActionHistory)
-        const latestModalAction =
-          _modalActionHistory[_modalActionHistory.length - 1]
-        switch (latestModalAction.group) {
-          case 'profile':
-            _setProfileAction(latestModalAction.action as ProfileAction)
-            _setEventAction(undefined)
-            break
-          case 'event':
-            _setEventAction(latestModalAction.action as EventAction)
-            _setProfileAction(undefined)
-            break
-        }
-      } else {
-        _setProfileAction(undefined)
-        _setEventAction(undefined)
-      }
-    },
-    [eventAction?.type, modalActionHistory, profileAction?.type],
-  )
-  const clearActions = useCallback(() => {
-    _setProfileAction(undefined)
-    _setEventAction(undefined)
-  }, [])
-
-  const value = useMemo((): AppContextProps => {
-    return {
-      profileAction,
-      setProfileAction,
-      eventAction,
-      setEventAction,
-      showSnackbar,
-      hideSnackbar,
-      backToPreviosModalAction,
-      clearActions,
-    }
-  }, [
-    profileAction,
-    setProfileAction,
-    eventAction,
-    setEventAction,
-    showSnackbar,
-    hideSnackbar,
-    backToPreviosModalAction,
-    clearActions,
-  ])
 
   useEffect(() => {
     const wakeLockSwitch = document.querySelector('#wake-lock')
@@ -303,19 +270,5 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
       wakeLock?.removeEventListener('release', releaseHandle)
     }
   }, [])
-  return (
-    <AppContext.Provider value={value}>
-      {children}
-      <Snackbar onClose={handleClose} {...snackProps}>
-        <Alert
-          {...slotProps?.alert}
-          onClose={handleClose}
-          severity={slotProps?.alert?.severity || 'warning'}
-          sx={{ width: '100%' }}
-        >
-          {snackProps?.message}
-        </Alert>
-      </Snackbar>
-    </AppContext.Provider>
-  )
+  return children
 }

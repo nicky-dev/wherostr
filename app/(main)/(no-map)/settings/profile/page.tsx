@@ -1,11 +1,11 @@
 'use client'
 
 import { ProfileCard } from '@/components/ProfileCard'
-import { useUser } from '@/hooks/useAccount'
+import { useAccountStore } from '@/contexts/AccountContext'
 import { Typography } from '@mui/material'
 
 export default function Page() {
-  const user = useUser()
+  const user = useAccountStore((state) => state.user)
   return (
     <>
       <ProfileCard hexpubkey={user?.hexpubkey} />

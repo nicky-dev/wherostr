@@ -1,16 +1,5 @@
 'use client'
-import {
-  Dispatch,
-  FC,
-  PropsWithChildren,
-  SetStateAction,
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { FC, PropsWithChildren, useEffect } from 'react'
 import {
   NDKEvent,
   NDKKind,
@@ -18,16 +7,18 @@ import {
   NDKNip07Signer,
   NDKPrivateKeySigner,
   NDKRelay,
-  NDKRelayList,
   NDKRelayStatus,
   NDKSubscriptionCacheUsage,
   NDKUser,
 } from '@nostr-dev-kit/ndk'
-import { NostrContext } from '@/contexts/NostrContext'
-import { useAction } from '@/hooks/useApp'
 import { nip19 } from 'nostr-tools'
 import { nanoid } from 'nanoid'
 import { hasNip7Extension } from '@/utils/nostr'
+import { useNDK, useNostrStore } from './NostrContext'
+import { create } from 'zustand'
+import { useSnackbar } from '@/components/SnackbarAlert'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import { appNameForAlby } from '@/constants/app'
 
 export type SignInType = 'nip7' | 'nsec' | 'npub'
 
@@ -38,13 +29,6 @@ export interface FollowListItem {
   value: any
 }
 
-export interface SessionItem {
-  type?: SignInType
-  pubkey?: string
-  nsec?: string
-  pin?: string
-}
-
 export interface AccountProps {
   user?: NDKUser
   readOnly: boolean
@@ -52,241 +36,35 @@ export interface AccountProps {
   muteList: string[]
   follows: NDKUser[]
   followLists: FollowListItem[]
+  initUser: () => Promise<void>
+  updateFollows: (user: NDKUser) => Promise<void>
+  setFollowLists: (followLists: FollowListItem[]) => void
   signIn: (type: SignInType, key?: string) => Promise<NDKUser | void>
-  signOut: () => Promise<void>
-  setFollows: Dispatch<SetStateAction<NDKUser[]>>
-  setMuteList: Dispatch<SetStateAction<string[]>>
+  signOut: () => void
+  setFollows: (follows: NDKUser[]) => void
+  setMuteList: (muteList: string[]) => void
   follow: (newFollow: NDKUser) => Promise<void>
   unfollow: (unfollowUser: NDKUser) => Promise<void>
   followHashtag: (hashtag: string) => Promise<void>
   unfollowHashtag: (hashtag: string) => Promise<void>
 }
 
-export const AccountContext = createContext<AccountProps>({
+export const useAccountStore = create<AccountProps>()((set, get) => ({
   user: undefined,
   readOnly: true,
   muteList: [],
   follows: [],
   signing: true,
   followLists: [],
-  signIn: async () => {},
-  signOut: async () => {},
-  setFollows: () => {},
-  setMuteList: () => {},
-  follow: async () => {},
-  unfollow: async () => {},
-  followHashtag: async () => {},
-  unfollowHashtag: async () => {},
-})
-
-export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
-  const { ndk, getUser } = useContext(NostrContext)
-  const { showSnackbar } = useAction()
-  const [readOnly, setReadOnly] = useState(true)
-  const [signing, setSigning] = useState<boolean>(true)
-  const [user, setUser] = useState<NDKUser>()
-  const [follows, setFollows] = useState<NDKUser[]>([])
-  const [followLists, setFollowLists] = useState<FollowListItem[]>([])
-  const [muteList, setMuteList] = useState<string[]>([])
-
-  const updateFollows = useCallback(
-    async (user: NDKUser) => {
-      const follows: Set<NDKUser> = new Set()
-      const contactListEvent = await ndk.fetchEvent(
-        {
-          kinds: [3],
-          authors: [user.hexpubkey],
-        },
-        { subId: nanoid(8), cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY },
-      )
-      if (contactListEvent) {
-        const pubkeys = new Set<string>()
-        contactListEvent.tags.forEach((tag) => {
-          if (tag[0] === 'p') {
-            try {
-              pubkeys.add(tag[1])
-            } catch (e) {}
-          }
-        })
-        pubkeys.forEach((pubkey) => {
-          const user = new NDKUser({ hexpubkey: pubkey })
-          user.ndk = ndk
-          follows.add(user)
-        })
-      }
-      const _follows = Array.from(follows)
-      follows.forEach((item) => {
-        ndk.cacheAdapter?.fetchProfile?.(item.pubkey)
-      })
-      setFollows(_follows)
-    },
-    [ndk],
-  )
-
-  const follow = useCallback(
-    async (newFollow: NDKUser) => {
-      if (!user) return
-      const followsSet = new Set(follows)
-      const followUser = ndk.getUser({ hexpubkey: newFollow.hexpubkey })
-      if (followsSet.has(followUser)) {
-        return
-      }
-      followsSet.add(followUser)
-      const event = new NDKEvent(ndk)
-      event.kind = 3
-      followsSet.forEach((follow) => {
-        event.tag(follow)
-      })
-      await event.publish()
-      setFollows(Array.from(followsSet))
-    },
-    [user, follows, ndk],
-  )
-
-  const unfollow = useCallback(
-    async (unfollowUser: NDKUser) => {
-      if (!follows.length) return
-      const event = new NDKEvent(ndk)
-      event.kind = 3
-      const followsSet = new Set(follows)
-      const exists = follows.find((d) => d.hexpubkey === unfollowUser.hexpubkey)
-      exists && followsSet.delete(exists)
-      followsSet.forEach((d) => {
-        event.tag(d)
-      })
-      await event.publish()
-      setFollows(Array.from(followsSet))
-    },
-    [follows, ndk],
-  )
-
-  const followHashtag = useCallback(
-    async (hashtag: string) => {
-      if (!user) return
-      const hashtagLow = hashtag.toLowerCase()
-      const tags = followLists.filter((d) => d.type === 'tag').map((d) => d.id)
-      const followsSet = new Set(tags)
-      followsSet.add(hashtagLow)
-      const event = new NDKEvent(ndk)
-      event.kind = 30001
-      event.pubkey = user.pubkey
-      event.tags.push(['d', 'follow'])
-      followsSet.forEach((tag) => {
-        event.tags.push(['t', tag])
-      })
-      await event.publish()
-      setFollowLists((prev) => [
-        ...prev,
-        { type: 'tag', id: hashtagLow, name: hashtagLow, value: hashtagLow },
-      ])
-    },
-    [user, followLists, ndk],
-  )
-
-  const unfollowHashtag = useCallback(
-    async (hashtag: string) => {
-      if (!user) return
-      const hashtagLow = hashtag.toLowerCase()
-      const tags = followLists.filter((d) => d.type === 'tag').map((d) => d.id)
-      const followsSet = new Set(tags)
-      followsSet.delete(hashtagLow)
-      const event = new NDKEvent(ndk)
-      event.kind = 30001
-      event.pubkey = user.pubkey
-      event.tags.push(['d', 'follow'])
-      followsSet.forEach((tag) => {
-        event.tags.push(['t', tag])
-      })
-      await event.publish()
-      setFollowLists((prev) =>
-        prev.filter((d) => d.type !== 'tag' || d.id !== hashtagLow),
-      )
-    },
-    [user, followLists, ndk],
-  )
-
-  const signIn = useCallback(
-    async (type: SignInType, key?: string) => {
-      try {
-        let user: NDKUser | undefined
-        setSigning(true)
-        let pubkey: string | undefined
-        let readOnly = true
-        if (type === 'nip7') {
-          if (!hasNip7Extension()) {
-            return showSnackbar('Extension not found')
-          }
-          readOnly = false
-          ndk.signer = new NDKNip07Signer()
-          const signerUser = await ndk.signer?.user()
-          if (signerUser) {
-            pubkey = signerUser.hexpubkey
-            // user = await getUser(signerUser.hexpubkey)
-            // setReadOnly(false)
-          }
-        } else if (type === 'nsec') {
-          readOnly = false
-          let secret = key
-          if (key?.startsWith('nsec')) {
-            const nsecProfile = nip19.decode(key)
-            if (nsecProfile.type !== 'nsec') throw new Error('Invalid nsec')
-            secret = nsecProfile.data
-          }
-          ndk.signer = new NDKPrivateKeySigner(secret)
-          const signerUser = await ndk.signer?.user()
-          if (signerUser) {
-            pubkey = signerUser.hexpubkey
-            readOnly = false
-          }
-        } else if (type === 'npub' && key) {
-          readOnly = true
-          pubkey = key
-          ndk.signer = undefined
-        }
-        if (pubkey) {
-          user = await getUser(pubkey)
-        }
-        if (user) {
-          if (!ndk.activeUser) {
-            ndk.activeUser = user
-          }
-          setSession({
-            pubkey: user.hexpubkey,
-            type,
-            ...(type === 'nsec' ? { nsec: key } : undefined),
-          })
-          await connectToUserRelays(user)
-          await updateFollows(user)
-          setUser(user)
-          setReadOnly(readOnly)
-          return user
-        }
-      } catch (err: any) {
-        showSnackbar(err.message, {
-          slotProps: { alert: { severity: 'error' } },
-        })
-      } finally {
-        setSigning(false)
-      }
-    },
-    [ndk, showSnackbar, getUser, updateFollows],
-  )
-
-  const signOut = useCallback(async () => {
-    ndk.signer = undefined
-    removeSession()
-    setUser(undefined)
-    setReadOnly(true)
-  }, [ndk])
-
-  const initUser = useCallback(async () => {
+  initUser: async () => {
+    const { signIn } = get()
     try {
-      const session = getSession()
+      const { session } = useSessionStore.getState()
       if (session?.pubkey && session.type) {
         await new Promise((resolve) => {
           setTimeout(() => {
             signIn(
-              session.type,
+              session.type!,
               session.type === 'nsec' ? session?.nsec : session?.pubkey,
             ).then(resolve)
           }, 500)
@@ -294,15 +72,219 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
         return
       }
     } finally {
-      setSigning(false)
+      set((state) => ({ ...state, signing: false }))
     }
-  }, [signIn])
+  },
+  updateFollows: async (user: NDKUser) => {
+    const { ndk } = useNostrStore.getState()
+    const follows: Set<NDKUser> = new Set()
+    const contactListEvent = await ndk.fetchEvent(
+      {
+        kinds: [3],
+        authors: [user.hexpubkey],
+      },
+      { subId: nanoid(8), cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY },
+    )
+    if (contactListEvent) {
+      const pubkeys = new Set<string>()
+      contactListEvent.tags.forEach((tag) => {
+        if (tag[0] === 'p') {
+          try {
+            pubkeys.add(tag[1])
+          } catch (e) {}
+        }
+      })
+      pubkeys.forEach((pubkey) => {
+        const user = new NDKUser({ hexpubkey: pubkey })
+        user.ndk = ndk
+        follows.add(user)
+      })
+    }
+    const _follows = Array.from(follows)
+    follows.forEach((item) => {
+      ndk.cacheAdapter?.fetchProfile?.(item.pubkey)
+    })
+    set((state) => ({ ...state, follows: _follows }))
+  },
+  setFollowLists: (followLists: FollowListItem[]) =>
+    set((state) => ({ ...state, followLists })),
+  signIn: async (type: SignInType, key?: string) => {
+    const { showSnackbar } = useSnackbar.getState()
+    const { ndk, getUser } = useNostrStore.getState()
+    const { updateFollows } = get()
+    try {
+      const { setSession } = useSessionStore.getState()
+      let user: NDKUser | undefined
+      set((state) => ({ ...state, signing: true }))
+      let pubkey: string | undefined
+      let readOnly = true
+      if (type === 'nip7') {
+        if (!hasNip7Extension()) {
+          return showSnackbar('Extension not found')
+        }
+        readOnly = false
+        ndk.signer = new NDKNip07Signer()
+        const signerUser = await ndk.signer?.user()
+        if (signerUser) {
+          pubkey = signerUser.hexpubkey
+          // user = await getUser(signerUser.hexpubkey)
+          // setReadOnly(false)
+        }
+      } else if (type === 'nsec') {
+        readOnly = false
+        let secret = key
+        if (key?.startsWith('nsec')) {
+          const nsecProfile = nip19.decode(key)
+          if (nsecProfile.type !== 'nsec') throw new Error('Invalid nsec')
+          secret = nsecProfile.data
+        }
+        ndk.signer = new NDKPrivateKeySigner(secret)
+        const signerUser = await ndk.signer?.user()
+        if (signerUser) {
+          pubkey = signerUser.hexpubkey
+          readOnly = false
+        }
+      } else if (type === 'npub' && key) {
+        readOnly = true
+        pubkey = key
+        ndk.signer = undefined
+      }
+      if (pubkey) {
+        user = await getUser(pubkey)
+      }
+      if (user) {
+        if (!ndk.activeUser) {
+          ndk.activeUser = user
+        }
+        await new Promise<void>((resolve) => {
+          if (ndk.pool.connectedRelays().length === 0) {
+            ndk.pool.once('relay:connect', () => resolve())
+          } else {
+            resolve()
+          }
+        })
+        setSession({
+          pubkey: user.hexpubkey,
+          type,
+          ...(type === 'nsec' ? { nsec: key } : undefined),
+        })
+        // await connectToUserRelays(user)
+        await updateFollows(user)
+        set((state) => ({ ...state, user, readOnly }))
+        return user
+      }
+    } catch (err: any) {
+      showSnackbar(err.message, {
+        slotProps: { alert: { severity: 'error' } },
+      })
+    } finally {
+      set((state) => ({ ...state, signing: false }))
+    }
+  },
+  signOut: () => {
+    const { removeSession } = useSessionStore.getState()
+    const { ndk } = useNostrStore.getState()
+    ndk.signer = undefined
+    removeSession()
+    set((state) => ({ ...state, user: undefined, readOnly: true }))
+  },
+  setFollows: (follows: NDKUser[]) => set((state) => ({ ...state, follows })),
+  setMuteList: (muteList: string[]) => set((state) => ({ ...state, muteList })),
+  follow: async (newFollow: NDKUser) => {
+    const { user, follows } = get()
+    const { ndk } = useNostrStore.getState()
+    if (!user) return
+    const followsSet = new Set<NDKUser>(follows)
+    const followUser = ndk.getUser({ hexpubkey: newFollow.hexpubkey })
+    if (followsSet.has(followUser)) {
+      return
+    }
+    followsSet.add(followUser)
+    const event = new NDKEvent(ndk)
+    event.kind = 3
+    followsSet.forEach((follow) => {
+      event.tag(follow)
+    })
+    await event.publish()
+    set((state) => ({ ...state, follows: Array.from(followsSet) }))
+  },
+  unfollow: async (unfollowUser: NDKUser) => {
+    const { ndk } = useNostrStore.getState()
+    const { follows } = get()
+    if (!follows.length) return
+    const event = new NDKEvent(ndk)
+    event.kind = 3
+    const followsSet = new Set(follows)
+    const exists = follows.find((d) => d.hexpubkey === unfollowUser.hexpubkey)
+    exists && followsSet.delete(exists)
+    followsSet.forEach((d) => {
+      event.tag(d)
+    })
+    await event.publish()
+    set((state) => ({ ...state, follows: Array.from(followsSet) }))
+  },
+  followHashtag: async (hashtag: string) => {
+    const { ndk } = useNostrStore.getState()
+    const { followLists, user } = get()
+    if (!user) return
+    const hashtagLow = hashtag.toLowerCase()
+    const tags = followLists.filter((d) => d.type === 'tag').map((d) => d.id)
+    const followsSet = new Set(tags)
+    followsSet.add(hashtagLow)
+    const event = new NDKEvent(ndk)
+    event.kind = 30001
+    event.pubkey = user.pubkey
+    event.tags.push(['d', 'follow'])
+    followsSet.forEach((tag) => {
+      event.tags.push(['t', tag])
+    })
+    await event.publish()
+    set((prev) => ({
+      followLists: [
+        ...prev.followLists,
+        { type: 'tag', id: hashtagLow, name: hashtagLow, value: hashtagLow },
+      ],
+    }))
+  },
+  unfollowHashtag: async (hashtag: string) => {
+    const { ndk } = useNostrStore.getState()
+    const { followLists, user } = get()
+    if (!user) return
+    const hashtagLow = hashtag.toLowerCase()
+    const tags = followLists.filter((d) => d.type === 'tag').map((d) => d.id)
+    const followsSet = new Set(tags)
+    followsSet.delete(hashtagLow)
+    const event = new NDKEvent(ndk)
+    event.kind = 30001
+    event.pubkey = user.pubkey
+    event.tags.push(['d', 'follow'])
+    followsSet.forEach((tag) => {
+      event.tags.push(['t', tag])
+    })
+    await event.publish()
+    set((prev) => ({
+      followLists: prev.followLists.filter(
+        (d) => d.type !== 'tag' || d.id !== hashtagLow,
+      ),
+    }))
+  },
+}))
+
+export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
+  const ndk = useNDK()
+  const { user, initUser, setMuteList, setFollowLists } = useAccountStore()
+
+  useEffect(() => {
+    import('@getalby/bitcoin-connect-react').then(({ init }) => {
+      init({ appName: appNameForAlby })
+    })
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (user) return
     initUser()
-  }, [user, initUser])
+  }, [user])
 
   useEffect(() => {
     if (!user?.pubkey) return setMuteList([])
@@ -332,7 +314,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       setMuteList(items)
     }
     fn()
-  }, [ndk, user?.pubkey])
+  }, [user?.pubkey])
 
   useEffect(() => {
     if (!user?.hexpubkey) return setFollowLists([])
@@ -381,43 +363,9 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       setFollowLists(peopleList.concat(tags))
     }
     fn()
-  }, [ndk, user?.hexpubkey])
+  }, [user?.hexpubkey])
 
-  const value = useMemo((): AccountProps => {
-    return {
-      user,
-      readOnly,
-      muteList,
-      follows,
-      followLists,
-      signing,
-      signIn,
-      signOut,
-      setFollows,
-      setMuteList,
-      follow,
-      unfollow,
-      followHashtag,
-      unfollowHashtag,
-    }
-  }, [
-    user,
-    readOnly,
-    muteList,
-    follows,
-    followLists,
-    signing,
-    signIn,
-    signOut,
-    follow,
-    unfollow,
-    followHashtag,
-    unfollowHashtag,
-  ])
-
-  return (
-    <AccountContext.Provider value={value}>{children}</AccountContext.Provider>
-  )
+  return children
 }
 
 const connectToUserRelays = async (user: NDKUser) => {
@@ -427,18 +375,16 @@ const connectToUserRelays = async (user: NDKUser) => {
     return
   }
   const runUserFunctions = async (user: NDKUser) => {
-    const relayList = await user.relayList()
-
-    if (!relayList) {
+    if (!user.relayUrls) {
       console.debug('No relay list found for user', { npub: user.npub })
       return
     }
     console.debug('Connecting to user relays', {
       npub: user.npub,
-      relays: relayList.relays,
+      relays: user.relayUrls,
     })
     await Promise.allSettled(
-      relayList.relays.map(async (url) => {
+      user.relayUrls.map(async (url) => {
         return new Promise<NDKRelay>((resolve, reject) => {
           const relay = ndk.pool.relays.get(url)
           if (!relay) {
@@ -487,24 +433,29 @@ const connectToUserRelays = async (user: NDKUser) => {
   }
 }
 
-// function encryptMessage(text: string, key: CryptoKey) {
-//   const key = new CryptoKey()
-//   generateKey(algorithm, extractable, keyUsages)
-
-//   const enc = new TextEncoder()
-//   const encoded = enc.encode(text)
-//   const iv = window.crypto.getRandomValues(new Uint8Array(12))
-//   return window.crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, encoded)
-// }
-
-const setSession = (session: SessionItem) => {
-  localStorage.setItem('session', JSON.stringify(session))
-}
-const removeSession = () => {
-  localStorage.removeItem('session')
+export interface SessionItem {
+  type?: SignInType
+  pubkey?: string
+  nsec?: string
+  pin?: string
 }
 
-const getSession = () => {
-  const session = localStorage.getItem('session')
-  return session ? JSON.parse(session) : {}
+export interface SessionStore {
+  session?: SessionItem
+  setSession: (session: SessionItem) => void
+  removeSession: () => void
 }
+
+const useSessionStore = create<SessionStore>()(
+  persist(
+    (set) => ({
+      session: undefined,
+      setSession: (session: SessionItem) => set({ session }),
+      removeSession: () => set({}),
+    }),
+    {
+      name: 'session', // name of the item in the storage (must be unique)
+      storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+    },
+  ),
+)

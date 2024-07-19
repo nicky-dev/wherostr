@@ -9,28 +9,26 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { ElectricBolt } from '@mui/icons-material'
-import { AppContext } from '@/contexts/AppContext'
+import { useAppStore } from '@/contexts/AppContext'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { useForm } from 'react-hook-form'
 import numeral from 'numeral'
 import { requestProvider } from 'webln'
 import { LoadingButton } from '@mui/lab'
-import { useNDK } from '@/hooks/useNostr'
+import { useNDK } from '@/contexts/NostrContext'
+import { useSnackbar } from './SnackbarAlert'
 
 const amountFormat = '0,0.[0]a'
 
 const ZapEventForm = ({ event }: { event: NDKEvent }) => {
   const ndk = useNDK()
-  const { backToPreviosModalAction, showSnackbar } = useContext(AppContext)
+  const { backToPreviosModalAction } = useAppStore()
+  const { showSnackbar } = useSnackbar()
   const { register, handleSubmit, setValue, watch } = useForm()
   const [loading, setLoading] = useState(false)
   const _amountValue = watch('amount')
-
-  useEffect(() => {
-    import('@getalby/bitcoin-connect-react')
-  }, [])
 
   const maxWeight = useMemo(
     () =>

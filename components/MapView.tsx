@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import classNames from 'classnames'
 import { Box, Paper } from '@mui/material'
 import { useMapLibre } from '@/hooks/useMaplibre'
+import { useMapContext } from '@/contexts/MapContext'
 
 const opts: Omit<maplibregl.MapOptions, 'container'> = {
   style:
@@ -47,18 +48,27 @@ export interface MapProps extends PropsWithChildren {
 
 const MapLoad: React.FC<MapProps> = ({ children, className, onLoad }) => {
   const mapContainer = useRef<HTMLDivElement>(null)
-  const map = useMapLibre(mapContainer, opts)
+  const mapContext = useMapLibre(mapContainer, opts)
 
   useEffect(() => {
-    if (!map || !onLoad) return
+    if (!mapContext.map) return
     const handler = (evt: maplibregl.MapLibreEvent) => {
-      onLoad?.(evt.target)
+      mapContext.setMapLoaded(true)
     }
-    map.on('style.load', handler)
+    if (!mapContext.map.isStyleLoaded()) {
+      mapContext.map.on('style.load', handler)
+    }
     return () => {
-      map.off('style.load', handler)
+      try {
+        if (!mapContext.map) return
+        mapContext.map.off('style.load', handler)
+        mapContext.map.remove()
+        mapContext.unsetMap()
+      } catch (err) {
+        console.warn(err)
+      }
     }
-  }, [map, onLoad])
+  }, [mapContext.map])
 
   return (
     <Box className={classNames('flex', className)}>

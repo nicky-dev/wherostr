@@ -19,19 +19,21 @@ import {
   ListItemText,
   Toolbar,
 } from '@mui/material'
-import { useAccount } from '@/hooks/useAccount'
 import Link from 'next/link'
 import { ProfileCard } from './ProfileCard'
 import { useAction } from '@/hooks/useApp'
 import { ProfileActionType } from '@/contexts/AppContext'
 import { usePathname, useRouter } from 'next/navigation'
 import { defaultPubkey } from '@/constants/app'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 const DrawerMenu: FC = () => {
   const router = useRouter()
   const pathname = usePathname()
   const { setProfileAction } = useAction()
-  const { readOnly, user, signOut } = useAccount()
+  const readOnly = useAccountStore((state) => state.readOnly)
+  const user = useAccountStore((state) => state.user)
+  const signOut = useAccountStore((state) => state.signOut)
   const [open, setOpen] = useState(false)
 
   const toggleDrawer = useCallback(() => {

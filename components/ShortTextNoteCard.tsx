@@ -28,16 +28,16 @@ import {
   TravelExploreOutlined,
 } from '@mui/icons-material'
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
-import { NostrContext } from '@/contexts/NostrContext'
 import { EventExt } from '@snort/system'
-import { EventActionType, AppContext } from '@/contexts/AppContext'
+import { EventActionType, useAppStore } from '@/contexts/AppContext'
 import { extractLngLat } from '@/utils/extractLngLat'
-import { MapContext } from '@/contexts/MapContext'
 import { LngLatBounds } from 'maplibre-gl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import NoteMenu from './NoteMenu'
 import classNames from 'classnames'
 import { textKinds } from '@/constants/app'
+import { useNostrStore } from '@/contexts/NostrContext'
+import { useMap } from '@/hooks/useMap'
 
 const ShortTextNoteCard = ({
   className,
@@ -65,8 +65,8 @@ const ShortTextNoteCard = ({
   const pathname = usePathname()
   const query = useSearchParams()
   const router = useRouter()
-  const { ndk } = useContext(NostrContext)
-  const { map } = useContext(MapContext)
+  const { ndk } = useNostrStore()
+  const map = useMap()
 
   const contentRef = useRef(null)
   const [overLimitedHeight, setOverLimitedHeight] = useState<
@@ -108,7 +108,8 @@ const ShortTextNoteCard = ({
       return thread?.replyTo || thread?.root || thread?.mentions.at(-1)
     }
   }, [event, depth])
-  const { setEventAction } = useContext(AppContext)
+
+  const setEventAction = useAppStore((state) => state.setEventAction)
   const handleClickRootNote = useCallback(async () => {
     if (ndk && fromNote?.value) {
       if (fromNote.value) {

@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
-import { useUser } from './useAccount'
 import { FeedType } from '@/components/FeedFilterMenu'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 export const useFeedType = (q?: string) => {
-  const user = useUser()
+  const user = useAccountStore((state) => state.user)
   const feedType = useMemo<FeedType>(() => {
     if (user) {
       if (!q || q === 'following') {

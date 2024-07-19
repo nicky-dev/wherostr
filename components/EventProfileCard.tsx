@@ -4,14 +4,16 @@ import { Box, Card, Divider } from '@mui/material'
 import { FC, PropsWithChildren, useCallback, useMemo, useState } from 'react'
 import { NDKUser } from '@nostr-dev-kit/ndk'
 import { LoadingButton } from '@mui/lab'
-import { useFollowing, useUser } from '@/hooks/useAccount'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 export const EventProfileCard: FC<
   PropsWithChildren & { hexpubkey: string }
 > = ({ children, hexpubkey }) => {
   const [loading, setLoading] = useState(false)
-  const account = useUser()
-  const [follows, follow, unfollow] = useFollowing()
+  const account = useAccountStore((state) => state.user)
+  const follows = useAccountStore((state) => state.follows)
+  const follow = useAccountStore((state) => state.follow)
+  const unfollow = useAccountStore((state) => state.unfollow)
   const itsYou = useMemo(
     () => account?.hexpubkey === hexpubkey,
     [account?.hexpubkey, hexpubkey],

@@ -25,18 +25,25 @@ import {
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ProfileChip from '@/components/ProfileChip'
 import classNames from 'classnames'
-import { useAccount } from '@/hooks/useAccount'
 import { LoadingButton } from '@mui/lab'
-import { SignInType } from '@/contexts/AccountContext'
+import { SignInType, useAccountStore } from '@/contexts/AccountContext'
 import { useForm } from 'react-hook-form'
 import { usePathname, useRouter } from 'next/navigation'
 import { hasNip7Extension } from '@/utils/nostr'
+import { useShallow } from 'zustand/react/shallow'
 
 const UserBar = ({ className }: { className?: string }) => {
   const router = useRouter()
   const pathname = usePathname()
   const { register, handleSubmit, setValue, reset } = useForm()
-  const { user, signing, signIn, signOut } = useAccount()
+  const { user, signing, signIn, signOut } = useAccountStore(
+    useShallow((state) => ({
+      user: state.user,
+      signing: state.signing,
+      signIn: state.signIn,
+      signOut: state.signOut,
+    })),
+  )
   const [open, setOpen] = useState(false)
   const [loginType, setLoginType] = useState<SignInType>()
 

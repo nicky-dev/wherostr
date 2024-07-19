@@ -19,8 +19,11 @@ import {
   useState,
 } from 'react'
 import { ArrowBackOutlined, Close } from '@mui/icons-material'
-import { AccountContext } from '@/contexts/AccountContext'
-import { EventActionType, AppContext, EventAction } from '@/contexts/AppContext'
+import {
+  EventActionType,
+  EventAction,
+  useAppStore,
+} from '@/contexts/AppContext'
 import { NDKEvent, NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
 import { CreateEventForm } from './CreateEventForm'
 import { isComment, isQuote } from '@/utils/event'
@@ -30,6 +33,7 @@ import EventList from './EventList'
 import { DAY, unixNow } from '@/utils/time'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { textKinds } from '@/constants/app'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 export const ShortTextNotePane = ({
   event,
@@ -38,7 +42,7 @@ export const ShortTextNotePane = ({
   event: NDKEvent
   viewportRef?: MutableRefObject<any>
 }) => {
-  const { eventAction } = useContext(AppContext)
+  const eventAction = useAppStore((state) => state.eventAction)
   const [eventActionState, setEventActionState] = useState<EventAction>({
     type: EventActionType.Comment,
     options: { comments: true },
@@ -235,9 +239,12 @@ export const ShortTextNotePane = ({
 
 const EventActionModal = () => {
   const viewportRef = useRef(null)
-  const { user } = useContext(AccountContext)
-  const { eventAction, backToPreviosModalAction, clearActions } =
-    useContext(AppContext)
+  const user = useAccountStore((state) => state.user)
+  const eventAction = useAppStore((state) => state.eventAction)
+  const backToPreviosModalAction = useAppStore(
+    (state) => state.backToPreviosModalAction,
+  )
+  const clearActions = useAppStore((state) => state.clearActions)
   const handleClickBack = useCallback(() => {
     backToPreviosModalAction('event')
   }, [backToPreviosModalAction])

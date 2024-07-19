@@ -1,19 +1,24 @@
-import { useContext, useEffect, useMemo } from 'react'
-import { MapContext } from '@/contexts/MapContext'
+import { useEffect } from 'react'
+import { useMapContext } from '@/contexts/MapContext'
 import maplibregl from 'maplibre-gl'
 
 export type MapEventCallback = (evt: maplibregl.MapLibreEvent) => void
 export type MapMouseEventCallback = (evt: maplibregl.MapMouseEvent) => void
 
+// const geoControl = new maplibregl.GeolocateControl({
+//   positionOptions: { enableHighAccuracy: true },
+//   trackUserLocation: true,
+// })
+const attributetion = new maplibregl.AttributionControl()
+
 export function useMapLibre(
   ref: React.RefObject<HTMLElement>,
   opts?: Omit<maplibregl.MapOptions, 'container'>,
 ) {
-  const mapContext = useContext(MapContext)
+  const mapContext = useMapContext()
 
   useEffect(() => {
     if (mapContext.map) return
-    if (!mapContext.setMap) return
     if (!ref.current) return
     console.debug('Create Map Instance')
     const map = new maplibregl.Map({
@@ -23,35 +28,22 @@ export function useMapLibre(
       antialias: false,
       attributionControl: false,
     })
-    mapContext.setMap?.(map)
-  }, [ref, mapContext.map, mapContext.setMap])
-
-  const attributetion = useMemo(() => {
-    console.debug('Create AttributionControl')
-    return new maplibregl.AttributionControl()
-  }, [])
+    mapContext.setMap(map)
+  }, [ref, mapContext.map])
 
   // const navigateContol = useMemo(() => {
   //   console.debug('Create NavigationControl')
   //   return new maplibregl.NavigationControl()
   // }, [])
 
-  const geoControl = useMemo(() => {
-    console.debug('Create GeolocateControl')
-    return new maplibregl.GeolocateControl({
-      positionOptions: { enableHighAccuracy: true },
-      trackUserLocation: true,
-    })
-  }, [])
-
   useEffect(() => {
     if (!mapContext.map) return
     // if (!mapContext.map.hasControl(navigateContol)) {
     //   mapContext.map?.addControl(navigateContol, 'bottom-right')
     // }
-    if (!mapContext.map.hasControl(geoControl)) {
-      mapContext.map?.addControl(geoControl, 'bottom-right')
-    }
+    // if (!mapContext.map.hasControl(geoControl)) {
+    //   mapContext.map?.addControl(geoControl, 'bottom-right')
+    // }
     if (!mapContext.map.hasControl(attributetion)) {
       mapContext.map?.addControl(attributetion, 'bottom-left')
     }
@@ -85,5 +77,5 @@ export function useMapLibre(
     mapContext.map.setZoom(opts.zoom)
   }, [mapContext.map, opts?.zoom])
 
-  return mapContext.map
+  return mapContext
 }

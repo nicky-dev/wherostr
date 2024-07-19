@@ -1,9 +1,9 @@
 'use client'
 import EventList from '@/components/EventList'
 import { Box, Divider, IconButton, Paper, Typography } from '@mui/material'
-import { useCallback, useContext, useMemo, useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { ArrowBackOutlined, Close } from '@mui/icons-material'
-import { AppContext } from '@/contexts/AppContext'
+import { useAppStore } from '@/contexts/AppContext'
 import { NDKKind } from '@nostr-dev-kit/ndk'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { unixNow } from '@/utils/time'
@@ -12,8 +12,12 @@ import ProfileValidBadge from './ProfileValidBadge'
 import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
 
 const ProfileActionModal = () => {
-  const { profileAction, backToPreviosModalAction, clearActions } =
-    useContext(AppContext)
+  const profileAction = useAppStore((state) => state.profileAction)
+  const backToPreviosModalAction = useAppStore(
+    (state) => state.backToPreviosModalAction,
+  )
+  const clearActions = useAppStore((state) => state.clearActions)
+
   const user = useUserProfile(profileAction?.hexpubkey)
   const handleClickBack = useCallback(() => {
     backToPreviosModalAction('profile')

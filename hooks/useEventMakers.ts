@@ -2,13 +2,13 @@ import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { useCallback, useEffect, useMemo } from 'react'
 import { fetchProfile, profilePin } from './useUserProfile'
 import { useMap } from './useMap'
-import { useNDK } from './useNostr'
 import { svgPin } from '@/constants/app'
 import { Marker } from 'maplibre-gl'
 import Geohash from 'latlon-geohash'
 import { useAction } from './useApp'
 import { mapClickHandler } from '@/components/MapController'
 import { useRouter } from 'next/navigation'
+import { useNDK } from '@/contexts/NostrContext'
 
 const markers: Record<string, Marker> = {}
 export const useEventMarkers = (events: NDKEvent[]) => {

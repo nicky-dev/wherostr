@@ -12,7 +12,6 @@ import copy from 'copy-to-clipboard'
 import { NDKEvent, NDKKind } from '@nostr-dev-kit/ndk'
 import { nip19 } from 'nostr-tools'
 import Geohash from 'latlon-geohash'
-import { useAccount, useFollowing, useMuting } from '@/hooks/useAccount'
 import { LoadingButton } from '@mui/lab'
 import {
   DeleteOutline,
@@ -22,6 +21,8 @@ import {
 } from '@mui/icons-material'
 import { useCallback, useMemo, useState } from 'react'
 import { useUserProfile } from '@/hooks/useUserProfile'
+import { useAccountStore } from '@/contexts/AccountContext'
+import { useMuting } from '@/hooks/useMute'
 
 interface NoteMenuItemProps {
   id: string
@@ -82,9 +83,12 @@ const options: NoteMenuOptionProps[] = [
 ]
 
 export default function NoteMenu({ event }: { event: NDKEvent }) {
-  const [_, mute] = useMuting()
-  const { user: account, readOnly } = useAccount()
-  const [follows, follow, unfollow] = useFollowing()
+  const mute = useMuting((state) => state.mute)
+  const account = useAccountStore((state) => state.user)
+  const readOnly = useAccountStore((state) => state.readOnly)
+  const follows = useAccountStore((state) => state.follows)
+  const follow = useAccountStore((state) => state.follow)
+  const unfollow = useAccountStore((state) => state.unfollow)
   const user = useUserProfile(event.author.hexpubkey)
   const [muteLoading, setMuteLoading] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)

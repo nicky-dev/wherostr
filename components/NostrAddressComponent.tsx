@@ -3,7 +3,6 @@ import { FC, useMemo } from 'react'
 import LiveActivity from './LiveActivity'
 import { NDKFilter, NDKKind } from '@nostr-dev-kit/ndk'
 import { nip19 } from 'nostr-tools'
-import { useStreamRelaySet } from '@/hooks/useNostr'
 import { useSubscribe } from '@/hooks/useSubscribe'
 import { DAY, unixNow } from '@/utils/time'
 import { EmbedLongFormContent } from './EmbedLongFormContent'
@@ -23,8 +22,7 @@ export const NostrAddressComponent: FC<NostrAddressComponentProps> = ({
       until: unixNow() + DAY,
     }
   }, [data])
-  const relaySet = useStreamRelaySet()
-  const [events] = useSubscribe(filter, true, relaySet)
+  const [events] = useSubscribe(filter, true)
   const event = useMemo(() => {
     return events?.[0]
   }, [events])

@@ -9,7 +9,7 @@ import {
   ElectricBoltOutlined,
 } from '@mui/icons-material'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { EventActionType, AppContext } from '@/contexts/AppContext'
+import { EventActionType, useAppStore } from '@/contexts/AppContext'
 import {
   NDKEvent,
   NDKKind,
@@ -17,8 +17,6 @@ import {
   zapInvoiceFromEvent,
 } from '@nostr-dev-kit/ndk'
 import numeral from 'numeral'
-import { useNDK } from '@/hooks/useNostr'
-import { useMuting, useUser } from '@/hooks/useAccount'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { amountFormat } from '@/constants/app'
 import { isComment, isQuote } from '@/utils/event'
@@ -26,6 +24,8 @@ import { useLongPress } from 'use-long-press'
 import { EmojiPicker } from './EmojiPicker'
 import TextNote from './TextNote'
 import { EmojiClickData } from 'emoji-picker-react'
+import { useNDK } from '@/contexts/NostrContext'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 const NoteActionBar = ({
   event,
@@ -45,9 +45,9 @@ const NoteActionBar = ({
   zap?: boolean
 }) => {
   const ndk = useNDK()
-  const user = useUser()
-  const [muteList] = useMuting()
-  const { setEventAction } = useContext(AppContext)
+  const user = useAccountStore((state) => state.user)
+  const muteList = useAccountStore((state) => state.muteList)
+  const setEventAction = useAppStore((state) => state.setEventAction)
   const [reacted, setReacted] = useState<NDKEvent>()
   const [{ liked, disliked }, setReaction] = useState({
     liked: 0,
@@ -245,7 +245,10 @@ const NoteActionBar = ({
               reacted?.content === '+' ? (
                 <ThumbUp className="!text-secondary" />
               ) : reacted && reacted?.content !== '-' ? (
-                <TextNote event={reacted} className="text-contrast-primary !leading-[18px]" />
+                <TextNote
+                  event={reacted}
+                  className="text-contrast-primary !leading-[18px]"
+                />
               ) : (
                 <ThumbUpOutlined />
               )

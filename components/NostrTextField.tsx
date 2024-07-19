@@ -1,4 +1,3 @@
-import { useNDK } from '@/hooks/useNostr'
 import {
   Box,
   Popover,
@@ -78,9 +77,10 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
       },
       [currentCaretPosition, handleClosePopover, replaceMentionValue],
     )
-    const profiles = useProfilesCache()
+    const [profiles] = useProfilesCache()
     const fuse = useMemo(
-      () => new Fuse(profiles, { keys: ['name', 'displayName', 'nip05'] }),
+      () =>
+        new Fuse(profiles || [], { keys: ['name', 'displayName', 'nip05'] }),
       [profiles],
     )
 
@@ -90,7 +90,7 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
             .search(searchText)
             .slice(0, 10)
             .map((item) => item.item)
-        : profiles.slice(0, 10)
+        : profiles?.slice(0, 10)
     }, [fuse, searchText, profiles])
 
     const handleChange: ChangeEventHandler<
@@ -150,6 +150,7 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
     )
     const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = useCallback(
       (event) => {
+        if (!filteredProfiles) return
         if (
           !mentionPopoverAnchorEl ||
           (event.key !== 'ArrowUp' &&
@@ -227,7 +228,7 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
             ref={viewportRef}
             className="min-w-[200px] max-w-md max-h-80 overflow-y-auto"
           >
-            {filteredProfiles.length ? (
+            {filteredProfiles?.length ? (
               <ViewportList
                 ref={viewportListRef}
                 viewportRef={viewportRef}

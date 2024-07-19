@@ -10,10 +10,10 @@ import { nip19 } from 'nostr-tools'
 import { useMemo } from 'react'
 import { StreamButton } from '@/components/StreamButton'
 import { Sensors } from '@mui/icons-material'
-import { useAccount } from '@/hooks/useAccount'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 export default function Page({ children }: { children: React.ReactNode }) {
-  const { readOnly } = useAccount()
+  const readOnly = useAccountStore((state) => state.readOnly)
   const { eventAction, profileAction } = useAction()
   const pathname = usePathname()
   const { id } = useParams()

@@ -23,8 +23,8 @@ import {
 import NextLink from 'next/link'
 import {
   EventActionType,
-  AppContext,
   ProfileActionType,
+  useAppStore,
 } from '@/contexts/AppContext'
 import { useEventCache } from '@/hooks/useCache'
 import { Variant } from '@mui/material/styles/createTypography'
@@ -33,13 +33,13 @@ import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
 import ReactPlayer from 'react-player/lazy'
 import { EmbedEventAddress } from './EmbedEventAddress'
 import classNames from 'classnames'
-import { useNDK } from '@/hooks/useNostr'
+import { useNDK } from '@/contexts/NostrContext'
 
 type RelatedNoteVariant = 'full' | 'fraction' | 'link'
 
 const nsfwTags = ['nsfw']
 export const UserMentionLink = ({ id }: { id: string }) => {
-  const { setProfileAction } = useContext(AppContext)
+  const setProfileAction = useAppStore((state) => state.setProfileAction)
   const user = useUserProfile(id)
   const displayName = useUserDisplayName(user)
   const handleClickProfile = useCallback(() => {
@@ -132,7 +132,7 @@ export const ReferredNote = ({
   icon: ReactNode
   state: 'pending' | 'rejected' | 'resolved'
 }) => {
-  const { setEventAction } = useContext(AppContext)
+  const setEventAction = useAppStore((state) => state.setEventAction)
   const handleClickNote = useCallback(() => {
     if (event) {
       setEventAction({
@@ -319,7 +319,7 @@ const TextNote = ({
   textVariant?: Variant
   skipEmbedLink?: boolean
 }) => {
-  const { clearActions } = useContext(AppContext)
+  const clearActions = useAppStore((state) => state.clearActions)
   const [show, setShow] = useState(false)
   const chunks = useMemo(() => {
     try {

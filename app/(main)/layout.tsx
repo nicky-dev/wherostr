@@ -2,6 +2,7 @@
 import { AppContextProvider } from '@/contexts/AppContext'
 import { AccountContextProvider } from '@/contexts/AccountContext'
 import SplashScreen from '@/components/SplashScreen'
+import SnackbarAlert from '@/components/SnackbarAlert'
 
 export default function RootLayout({
   children,
@@ -15,6 +16,7 @@ export default function RootLayout({
           {children}
         </main>
         <SplashScreen />
+        <SnackbarAlert />
       </AccountContextProvider>
     </AppContextProvider>
   )

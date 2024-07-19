@@ -58,10 +58,10 @@ const SearchBox: React.FC<
     [],
   )
 
-  const profiles = useProfilesCache()
+  const [profiles] = useProfilesCache()
   const fuse = React.useMemo(
     () =>
-      new Fuse(profiles, {
+      new Fuse(profiles || [], {
         keys: ['name', 'displayName', 'username', 'nip05'],
       }),
     [profiles],
@@ -105,7 +105,7 @@ const SearchBox: React.FC<
                 hexpubkey: item.item.hexpubkey,
               }
             })
-        : profiles.slice(0, 10).map((item) => {
+        : profiles?.slice(0, 10).map((item) => {
             const name = createNostrLink(
               NostrPrefix.PublicKey,
               item.hexpubkey,
@@ -116,7 +116,7 @@ const SearchBox: React.FC<
               display_name: item.displayName,
               hexpubkey: item.hexpubkey,
             }
-          })
+          }) || []
       setOptions(options)
       return
     }

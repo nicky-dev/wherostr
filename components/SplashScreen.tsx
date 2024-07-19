@@ -1,4 +1,3 @@
-import { useAccount } from '@/hooks/useAccount'
 import {
   Box,
   Fade,
@@ -10,10 +9,11 @@ import {
 import Image from 'next/image'
 import { FC } from 'react'
 import logo from '@/public/Wherostr- logo2_forDarkBG.png'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 interface SplashScreenProps extends Omit<FadeProps, 'children'> {}
 const SplashScreen: FC<SplashScreenProps> = (props) => {
-  const { signing = true } = useAccount()
+  const signing = useAccountStore((state) => state.signing)
   return (
     <Fade in={signing} {...props}>
       <Paper className="fixed inset-0 z-50 flex justify-center items-center flex-col -mt-16">

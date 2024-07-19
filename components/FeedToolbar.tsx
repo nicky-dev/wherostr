@@ -2,7 +2,6 @@ import { Box, Chip, IconButton, Paper } from '@mui/material'
 import { FC, useCallback, useMemo, useState } from 'react'
 import FeedFilterMenu, { FeedFilterMenuProps, FeedType } from './FeedFilterMenu'
 import { ExtractQueryResult } from '@/utils/extractQuery'
-import { useFollowList, useUser } from '@/hooks/useAccount'
 import { CropFree, List, LocationOn, Search, Tag } from '@mui/icons-material'
 import { usePathname, useRouter } from 'next/navigation'
 import buffer from '@turf/buffer'
@@ -14,6 +13,7 @@ import Filter from './Filter'
 import { nip19 } from 'nostr-tools'
 import ProfileAvatar from './ProfileAvatar'
 import { useUserDisplayName, useUserProfile } from '@/hooks/useUserProfile'
+import { useAccountStore } from '@/contexts/AccountContext'
 
 interface FeedToolbarProps {
   feedType?: FeedType
@@ -27,11 +27,11 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
   pathname: basePath = '/',
   filterMenuProps,
 }) => {
-  const user = useUser()
+  const user = useAccountStore((state) => state.user)
+  const followLists = useAccountStore((state) => state.followLists)
   const router = useRouter()
   const map = useMap()
   const [showSearch, setShowSearch] = useState(false)
-  const [followLists] = useFollowList()
 
   const handleClickShowSearch = useCallback(() => setShowSearch(true), [])
   const handleBlurSearchBox = useCallback(() => setShowSearch(false), [])
@@ -109,6 +109,7 @@ export const FeedToolbar: FC<FeedToolbarProps> = ({
                       const polygon = buffer(bboxPolygon(query.bbox), 5, {
                         units: 'kilometers',
                       })
+                      if (!polygon) return
                       const [x1, y1, x2, y2] = bbox(polygon)
                       router.replace(`${pathname}?map=1`, {
                         scroll: false,
