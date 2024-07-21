@@ -23,12 +23,12 @@ export enum EventActionType {
 
 export interface ProfileAction {
   type: ProfileActionType
-  hexpubkey: string
+  pubkey: string
   options?: any
 }
 export interface ProfileActionOptions {
   type: ProfileActionType
-  hexpubkey: string
+  pubkey: string
   options?: any
 }
 export interface EventAction {
@@ -83,7 +83,7 @@ export const useAppStore = create<AppStore>()((set, get) => ({
         if (
           latestModalAction?.group === 'profile' &&
           latestModalAction.action.type === profileAction.type &&
-          latestModalAction.action.hexpubkey === profileAction.hexpubkey
+          latestModalAction.action.pubkey === profileAction.pubkey
         ) {
           _modalActionHistory.pop()
         }

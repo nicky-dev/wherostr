@@ -78,7 +78,7 @@ const DrawerMenu: FC = () => {
                   closeDrawer()
                   setTimeout(() => {
                     setProfileAction({
-                      hexpubkey: hexpubkey,
+                      pubkey: hexpubkey,
                       type: ProfileActionType.View,
                     })
                   }, 100)

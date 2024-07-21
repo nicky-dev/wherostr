@@ -46,7 +46,7 @@ export const UserMentionLink = ({ id }: { id: string }) => {
     if (!user?.pubkey) return
     setProfileAction({
       type: ProfileActionType.View,
-      hexpubkey: user?.pubkey,
+      pubkey: user?.pubkey,
     })
   }, [setProfileAction, user?.pubkey])
 

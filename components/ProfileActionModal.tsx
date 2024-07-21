@@ -18,7 +18,7 @@ const ProfileActionModal = () => {
   )
   const clearActions = useAppStore((state) => state.clearActions)
 
-  const user = useUserProfile(profileAction?.hexpubkey)
+  const user = useUserProfile(profileAction?.pubkey)
   const handleClickBack = useCallback(() => {
     backToPreviosModalAction('profile')
   }, [backToPreviosModalAction])
@@ -28,14 +28,14 @@ const ProfileActionModal = () => {
   )
 
   const filter = useMemo(() => {
-    if (!profileAction?.hexpubkey) return
+    if (!profileAction?.pubkey) return
     return {
       kinds: [NDKKind.Text, NDKKind.Repost],
-      authors: [profileAction?.hexpubkey],
+      authors: [profileAction?.pubkey],
       until: unixNow(),
       limit: 30,
     }
-  }, [profileAction?.hexpubkey])
+  }, [profileAction?.pubkey])
 
   const [events, fetchMore] = useSubscribe(filter)
   const ref = useRef<HTMLDivElement>(null)
@@ -64,7 +64,7 @@ const ProfileActionModal = () => {
           </Box>
           <Divider />
         </Paper>
-        <ProfileCardFull hexpubkey={profileAction?.hexpubkey} />
+        <ProfileCardFull hexpubkey={profileAction?.pubkey} />
         <Divider />
         <EventList
           events={events}

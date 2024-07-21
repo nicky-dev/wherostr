@@ -51,7 +51,7 @@ const ProfileChip = ({
     }
     setProfileAction({
       type: ProfileActionType.View,
-      hexpubkey: userLeft?.pubkey,
+      pubkey: userLeft?.pubkey,
     })
   }, [userLeft?.pubkey, onClick, setProfileAction])
 

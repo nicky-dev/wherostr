@@ -92,7 +92,7 @@ export const useAccountStore = create<AccountProps>()((set, get) => ({
         }
       })
       pubkeys.forEach((pubkey) => {
-        const user = new NDKUser({ hexpubkey: pubkey })
+        const user = new NDKUser({ pubkey })
         user.ndk = ndk
         follows.add(user)
       })
@@ -192,7 +192,7 @@ export const useAccountStore = create<AccountProps>()((set, get) => ({
     const { ndk } = useNostrStore.getState()
     if (!user) return
     const followsSet = new Set<NDKUser>(follows)
-    const followUser = ndk.getUser({ hexpubkey: newFollow.pubkey })
+    const followUser = ndk.getUser({ pubkey: newFollow.pubkey })
     if (followsSet.has(followUser)) {
       return
     }

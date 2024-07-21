@@ -28,7 +28,6 @@ export const useProfilesCache = () => {
   }, [])
 }
 
-const verifyCache: Record<string, boolean> = {}
 export const useUserProfile = (hexpubkey?: string) => {
   const ndk = useNDK()
   const pubkey = useMemo(() => {
@@ -57,26 +56,23 @@ export const useUserProfile = (hexpubkey?: string) => {
         const d = {
           ...user,
           npub: user.npub,
-          hexpubkey: user.pubkey,
+          pubkey: user.pubkey,
           profile: profile,
         } as NDKUser
         return d
       })
       if (!profile.nip05) return profile
-      if (!verifyCache[profile.nip05]) {
-        const validNip05 = await user
-          .validateNip05(profile.nip05)
-          .catch((err) => false)
-        verifyCache[profile.nip05] = validNip05 === true
-      }
+      const validNip05 = await user
+        .validateNip05(profile.nip05)
+        .catch((err) => false)
       setUser((prev) => {
         const d = {
           ...user,
           npub: user.npub,
-          hexpubkey: user.pubkey,
+          pubkey: user.pubkey,
           profile: {
             ...profile,
-            validNip05: verifyCache[profile.nip05!] === true ? '1' : '0',
+            validNip05: validNip05 === true ? '1' : '0',
           } as NDKUserProfile,
         } as NDKUser
         return d

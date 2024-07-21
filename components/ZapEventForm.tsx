@@ -71,7 +71,7 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
               Math.floor(zap.amount) * 1000,
               comment || undefined,
               undefined,
-              ndk.getUser({ hexpubkey: zap.pubkey }),
+              ndk.getUser({ pubkey: zap.pubkey }),
             )
             if (pr) {
               const requestProvider = await import(
