@@ -1,31 +1,16 @@
 'use client'
 import { useAppStore } from '@/contexts/AppContext'
-import { useMemo } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 
 export const useAction = () => {
-  const {
-    setProfileAction,
-    setEventAction,
-    eventAction,
-    profileAction,
-    backToPreviosModalAction,
-    clearActions,
-  } = useAppStore()
-  return useMemo(() => {
-    return {
-      setProfileAction,
-      setEventAction,
-      eventAction,
-      profileAction,
-      backToPreviosModalAction,
-      clearActions,
-    }
-  }, [
-    setProfileAction,
-    setEventAction,
-    eventAction,
-    profileAction,
-    backToPreviosModalAction,
-    clearActions,
-  ])
+  return useAppStore(
+    useShallow((state) => ({
+      setPofileAction: state.setProfileAction,
+      setEventAction: state.setEventAction,
+      eventAction: state.eventAction,
+      profileAction: state.profileAction,
+      backToPreviosModalAction: state.backToPreviosModalAction,
+      clearActions: state.clearActions,
+    })),
+  )
 }

@@ -80,7 +80,7 @@ const NoteActionBar = ({
           reposts.push(item)
           break
         case NDKKind.Reaction:
-          if (item.pubkey === user?.hexpubkey) {
+          if (item.pubkey === user?.pubkey) {
             setReacted(item)
           }
           reacts.push(item)
@@ -97,7 +97,7 @@ const NoteActionBar = ({
       reacts,
       zaps,
     }
-  }, [event, muteList, relatedEvents, user?.hexpubkey])
+  }, [event, muteList, relatedEvents, user?.pubkey])
 
   useEffect(() => {
     if (!data) return

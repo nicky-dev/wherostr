@@ -80,7 +80,7 @@ export const useAccountStore = create<AccountProps>()((set, get) => ({
     const contactListEvent = await ndk.fetchEvent(
       {
         kinds: [3],
-        authors: [user.hexpubkey],
+        authors: [user.pubkey],
       },
       { subId: nanoid(8), cacheUsage: NDKSubscriptionCacheUsage.ONLY_RELAY },
     )
@@ -125,8 +125,8 @@ export const useAccountStore = create<AccountProps>()((set, get) => ({
         ndk.signer = new NDKNip07Signer()
         const signerUser = await ndk.signer?.user()
         if (signerUser) {
-          pubkey = signerUser.hexpubkey
-          // user = await getUser(signerUser.hexpubkey)
+          pubkey = signerUser.pubkey
+          // user = await getUser(signerUser.pubkey)
           // setReadOnly(false)
         }
       } else if (type === 'nsec') {
@@ -140,7 +140,7 @@ export const useAccountStore = create<AccountProps>()((set, get) => ({
         ndk.signer = new NDKPrivateKeySigner(secret)
         const signerUser = await ndk.signer?.user()
         if (signerUser) {
-          pubkey = signerUser.hexpubkey
+          pubkey = signerUser.pubkey
           readOnly = false
         }
       } else if (type === 'npub' && key) {
@@ -157,13 +157,13 @@ export const useAccountStore = create<AccountProps>()((set, get) => ({
         }
         await new Promise<void>((resolve) => {
           if (ndk.pool.connectedRelays().length === 0) {
-            ndk.pool.once('relay:connect', () => resolve())
+            ndk.pool.once('connect', () => resolve())
           } else {
             resolve()
           }
         })
         setSession({
-          pubkey: user.hexpubkey,
+          pubkey: user.pubkey,
           type,
           ...(type === 'nsec' ? { nsec: key } : undefined),
         })
@@ -194,7 +194,7 @@ export const useAccountStore = create<AccountProps>()((set, get) => ({
     const { ndk } = useNostrStore.getState()
     if (!user) return
     const followsSet = new Set<NDKUser>(follows)
-    const followUser = ndk.getUser({ hexpubkey: newFollow.hexpubkey })
+    const followUser = ndk.getUser({ hexpubkey: newFollow.pubkey })
     if (followsSet.has(followUser)) {
       return
     }
@@ -214,7 +214,7 @@ export const useAccountStore = create<AccountProps>()((set, get) => ({
     const event = new NDKEvent(ndk)
     event.kind = 3
     const followsSet = new Set(follows)
-    const exists = follows.find((d) => d.hexpubkey === unfollowUser.hexpubkey)
+    const exists = follows.find((d) => d.pubkey === unfollowUser.pubkey)
     exists && followsSet.delete(exists)
     followsSet.forEach((d) => {
       event.tag(d)
@@ -310,19 +310,19 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [user?.pubkey])
 
   useEffect(() => {
-    if (!user?.hexpubkey) return setFollowLists([])
+    if (!user?.pubkey) return setFollowLists([])
     const fn = async () => {
       const events = await ndk.fetchEvents(
         [
           {
             kinds: [30001 as NDKKind],
-            authors: [user?.hexpubkey],
+            authors: [user?.pubkey],
             '#d': ['follow'],
             limit: 1,
           },
           {
             kinds: [NDKKind.CategorizedPeopleList],
-            authors: [user?.hexpubkey],
+            authors: [user?.pubkey],
           },
         ],
         { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST, subId: nanoid(8) },
@@ -356,7 +356,7 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
       setFollowLists(peopleList.concat(tags))
     }
     fn()
-  }, [user?.hexpubkey])
+  }, [user?.pubkey])
 
   return children
 }

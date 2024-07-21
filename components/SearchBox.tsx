@@ -96,25 +96,25 @@ const SearchBox: React.FC<
             .map((item) => {
               const name = createNostrLink(
                 NostrPrefix.PublicKey,
-                item.item.hexpubkey,
+                item.item.pubkey,
               ).encode()
               return {
                 place_id: -2,
                 name,
                 display_name: item.item.displayName,
-                hexpubkey: item.item.hexpubkey,
+                hexpubkey: item.item.pubkey,
               }
             })
         : profiles?.slice(0, 10).map((item) => {
             const name = createNostrLink(
               NostrPrefix.PublicKey,
-              item.hexpubkey,
+              item.pubkey,
             ).encode()
             return {
               place_id: -2,
               name,
               display_name: item.displayName,
-              hexpubkey: item.hexpubkey,
+              hexpubkey: item.pubkey,
             }
           }) || []
       setOptions(options)

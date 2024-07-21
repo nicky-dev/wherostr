@@ -10,7 +10,7 @@ export class NDKEvnetSigner implements EventSigner {
     return this.ndk.connect()
   }
   getPubKey(): Promise<string> {
-    return this.ndk.signer!.user().then((user) => user.hexpubkey)
+    return this.ndk.signer!.user().then((user) => user.pubkey)
   }
   nip4Encrypt(content: string, key: string): Promise<string> {
     throw new Error('Method not implemented.')

@@ -90,7 +90,7 @@ export const MapController = ({ q }: { q?: string }) => {
       follows &&
       (feedType === 'following' || feedType === 'conversation')
     ) {
-      return { authors: follows.map((d) => d.hexpubkey).concat([user?.pubkey]) }
+      return { authors: follows.map((d) => d.pubkey).concat([user?.pubkey]) }
     }
   }, [user?.pubkey, query?.npub, follows, listEvent, feedType])
 

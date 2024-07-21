@@ -43,12 +43,12 @@ export const UserMentionLink = ({ id }: { id: string }) => {
   const user = useUserProfile(id)
   const displayName = useUserDisplayName(user)
   const handleClickProfile = useCallback(() => {
-    if (!user?.hexpubkey) return
+    if (!user?.pubkey) return
     setProfileAction({
       type: ProfileActionType.View,
-      hexpubkey: user?.hexpubkey,
+      hexpubkey: user?.pubkey,
     })
-  }, [setProfileAction, user?.hexpubkey])
+  }, [setProfileAction, user?.pubkey])
 
   return displayName ? (
     <Link

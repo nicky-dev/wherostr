@@ -1,14 +1,6 @@
 'use client'
 import { NDKEvent, NDKTag } from '@nostr-dev-kit/ndk'
-import {
-  Box,
-  Button,
-  Chip,
-  Hidden,
-  Paper,
-  Toolbar,
-  Typography,
-} from '@mui/material'
+import { Box, Chip, Hidden, Paper, Toolbar, Typography } from '@mui/material'
 import { LiveVideoPlayer } from './LiveVideoPlayer'
 import { LiveChat } from './LiveChat'
 import { useCallback, useMemo, useState } from 'react'
@@ -18,9 +10,8 @@ import { LiveStreamTime } from './LiveStreamTime'
 import ResponsiveButton from './ResponsiveButton'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import StatusBadge from './StatusBadge'
-import { EventActionType } from '@/contexts/AppContext'
+import { EventActionType, useAppStore } from '@/contexts/AppContext'
 import { StreamButton } from './StreamButton'
-import { useAction } from '@/hooks/useApp'
 import { DeleteButton } from './DeleteEventButton'
 import { v4 as uuidv4 } from 'uuid'
 import TextNote from './TextNote'
@@ -49,7 +40,7 @@ const LiveActivity = ({
   naddr: string
   event?: NDKEvent
 }) => {
-  const { setEventAction } = useAction()
+  const setEventAction = useAppStore((state) => state.setEventAction)
   const user = useAccountStore((state) => state.user)
   const follows = useAccountStore((state) => state.follows)
   const follow = useAccountStore((state) => state.follow)
@@ -95,10 +86,10 @@ const LiveActivity = ({
               </Box>
             </Hidden>
             <Box className="flex items-center gap-2">
-              <ProfileChip hexpubkey={author?.hexpubkey} showNip5={false} />
+              <ProfileChip hexpubkey={author?.pubkey} showNip5={false} />
               <Box className="flex-1 md:flex-auto" component="span" />
               {liveItem.pubkey &&
-                !follows.find((d) => d.hexpubkey === liveItem.pubkey) && (
+                !follows.find((d) => d.pubkey === liveItem.pubkey) && (
                   <ResponsiveButton
                     loading={loading}
                     loadingPosition="start"
@@ -170,7 +161,7 @@ const LiveActivity = ({
               })}
             </Box>
           </Hidden>
-          {user?.hexpubkey === liveItem.author && (
+          {user?.pubkey === liveItem.author && (
             <Box my={1} gap={1} display="flex">
               <StreamButton
                 label="Edit"

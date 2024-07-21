@@ -8,7 +8,7 @@ export default function Page() {
   const user = useAccountStore((state) => state.user)
   return (
     <>
-      <ProfileCard hexpubkey={user?.hexpubkey} />
+      <ProfileCard hexpubkey={user?.pubkey} />
       <Typography variant="h4">Coming soon</Typography>
     </>
   )

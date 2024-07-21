@@ -45,15 +45,15 @@ const ProfileChip = ({
     [userLeft],
   )
   const handleClickProfile = useCallback(() => {
-    if (!userLeft?.hexpubkey) return
-    if (onClick && onClick(userLeft?.hexpubkey) === false) {
+    if (!userLeft?.pubkey) return
+    if (onClick && onClick(userLeft?.pubkey) === false) {
       return
     }
     setProfileAction({
       type: ProfileActionType.View,
-      hexpubkey: userLeft?.hexpubkey,
+      hexpubkey: userLeft?.pubkey,
     })
-  }, [userLeft?.hexpubkey, onClick, setProfileAction])
+  }, [userLeft?.pubkey, onClick, setProfileAction])
 
   return (
     <Box
@@ -66,7 +66,7 @@ const ProfileChip = ({
       )}
       onClick={clickable && userLeft ? handleClickProfile : undefined}
     >
-      <ProfileAvatar hexpubkey={userLeft?.hexpubkey} />
+      <ProfileAvatar hexpubkey={userLeft?.pubkey} />
       {showName && (
         <Box className="flex flex-col pl-2 overflow-hidden">
           <Box className="flex">

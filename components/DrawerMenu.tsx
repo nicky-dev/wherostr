@@ -21,8 +21,7 @@ import {
 } from '@mui/material'
 import Link from 'next/link'
 import { ProfileCard } from './ProfileCard'
-import { useAction } from '@/hooks/useApp'
-import { ProfileActionType } from '@/contexts/AppContext'
+import { ProfileActionType, useAppStore } from '@/contexts/AppContext'
 import { usePathname, useRouter } from 'next/navigation'
 import { defaultPubkey } from '@/constants/app'
 import { useAccountStore } from '@/contexts/AccountContext'
@@ -30,7 +29,7 @@ import { useAccountStore } from '@/contexts/AccountContext'
 const DrawerMenu: FC = () => {
   const router = useRouter()
   const pathname = usePathname()
-  const { setProfileAction } = useAction()
+  const setProfileAction = useAppStore((state) => state.setProfileAction)
   const readOnly = useAccountStore((state) => state.readOnly)
   const user = useAccountStore((state) => state.user)
   const signOut = useAccountStore((state) => state.signOut)

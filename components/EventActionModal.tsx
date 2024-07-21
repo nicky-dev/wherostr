@@ -324,7 +324,7 @@ const EventActionModal = () => {
           {eventAction.type !== EventActionType.View && (
             <ProfileChip
               className="pt-3 px-3"
-              hexpubkey={user?.hexpubkey}
+              hexpubkey={user?.pubkey}
               clickable={false}
             />
           )}

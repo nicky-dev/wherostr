@@ -15,10 +15,10 @@ export const EventProfileCard: FC<
   const follow = useAccountStore((state) => state.follow)
   const unfollow = useAccountStore((state) => state.unfollow)
   const itsYou = useMemo(
-    () => account?.hexpubkey === hexpubkey,
-    [account?.hexpubkey, hexpubkey],
+    () => account?.pubkey === hexpubkey,
+    [account?.pubkey, hexpubkey],
   )
-  const isFollowing = follows.find((d) => d.hexpubkey === hexpubkey)
+  const isFollowing = follows.find((d) => d.pubkey === hexpubkey)
   const user = useMemo(() => new NDKUser({ hexpubkey }), [hexpubkey])
   const handleClickFollow = useCallback(async () => {
     try {

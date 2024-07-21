@@ -102,7 +102,7 @@ export default function Feed({
       follows &&
       (feedType === 'following' || feedType === 'conversation')
     ) {
-      return { authors: follows.map((d) => d.hexpubkey).concat([user?.pubkey]) }
+      return { authors: follows.map((d) => d.pubkey).concat([user?.pubkey]) }
     }
   }, [user?.pubkey, follows, listEvent, feedType])
 

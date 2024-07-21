@@ -5,8 +5,8 @@ import { FeedToolbar } from '@/components/FeedToolbar'
 import MainPane from '@/components/MainPane'
 import { MapView } from '@/components/MapView'
 import ProfileActionModal from '@/components/ProfileActionModal'
+import { useAppStore } from '@/contexts/AppContext'
 import { MapContextProvider } from '@/contexts/MapContext'
-import { useAction } from '@/hooks/useApp'
 import { useFeedType } from '@/hooks/useFeedType'
 import { extractQuery } from '@/utils/extractQuery'
 import { Box } from '@mui/material'
@@ -19,7 +19,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const { eventAction, profileAction } = useAction()
+  const eventAction = useAppStore((state) => state.eventAction)
+  const profileAction = useAppStore((state) => state.profileAction)
   const [, base, type, searchType, searchValue] = pathname.split('/')
   const q =
     searchType && searchValue ? `${searchType}:${searchValue}` : undefined

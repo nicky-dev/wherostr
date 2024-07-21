@@ -21,7 +21,7 @@ export const useProfilesCache = () => {
         return Array.from<NDKUserProfile>(val.values()).map((v, i) => {
           return {
             ...v,
-            hexpubkey: keys[i],
+            pubkey: keys[i],
           }
         })
       })
@@ -43,7 +43,7 @@ export const useUserProfile = (hexpubkey?: string) => {
   }, [hexpubkey])
 
   const [user, setUser] = useState<NDKUser | undefined>(
-    pubkey ? ndk.getUser({ hexpubkey: pubkey }) : undefined,
+    pubkey ? ndk.getUser({ pubkey }) : undefined,
   )
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export const useUserProfile = (hexpubkey?: string) => {
         const d = {
           ...user,
           npub: user.npub,
-          hexpubkey: user.hexpubkey,
+          hexpubkey: user.pubkey,
           profile: profile,
         } as NDKUser
         return d
@@ -73,7 +73,7 @@ export const useUserProfile = (hexpubkey?: string) => {
         const d = {
           ...user,
           npub: user.npub,
-          hexpubkey: user.hexpubkey,
+          hexpubkey: user.pubkey,
           profile: {
             ...profile,
             validNip05: verifyCache[profile.nip05!] === true ? '1' : '0',

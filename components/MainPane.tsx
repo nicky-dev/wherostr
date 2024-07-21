@@ -32,14 +32,14 @@ const NavigationBar: FC<{
         <IconButton LinkComponent={Link} href="/">
           <HomeOutlined />
         </IconButton>
-        {!!user?.hexpubkey && (
+        {!!user?.pubkey && (
           <IconButton LinkComponent={Link} href="/notifications">
             <NotificationsOutlined />
           </IconButton>
         )}
         {endTools}
-        {user?.hexpubkey ? (
-          <ProfileChip showName={false} hexpubkey={user.hexpubkey} />
+        {user?.pubkey ? (
+          <ProfileChip showName={false} hexpubkey={user.pubkey} />
         ) : (
           <UserBar />
         )}

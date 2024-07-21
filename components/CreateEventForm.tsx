@@ -1,5 +1,4 @@
-import { EventActionType } from '@/contexts/AppContext'
-import { useAction } from '@/hooks/useApp'
+import { EventActionType, useAppStore } from '@/contexts/AppContext'
 import { useMap } from '@/hooks/useMap'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -76,7 +75,9 @@ export const CreateEventForm = ({
   const router = useRouter()
   const pathname = usePathname()
   const query = useSearchParams()
-  const { backToPreviosModalAction } = useAction()
+  const backToPreviosModalAction = useAppStore(
+    (state) => state.backToPreviosModalAction,
+  )
   const { showSnackbar } = useSnackbar()
   const [busy, setBusy] = useState(false)
   const [appendMapLink, setAppendMapLink] = useState(false)
@@ -186,7 +187,7 @@ export const CreateEventForm = ({
         const { content, geohash, pow } = data
         const newEvent = new EventBuilder()
         let noteContent = content
-        newEvent.pubKey(user!.hexpubkey)
+        newEvent.pubKey(user!.pubkey)
         // const newEvent = new NDKEvent(ndk)
         // newEvent.content = content
         // newEvent.tags = []
@@ -198,7 +199,7 @@ export const CreateEventForm = ({
             noteContent = JSON.stringify(relatedEvents[0].rawEvent())
             newEvent.kind(EventKind.Repost)
             newEvent.tag(['e', relatedEvents[0].id, '', 'mention'])
-            newEvent.tag(['p', relatedEvents[0].author.hexpubkey])
+            newEvent.tag(['p', relatedEvents[0].author.pubkey])
             break
           case EventActionType.Quote:
             newEvent.kind(EventKind.TextNote)
@@ -215,7 +216,7 @@ export const CreateEventForm = ({
             }
             const tagP = relatedEvents[0].getMatchingTags('p')
             tagP.forEach((tag) => newEvent.tag(tag))
-            newEvent.tag(['p', relatedEvents[0].author.hexpubkey])
+            newEvent.tag(['p', relatedEvents[0].author.pubkey])
             break
         }
 

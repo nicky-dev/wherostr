@@ -162,7 +162,7 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
         }
         event.preventDefault()
         if (event.key === 'Enter') {
-          handleSelectProfile(filteredProfiles[focusIndex].hexpubkey)
+          handleSelectProfile(filteredProfiles[focusIndex].pubkey)
         } else if (event.key === 'ArrowUp' && focusIndex > 0) {
           const newIndex = focusIndex - 1
           setFocusIndex(newIndex)

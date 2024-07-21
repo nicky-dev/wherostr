@@ -68,7 +68,7 @@ export const ProfileCard = ({
         >
           <ProfileAvatar
             className="-mt-[72px]"
-            hexpubkey={user?.hexpubkey}
+            hexpubkey={user?.pubkey}
             avatarSize={144}
             showValidBadge={false}
           />
@@ -126,11 +126,11 @@ export const ProfileCardFull = ({
   const user = useUserProfile(hexpubkey)
   const displayName = useUserDisplayName(user)
   const itsYou = useMemo(
-    () => account?.hexpubkey === hexpubkey,
-    [account?.hexpubkey, hexpubkey],
+    () => account?.pubkey === hexpubkey,
+    [account?.pubkey, hexpubkey],
   )
   const isFollowing = useMemo(
-    () => follows.find((d) => d.hexpubkey === hexpubkey),
+    () => follows.find((d) => d.pubkey === hexpubkey),
     [follows, hexpubkey],
   )
   const clickable = useMemo(() => !!onClick, [onClick])
@@ -197,7 +197,7 @@ export const ProfileCardFull = ({
           >
             <ProfileAvatar
               className="-mt-[72px]"
-              hexpubkey={user?.hexpubkey}
+              hexpubkey={user?.pubkey}
               avatarSize={144}
               showValidBadge={false}
             />

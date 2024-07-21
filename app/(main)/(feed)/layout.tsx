@@ -4,9 +4,8 @@ import MainPane from '@/components/MainPane'
 import { MapView } from '@/components/MapView'
 import ProfileActionModal from '@/components/ProfileActionModal'
 import { useAccountStore } from '@/contexts/AccountContext'
-import { EventActionType } from '@/contexts/AppContext'
+import { EventActionType, useAppStore } from '@/contexts/AppContext'
 import { MapContextProvider } from '@/contexts/MapContext'
-import { useAction } from '@/hooks/useApp'
 import { ChevronLeftOutlined, Draw } from '@mui/icons-material'
 import { Box, Fab, Hidden, Zoom, useMediaQuery, useTheme } from '@mui/material'
 import classNames from 'classnames'
@@ -19,7 +18,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   const readOnly = useAccountStore((state) => state.readOnly)
-  const { eventAction, profileAction, setEventAction } = useAction()
+  const eventAction = useAppStore((state) => state.eventAction)
+  const profileAction = useAppStore((state) => state.profileAction)
+  const setEventAction = useAppStore((state) => state.setEventAction)
   const theme = useTheme()
   const router = useRouter()
   const searchParams = useSearchParams()

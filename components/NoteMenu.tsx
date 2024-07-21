@@ -89,19 +89,19 @@ export default function NoteMenu({ event }: { event: NDKEvent }) {
   const follows = useAccountStore((state) => state.follows)
   const follow = useAccountStore((state) => state.follow)
   const unfollow = useAccountStore((state) => state.unfollow)
-  const user = useUserProfile(event.author.hexpubkey)
+  const user = useUserProfile(event.author.pubkey)
   const [muteLoading, setMuteLoading] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
   const itsYou = useMemo(
-    () => account?.hexpubkey === event.author.hexpubkey,
-    [account?.hexpubkey, event.author.hexpubkey],
+    () => account?.pubkey === event.author.pubkey,
+    [account?.pubkey, event.author.pubkey],
   )
   const isFollowing = useMemo(
-    () => follows.find((d) => d.hexpubkey === event.author.hexpubkey),
-    [event.author.hexpubkey, follows],
+    () => follows.find((d) => d.pubkey === event.author.pubkey),
+    [event.author.pubkey, follows],
   )
 
   const handleClickDelete = useCallback(async () => {

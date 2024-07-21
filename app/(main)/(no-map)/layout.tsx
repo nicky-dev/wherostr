@@ -2,7 +2,6 @@
 import MainPane from '@/components/MainPane'
 import { Box } from '@mui/material'
 import classNames from 'classnames'
-import { useAction } from '@/hooks/useApp'
 import EventActionModal from '@/components/EventActionModal'
 import ProfileActionModal from '@/components/ProfileActionModal'
 import { useParams, usePathname } from 'next/navigation'
@@ -11,10 +10,12 @@ import { useMemo } from 'react'
 import { StreamButton } from '@/components/StreamButton'
 import { Sensors } from '@mui/icons-material'
 import { useAccountStore } from '@/contexts/AccountContext'
+import { useAppStore } from '@/contexts/AppContext'
 
 export default function Page({ children }: { children: React.ReactNode }) {
   const readOnly = useAccountStore((state) => state.readOnly)
-  const { eventAction, profileAction } = useAction()
+  const eventAction = useAppStore((state) => state.eventAction)
+  const profileAction = useAppStore((state) => state.profileAction)
   const pathname = usePathname()
   const { id } = useParams()
   const desc = useMemo(

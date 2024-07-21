@@ -5,16 +5,16 @@ import { useMap } from './useMap'
 import { svgPin } from '@/constants/app'
 import { Marker } from 'maplibre-gl'
 import Geohash from 'latlon-geohash'
-import { useAction } from './useApp'
 import { mapClickHandler } from '@/components/MapController'
 import { useRouter } from 'next/navigation'
 import { useNDK } from '@/contexts/NostrContext'
+import { useAppStore } from '@/contexts/AppContext'
 
 const markers: Record<string, Marker> = {}
 export const useEventMarkers = (events: NDKEvent[]) => {
   const ndk = useNDK()
   const map = useMap()
-  const { setEventAction } = useAction()
+  const setEventAction = useAppStore((state) => state.setEventAction)
   const router = useRouter()
 
   const features = useMemo(() => {

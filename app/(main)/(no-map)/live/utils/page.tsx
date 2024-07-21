@@ -34,7 +34,7 @@ export default function Page() {
   const filter = useMemo<NDKFilter | undefined>(() => {
     return {
       kinds: [30311 as NDKKind],
-      authors: user?.hexpubkey ? [user.hexpubkey] : [],
+      authors: user?.pubkey ? [user.pubkey] : [],
       since,
     }
   }, [since, user])

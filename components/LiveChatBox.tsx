@@ -264,8 +264,8 @@ const MessageItem = ({
   const action = useMemo(() => event.kind === 1311, [event.kind])
   const account = useAccountStore((state) => state.user)
   const itsYou = useMemo(
-    () => account?.hexpubkey === hexpubkey,
-    [account?.hexpubkey, hexpubkey],
+    () => account?.pubkey === hexpubkey,
+    [account?.pubkey, hexpubkey],
   )
   const createdDate = useMemo(() => {
     if (!event.created_at) {

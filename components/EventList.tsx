@@ -76,9 +76,9 @@ const EventList: FC<EventListProps> = ({
 
   const notes = useMemo(() => {
     return events.filter((d) => {
-      if (excludedMe && user?.pubkey === d.author.hexpubkey) return false
+      if (excludedMe && user?.pubkey === d.author.pubkey) return false
       if (showComments && d.kind === NDKKind.Repost) return false
-      if (muteList.includes(d.author.hexpubkey)) return false
+      if (muteList.includes(d.author.pubkey)) return false
       return showComments || showComments === undefined || !isComment(d)
     })
   }, [events, excludedMe, user?.pubkey, showComments, muteList])
@@ -197,9 +197,9 @@ const EventList: FC<EventListProps> = ({
 
   const newNotes = useMemo(() => {
     return newItems.filter((d) => {
-      if (excludedMe && user?.pubkey === d.author.hexpubkey) return false
+      if (excludedMe && user?.pubkey === d.author.pubkey) return false
       if (showComments && d.kind === NDKKind.Repost) return false
-      if (muteList.includes(d.author.hexpubkey)) return false
+      if (muteList.includes(d.author.pubkey)) return false
       return showComments || showComments === undefined || !isComment(d)
     })
   }, [newItems, excludedMe, user?.pubkey, showComments, muteList])

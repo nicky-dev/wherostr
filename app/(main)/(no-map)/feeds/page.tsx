@@ -1,8 +1,7 @@
 'use client'
 import Feed from '@/components/Feed'
 import { useAccountStore } from '@/contexts/AccountContext'
-import { EventActionType } from '@/contexts/AppContext'
-import { useAction } from '@/hooks/useApp'
+import { EventActionType, useAppStore } from '@/contexts/AppContext'
 import { Draw } from '@mui/icons-material'
 import { Fab, Zoom, useMediaQuery, useTheme } from '@mui/material'
 import classNames from 'classnames'
@@ -11,9 +10,8 @@ import { useCallback } from 'react'
 
 export default function Page() {
   const pathname = usePathname()
-
   const readOnly = useAccountStore((state) => state.readOnly)
-  const { setEventAction } = useAction()
+  const setEventAction = useAppStore((state) => state.setEventAction)
   const theme = useTheme()
   const mdUp = useMediaQuery(theme.breakpoints.up('md'))
   const mdDown = useMediaQuery(theme.breakpoints.down('md'))

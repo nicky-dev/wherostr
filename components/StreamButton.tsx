@@ -19,7 +19,6 @@ import { LoadingButton } from '@mui/lab'
 import { unixNow } from '@/utils/time'
 import ReactPlayer from 'react-player'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
-import { useAction } from '@/hooks/useApp'
 import { nip19 } from 'nostr-tools'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
@@ -114,7 +113,7 @@ export const StreamButton: FC<StreamButtonProps> = ({
           event.tags.push(['status', values.status])
         }
 
-        event.tags.push(['p', user?.hexpubkey || pubkey || author, '', 'host'])
+        event.tags.push(['p', user?.pubkey || pubkey || author, '', 'host'])
 
         tags.split(',').forEach((t: string) => {
           const d = t.trim()
