@@ -235,10 +235,7 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [eventAction, profileAction])
 
   useEffect(() => {
-    const wakeLockSwitch = document.querySelector('#wake-lock')
-
     let wakeLock: WakeLockSentinel | undefined
-
     const releaseHandle = () => {
       console.log('Wake Lock was released')
     }
@@ -251,23 +248,15 @@ export const AppContextProvider: FC<PropsWithChildren> = ({ children }) => {
         console.error(`${err.name}, ${err.message}`)
       }
     }
-
     const releaseWakeLock = async () => {
       console.log('releasing wakeLock')
 
       await wakeLock?.release()
       wakeLock = undefined
     }
-
-    const checkWakeLockDetail = ({ detail }: any) => {
-      const { checked } = detail
-      checked ? requestWakeLock() : releaseWakeLock()
-    }
-
-    wakeLockSwitch?.addEventListener('change', checkWakeLockDetail)
+    requestWakeLock()
     return () => {
-      wakeLockSwitch?.removeEventListener('change', checkWakeLockDetail)
-      wakeLock?.removeEventListener('release', releaseHandle)
+      releaseWakeLock()
     }
   }, [])
   return children

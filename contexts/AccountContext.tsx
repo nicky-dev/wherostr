@@ -18,7 +18,6 @@ import { useNDK, useNostrStore } from './NostrContext'
 import { create } from 'zustand'
 import { useSnackbar } from '@/components/SnackbarAlert'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { appNameForAlby } from '@/constants/app'
 
 export type SignInType = 'nip7' | 'nsec' | 'npub'
 
@@ -273,12 +272,6 @@ export const useAccountStore = create<AccountProps>()((set, get) => ({
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const ndk = useNDK()
   const { user, initUser, setMuteList, setFollowLists } = useAccountStore()
-
-  useEffect(() => {
-    import('@getalby/bitcoin-connect-react').then(({ init }) => {
-      init({ appName: appNameForAlby })
-    })
-  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return

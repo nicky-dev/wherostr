@@ -15,7 +15,6 @@ import { useAppStore } from '@/contexts/AppContext'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { useForm } from 'react-hook-form'
 import numeral from 'numeral'
-import { requestProvider } from 'webln'
 import { LoadingButton } from '@mui/lab'
 import { useNDK } from '@/contexts/NostrContext'
 import { useSnackbar } from './SnackbarAlert'
@@ -75,7 +74,12 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
               ndk.getUser({ hexpubkey: zap.pubkey }),
             )
             if (pr) {
-              await (await requestProvider()).sendPayment(pr)
+              const requestProvider = await import(
+                '@getalby/bitcoin-connect-react'
+              ).then(({ requestProvider }) => requestProvider)
+              const weblnProvider = await requestProvider()
+              const { preimage } = await weblnProvider.sendPayment(pr)
+              console.log('preimage', preimage)
               totalAmount += Math.floor(zap.amount)
             }
           }),

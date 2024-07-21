@@ -7,7 +7,7 @@ import NDK, {
 } from '@nostr-dev-kit/ndk'
 import NDKCacheAdapterDexie from '@nostr-dev-kit/ndk-cache-dexie'
 import { nip19, nip05 } from 'nostr-tools'
-import { nip5Regexp, streamRelayUrls } from '@/constants/app'
+import { appNameForAlby, nip5Regexp, streamRelayUrls } from '@/constants/app'
 import { nanoid } from 'nanoid'
 import { create } from 'zustand'
 import { FC, PropsWithChildren, useEffect } from 'react'
@@ -104,6 +104,13 @@ export const streamRelays = NDKRelaySet.fromRelayUrls(
 
 export const NostrContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const ndk = useNDK()
+
+  useEffect(() => {
+    import('@getalby/bitcoin-connect-react').then(({ init }) => {
+      init({ appName: appNameForAlby })
+    })
+  }, [])
+
   useEffect(() => {
     try {
       indexedDB.deleteDatabase('wherostr-cache')
