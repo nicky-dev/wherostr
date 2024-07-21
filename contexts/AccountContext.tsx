@@ -58,14 +58,18 @@ export const useAccountStore = create<AccountProps>()((set, get) => ({
     try {
       const { session } = useSessionStore.getState()
       if (session?.pubkey && session.type) {
-        await new Promise((resolve) => {
-          setTimeout(() => {
-            signIn(
-              session.type!,
-              session.type === 'nsec' ? session?.nsec : session?.pubkey,
-            ).then(resolve)
-          }, 500)
-        })
+        await signIn(
+          session.type!,
+          session.type === 'nsec' ? session?.nsec : session?.pubkey,
+        )
+        // await new Promise((resolve) => {
+        //   // setTimeout(() => {
+        //   //   signIn(
+        //   //     session.type!,
+        //   //     session.type === 'nsec' ? session?.nsec : session?.pubkey,
+        //   //   ).then(resolve)
+        //   // }, 500)
+        // })
         return
       }
     } finally {
@@ -155,7 +159,7 @@ export const useAccountStore = create<AccountProps>()((set, get) => ({
         }
         await new Promise<void>((resolve) => {
           if (ndk.pool.connectedRelays().length === 0) {
-            ndk.pool.once('connect', () => resolve())
+            ndk.pool.once('relay:connect', () => resolve())
           } else {
             resolve()
           }
@@ -269,7 +273,9 @@ export const useAccountStore = create<AccountProps>()((set, get) => ({
 
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const ndk = useNDK()
-  const { user, initUser, setFollowLists } = useAccountStore()
+  const user = useAccountStore((state) => state.user)
+  const initUser = useAccountStore((state) => state.initUser)
+  const setFollowLists = useAccountStore((state) => state.setFollowLists)
 
   useEffect(() => {
     if (typeof window === 'undefined') return

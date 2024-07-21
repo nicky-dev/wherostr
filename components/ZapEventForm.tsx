@@ -79,7 +79,6 @@ const ZapEventForm = ({ event }: { event: NDKEvent }) => {
               ).then(({ requestProvider }) => requestProvider)
               const weblnProvider = await requestProvider()
               const { preimage } = await weblnProvider.sendPayment(pr)
-              console.log('preimage', preimage)
               totalAmount += Math.floor(zap.amount)
             }
           }),
