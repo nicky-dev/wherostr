@@ -1,19 +1,8 @@
 'use client'
-import {
-  Dispatch,
-  FC,
-  PropsWithChildren,
-  SetStateAction,
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { FC, PropsWithChildren, useEffect } from 'react'
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { ErrorCode } from '@/constants/app'
-import { Alert, AlertProps, Snackbar, SnackbarProps } from '@mui/material'
+import { AlertProps, SnackbarProps } from '@mui/material'
 import { create } from 'zustand'
 import { useNostrStore } from './NostrContext'
 import { useSnackbar } from '@/components/SnackbarAlert'

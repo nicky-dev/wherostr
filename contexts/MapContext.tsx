@@ -1,13 +1,6 @@
 'use client'
-import {
-  createContext,
-  PropsWithChildren,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
-import { create, createStore, useStore } from 'zustand'
+import { createContext, PropsWithChildren, useContext } from 'react'
+import { createStore, useStore } from 'zustand'
 
 export type MapType = maplibregl.Map
 export interface MapContextValue<T = MapType> {

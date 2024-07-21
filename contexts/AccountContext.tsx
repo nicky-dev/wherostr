@@ -6,8 +6,6 @@ import {
   NDKList,
   NDKNip07Signer,
   NDKPrivateKeySigner,
-  NDKRelay,
-  NDKRelayStatus,
   NDKSubscriptionCacheUsage,
   NDKUser,
 } from '@nostr-dev-kit/ndk'
@@ -271,7 +269,7 @@ export const useAccountStore = create<AccountProps>()((set, get) => ({
 
 export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const ndk = useNDK()
-  const { user, initUser, setMuteList, setFollowLists } = useAccountStore()
+  const { user, initUser, setFollowLists } = useAccountStore()
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -280,14 +278,10 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [user])
 
   useEffect(() => {
-    if (!user?.pubkey) return setMuteList([])
+    if (!user?.pubkey) return
     const fn = async () => {
       const events = await ndk.fetchEvents(
         [
-          {
-            kinds: [NDKKind.MuteList],
-            authors: [user.pubkey],
-          },
           {
             kinds: [NDKKind.CategorizedPeopleList],
             authors: [user.pubkey],
@@ -297,14 +291,12 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
         ],
         { cacheUsage: NDKSubscriptionCacheUsage.CACHE_FIRST, subId: nanoid(8) },
       )
-      const items: string[] = []
       events.forEach((ev) => {
         const list = NDKList.from(ev)
         list.items.forEach((item) => {
-          items.push(item[1])
+          ndk.mutedIds.set(item[1], item[0])
         })
       })
-      setMuteList(items)
     }
     fn()
   }, [user?.pubkey])
@@ -359,71 +351,6 @@ export const AccountContextProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [user?.pubkey])
 
   return children
-}
-
-const connectToUserRelays = async (user: NDKUser) => {
-  const ndk = user.ndk
-  if (!ndk) {
-    console.debug('NDK not initialized', { npub: user.npub })
-    return
-  }
-  const runUserFunctions = async (user: NDKUser) => {
-    if (!user.relayUrls) {
-      console.debug('No relay list found for user', { npub: user.npub })
-      return
-    }
-    console.debug('Connecting to user relays', {
-      npub: user.npub,
-      relays: user.relayUrls,
-    })
-    await Promise.allSettled(
-      user.relayUrls.map(async (url) => {
-        return new Promise<NDKRelay>((resolve, reject) => {
-          const relay = ndk.pool.relays.get(url)
-          if (!relay) {
-            const relay = new NDKRelay(url)
-            const timeout = setTimeout(() => {
-              relay.removeAllListeners()
-              reject('timeout')
-            }, 3000)
-            relay.once('connect', () => {
-              clearTimeout(timeout)
-              resolve(relay)
-            })
-            ndk.pool.addRelay(relay)
-          } else {
-            if (relay.connectivity.status === NDKRelayStatus.CONNECTED) {
-              resolve(relay)
-            } else if (
-              relay.connectivity.status === NDKRelayStatus.CONNECTING
-            ) {
-              const timeout = setTimeout(() => {
-                relay.removeAllListeners()
-                reject('timeout')
-              }, 3000)
-              relay.once('connect', () => {
-                clearTimeout(timeout)
-                resolve(relay)
-              })
-            }
-          }
-        })
-      }),
-    )
-  }
-
-  if (ndk.pool.connectedRelays().length > 0) {
-    await runUserFunctions(user)
-  } else {
-    await new Promise((resolve) => {
-      console.debug('Waiting for connection to main relays')
-      ndk.pool.once('relay:connect', async (relay: NDKRelay) => {
-        console.debug('New relay came online', relay)
-        await runUserFunctions(user)
-        resolve(undefined)
-      })
-    })
-  }
 }
 
 export interface SessionItem {
