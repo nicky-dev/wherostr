@@ -191,7 +191,7 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
       ],
     )
     const renderProfileItem = useCallback(
-      ({ hexpubkey }: any, index: number) => (
+      ({ pubkey }: any, index: number) => (
         <Box
           key={index}
           className={classNames({
@@ -200,7 +200,7 @@ const NostrTextField = forwardRef<HTMLDivElement, TextFieldProps>(
         >
           <ProfileChip
             className="p-2"
-            hexpubkey={hexpubkey}
+            hexpubkey={pubkey}
             onClick={handleSelectProfile}
           />
         </Box>

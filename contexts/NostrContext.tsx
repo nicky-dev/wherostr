@@ -28,7 +28,7 @@ export const defaultRelays = [
 const dexieAdapter = new NDKCacheAdapterDexie({
   dbName: 'nostr',
   expirationTime: 3600 * 24 * 1,
-  profileCacheSize: 200,
+  profileCacheSize: 1000,
 })
 
 export const useNostrStore = create<Nostr>()((set, get) => ({

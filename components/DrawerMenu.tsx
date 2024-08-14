@@ -168,11 +168,11 @@ const DrawerMenu: FC = () => {
             <List>
               <ListItemButton
                 onClick={async () => {
-                  await signOut()
+                  signOut()
                   if (!pathname.startsWith('/settings')) {
-                    router.replace(`${pathname}/global`)
+                    router.replace(`/`)
                   } else {
-                    router.replace(`/global`)
+                    router.replace(`/`)
                   }
                   closeDrawer()
                 }}

@@ -44,9 +44,9 @@ export function useMapLibre(
     // if (!mapContext.map.hasControl(geoControl)) {
     //   mapContext.map?.addControl(geoControl, 'bottom-right')
     // }
-    if (!mapContext.map.hasControl(attributetion)) {
-      mapContext.map?.addControl(attributetion, 'bottom-left')
-    }
+    // if (!mapContext.map.hasControl(attributetion)) {
+    //   mapContext.map?.addControl(attributetion, 'bottom-left')
+    // }
   }, [mapContext.map])
 
   useEffect(() => {

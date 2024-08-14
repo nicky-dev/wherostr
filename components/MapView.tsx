@@ -5,7 +5,8 @@ import dynamic from 'next/dynamic'
 import classNames from 'classnames'
 import { Box, Paper } from '@mui/material'
 import { useMapLibre } from '@/hooks/useMaplibre'
-import { useMapContext } from '@/contexts/MapContext'
+import mblogo from '@/public/4Logo_mb_poweredby.png'
+import Image from 'next/image'
 
 const opts: Omit<maplibregl.MapOptions, 'container'> = {
   style:
@@ -72,8 +73,14 @@ const MapLoad: React.FC<MapProps> = ({ children, className, onLoad }) => {
 
   return (
     <Box className={classNames('flex', className)}>
-      <Box ref={mapContainer} className="flex-1">
+      <Box ref={mapContainer} className="relative flex-1">
         {children}
+        <Image
+          src={mblogo}
+          alt=""
+          className="absolute bottom-0 left-0 z-10"
+          height={48}
+        />
       </Box>
     </Box>
   )
