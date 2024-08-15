@@ -90,9 +90,9 @@ export function LiveChat({
             newEvent.tags.push(['p', replyEvent?.pubkey])
           }
           setBusy(true)
-          await newEvent.publish()
           setReplyEvent(undefined)
           setMessage('')
+          await newEvent.publish()
           setBusy(false)
         }}
       >
