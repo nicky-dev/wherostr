@@ -17,6 +17,7 @@ import NostrTextField from './NostrTextField'
 import ProfileAvatar from './ProfileAvatar'
 import { useNostrStore } from '@/contexts/NostrContext'
 import { useAccountStore } from '@/contexts/AccountContext'
+import { nip19 } from 'nostr-tools'
 
 export function LiveChat({
   naddr,
@@ -79,13 +80,19 @@ export function LiveChat({
             ['a', `30311:${event?.author}:${event?.id}`, '', 'root'],
           ]
           if (event!.id && replyEvent?.id) {
+            let nevent = nip19.neventEncode({
+              id: replyEvent?.id,
+              author: replyEvent?.pubkey,
+              kind: replyEvent.kind,
+            })
+            newEvent.content = `nostr:${nevent}\n${newEvent.content}`
             newEvent.tags.push(['e', replyEvent?.id, '', 'reply'])
             newEvent.tags.push(['p', replyEvent?.pubkey])
           }
-          setReplyEvent(undefined)
-          setMessage('')
           setBusy(true)
           await newEvent.publish()
+          setReplyEvent(undefined)
+          setMessage('')
           setBusy(false)
         }}
       >
