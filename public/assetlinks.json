@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "th.co.mapboss.wherostr.social.wherostr_social",
+      "sha256_cert_fingerprints": [
+        "A0:8A:CD:DE:6B:83:8A:63:59:09:8A:D3:6D:47:B2:ED:E2:53:54:57:7B:9F:68:D9:3E:34:03:81:74:C0:09:16"
+      ]
+    }
+  }
+]
