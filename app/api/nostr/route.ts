@@ -19,6 +19,6 @@ export async function GET(request: Request) {
   if (!pubkey) {
     return Response.json({})
   }
-  const relay = result.relay?.[pubkey]
-  return Response.json({ names: { [name]: pubkey }, relay })
+  const relays = result.relays?.[pubkey]
+  return Response.json({ names: { [name]: pubkey }, relays })
 }
