@@ -26,6 +26,14 @@ const nextConfig = withPWA({
                         value: "*",
                     },
                 ],
+            }, {
+                source: "/.well-known/lnurlp/:name",
+                headers: [
+                    {
+                        key: "Access-Control-Allow-Origin",
+                        value: "*",
+                    },
+                ],
             },
         ];
     },
@@ -34,6 +42,10 @@ const nextConfig = withPWA({
             {
                 source: "/.well-known/nostr.json",
                 destination: "/api/nostr",
+            },
+            {
+                source: "/.well-known/lnurlp/:name",
+                destination: "/api/lnurlp/:name",
             },
         ];
     },
